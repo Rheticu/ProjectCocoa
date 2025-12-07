@@ -1,0 +1,23 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+export_presets.cfg
+*.import
+
+# Binarios y ejecutables
+*.exe
+*.pck
+*.zip
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Logs y temporales
+*.log
+*.tmp"
+
+#Plugins
+addons/
+ai_context_export.json

@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://ofh5u6p2x0wm"]
+
+[ext_resource type="PackedScene" uid="uid://7cek1s1jt51e" path="res://scenes/buildings/building_scene.tscn" id="1_dqo6o"]
+[ext_resource type="Texture2D" uid="uid://cimhffcitg6ck" path="res://art/buildings/barracks.png" id="2_rkqoi"]
+
+[node name="Barracks" instance=ExtResource("1_dqo6o")]
+can_produce_units = true
+building_type = "Barracks"
+
+[node name="Sprite2D" parent="." index="0"]
+scale = Vector2(0.09, 0.09)
+texture = ExtResource("2_rkqoi")

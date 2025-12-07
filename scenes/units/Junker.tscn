@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://ctgduopogq0b0"]
+
+[ext_resource type="PackedScene" uid="uid://d3tyw1iai4n62" path="res://scenes/units/base_unit.tscn" id="1_0pl03"]
+[ext_resource type="Texture2D" uid="uid://y030jo5iow7e" path="res://art/units/Junk.png" id="2_g6rt8"]
+
+[node name="Junker" instance=ExtResource("1_0pl03")]
+unit_type = "Naval"
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("2_g6rt8")

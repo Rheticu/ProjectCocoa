@@ -1,0 +1,70 @@
+[gd_scene load_steps=2 format=3 uid="uid://bntl4xh52v78l"]
+
+[ext_resource type="Script" path="res://scripts/HUD_script.gd" id="1_xc2ir"]
+
+[node name="HUD" type="CanvasLayer"]
+offset = Vector2(0, -16)
+transform = Transform2D(1, 0, 0, 1, 0, -16)
+script = ExtResource("1_xc2ir")
+
+[node name="BackgroundHUD" type="ColorRect" parent="."]
+offset_top = 16.0
+offset_right = 640.0
+offset_bottom = 48.0
+color = Color(0.760833, 0.064109, 0.333159, 1)
+
+[node name="EndTurnButton" type="Button" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -80.0
+offset_top = 16.0
+offset_right = 10.0
+offset_bottom = 47.0
+grow_horizontal = 0
+scale = Vector2(0.839995, 1)
+text = "END TURN"
+
+[node name="UnitInfoPanel" type="PanelContainer" parent="."]
+offset_top = 16.0
+offset_right = 176.0
+offset_bottom = 48.0
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UnitInfoPanel"]
+layout_mode = 2
+
+[node name="AttackLabel" type="Label" parent="UnitInfoPanel/HBoxContainer"]
+layout_mode = 2
+
+[node name="DefenseLabel" type="Label" parent="UnitInfoPanel/HBoxContainer"]
+layout_mode = 2
+
+[node name="UnitInfoPanel2" type="PanelContainer" parent="."]
+offset_left = 176.0
+offset_top = 16.0
+offset_right = 352.0
+offset_bottom = 48.0
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UnitInfoPanel2"]
+layout_mode = 2
+
+[node name="Funds" type="Label" parent="UnitInfoPanel2/HBoxContainer"]
+layout_mode = 2
+
+[node name="Income" type="Label" parent="UnitInfoPanel2/HBoxContainer"]
+layout_mode = 2
+
+[node name="UnitInfoPanel3" type="PanelContainer" parent="."]
+offset_left = 384.0
+offset_top = 16.0
+offset_right = 560.0
+offset_bottom = 48.0
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UnitInfoPanel3"]
+layout_mode = 2
+
+[node name="TurnLabel" type="Label" parent="UnitInfoPanel3/HBoxContainer"]
+layout_mode = 2

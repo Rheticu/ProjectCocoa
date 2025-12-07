@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://bhla5fewx2gdq"]
+
+[ext_resource type="PackedScene" uid="uid://d3tyw1iai4n62" path="res://scenes/units/base_unit.tscn" id="1_pvcaq"]
+[ext_resource type="Texture2D" uid="uid://b03bvb73jr2po" path="res://art/units/Sword1.png" id="2_jfh33"]
+
+[node name="SwordUnit" instance=ExtResource("1_pvcaq")]
+attack = 20
+defense = 3
+vision_range = 1
+unit_type = "Infantry"
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("2_jfh33")

@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://i03rku3un1nr"]
+
+[ext_resource type="PackedScene" uid="uid://d3tyw1iai4n62" path="res://scenes/units/base_unit.tscn" id="1_85nt5"]
+[ext_resource type="Script" uid="uid://dwdbewoydpval" path="res://scripts/unit_script.gd" id="2_rq7u8"]
+[ext_resource type="Texture2D" uid="uid://c3f6o04asdt5w" path="res://art/units/dragon2.png" id="2_yl5n5"]
+
+[node name="Dragon1Unit" instance=ExtResource("1_85nt5")]
+script = ExtResource("2_rq7u8")
+movement_range = 4
+attack = 28
+defense = 4
+team = 2
+
+[node name="Sprite2D" parent="." index="0"]
+position = Vector2(-5, -5)
+texture = ExtResource("2_yl5n5")
+flip_h = true
+
+[node name="CollisionShape2D" parent="." index="1"]
+position = Vector2(-0.5, -1)
