@@ -1061,12 +1061,20 @@ func start_turn(team: int):
 			if unit.team == team:
 				unit.current_state = MapUnit.UnitState.UNSELECTED
 				unit.update_visual_state()
+				# Limpiar metadatos de movimiento pendiente del turno anterior
+				if unit.has_meta("pending_move_path"):
+					unit.remove_meta("pending_move_path")
+					unit.remove_meta("pending_move_is_wrapped")
 	else:
 		hud.set_end_turn_enabled(false)
 		# Deseleccionar cualquier unidad seleccionada
 		for unit in all_units:
 			if unit.current_state == MapUnit.UnitState.SELECTED:
 				unit.deselect()
+			# Limpiar metadatos de movimiento pendiente del turno anterior
+			if unit.has_meta("pending_move_path"):
+				unit.remove_meta("pending_move_path")
+				unit.remove_meta("pending_move_is_wrapped")
 
 func _on_end_turn_pressed():
 	if current_player_team != player_id:
@@ -1566,12 +1574,35 @@ func try_attack(grid_pos: Vector2i):
 		if unit.grid_position == grid_pos && selected_unit.can_attack(unit):
 			selected_unit.attacking(unit)
 			
-			# SINCRONIZAR ATAQUE
+			# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
 			if multiplayer.multiplayer_peer != null:
 				var attacker_id = get_unit_identifier(selected_unit)
 				var target_id = get_unit_identifier(unit)
-				sync_attack.rpc(attacker_id.x, attacker_id.y, attacker_id.team, attacker_id.unit_type,
-					target_id.x, target_id.y, target_id.team, target_id.unit_type)
+				
+				# Si la unidad se movió, enviar path completo; si no, enviar path vacío
+				var path_x: Array = []
+				var path_y: Array = []
+				var is_wrapped = false
+				var attacker_old_x = selected_unit.original_position.x
+				var attacker_old_y = selected_unit.original_position.y
+				
+				if selected_unit.current_state == MapUnit.UnitState.MOVED:
+					# La unidad se movió este turno, enviar su path
+					if selected_unit.has_meta("pending_move_path"):
+						var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+						for p in pending_path:
+							path_x.append(p.x)
+							path_y.append(p.y)
+						if selected_unit.has_meta("pending_move_is_wrapped"):
+							is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+				
+				# Enviar RPC con movimiento y ataque atomicamente
+				sync_unit_move_and_attack.rpc(
+					attacker_old_x, attacker_old_y,
+					path_x, path_y, is_wrapped,
+					attacker_id.team, attacker_id.unit_type,
+					target_id.x, target_id.y, target_id.team, target_id.unit_type
+				)
 			
 			# Limpiar selección visual sin cambiar el estado MOVED
 			selected_unit.update_visual_state()
@@ -1581,6 +1612,61 @@ func try_attack(grid_pos: Vector2i):
 			end_attack_mode()
 			active_overlay.clear()
 			return
+
+@rpc("any_peer", "reliable")
+func sync_unit_move_and_attack(
+		attacker_old_x: int, attacker_old_y: int,
+		path_x: Array, path_y: Array, is_wrapped: bool,
+		attacker_team: int, attacker_type: String,
+		target_x: int, target_y: int, target_team: int, target_type: String):
+	
+	var sender_id = multiplayer.get_remote_sender_id()
+	var sender_player_id = 1 if sender_id == 1 else 2
+	
+	if sender_player_id != current_player_team:
+		return
+	
+	if sender_player_id == player_id:
+		return
+	
+	# Buscar la unidad atacante por su posición vieja (antes del movimiento)
+	var attacker = find_unit_by_identifier({
+		"x": attacker_old_x,
+		"y": attacker_old_y,
+		"team": attacker_team,
+		"unit_type": attacker_type
+	})
+	
+	if not attacker:
+		return
+	
+	# PASO 1: Si hay path, reproducir el movimiento
+	if not path_x.is_empty():
+		# Reconstruir path desde arrays
+		var path: Array[Vector2i] = []
+		for i in range(path_x.size()):
+			path.append(Vector2i(path_x[i], path_y[i]))
+		
+		# Aplicar movimiento visual (tween) y actualización de estado
+		if is_wrapped:
+			move_unit_along_wrapped_path(attacker, path, true)
+		else:
+			move_unit_along_path(attacker, path, true)
+		
+		# Esperar a que el tween termine (0.14s por tile aproximadamente)
+		await get_tree().create_timer(path.size() * 0.14).timeout
+	
+	# PASO 2: Ejecutar el ataque
+	var target = find_unit_by_identifier({
+		"x": target_x,
+		"y": target_y,
+		"team": target_team,
+		"unit_type": target_type
+	})
+	
+	if target:
+		attacker.attacking(target)
+		update_fog_of_war()
 
 @rpc("any_peer", "reliable")
 func sync_attack(attacker_x: int, attacker_y: int, attacker_team: int, attacker_type: String,
