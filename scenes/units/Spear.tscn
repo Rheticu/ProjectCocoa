@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://cwuvcd8l431ts"]
 
 [ext_resource type="PackedScene" uid="uid://d3tyw1iai4n62" path="res://scenes/units/base_unit.tscn" id="1_1lerb"]
-[ext_resource type="Texture2D" uid="uid://5pp2cemokgjn" path="res://art/units/Princess1.png" id="3_nl4o0"]
+[ext_resource type="Texture2D" uid="uid://b1t4x00jny1uc" path="res://art/units/Spear1_Red.png" id="3_nl4o0"]
 
 [node name="Spear" instance=ExtResource("1_1lerb")]
 movement_range = 4

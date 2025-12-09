@@ -231,8 +231,14 @@ func close_production_menu():
 func _on_unit_button_pressed(unit: String, cost: int):
 	var unit_scene = load("res://scenes/units/" + unit + ".tscn")
 	var unit_instance = unit_scene.instantiate()
+	var color_suffix = "_Blue" if team == 1 else "_Red"
+	var sprite_path = "res://art/units/%s1%s.png" % [unit, color_suffix]
 	main.get_node("Units").add_child(unit_instance)
 	unit_instance.team = self.team
+
+	if unit_instance.get_node("Sprite2D") and ResourceLoader.exists(sprite_path):
+		unit_instance.get_node("Sprite2D").texture = load(sprite_path)
+
 	unit_instance.grid_position = building_position
 	unit_instance.current_state = unit_instance.UnitState.MOVED
 	unit_instance.update_visual_state()
@@ -246,7 +252,7 @@ func _on_unit_button_pressed(unit: String, cost: int):
 	
 	hud.update_income_funds()
 	main.all_units.append(unit_instance)
-	
+	main.update_fog_of_war()
 	# Sincronizar producción en multiplayer (solo si existe el método y estamos conectados)
 	if main.has_method("sync_unit_production") and main.multiplayer.multiplayer_peer != null:
 		main.sync_unit_production.rpc(building_position.x, building_position.y, unit, team, cost)
