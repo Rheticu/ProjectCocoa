@@ -6,9 +6,11 @@ extends Area2D
 @export var income_per_turn := 1000
 @export var can_produce_units := false
 @export var building_type: String
+
 @onready var main = get_node("/root/Main")
 @onready var hud = get_node("/root/Main/UI/HUD")
 @onready var camera = get_node("/root/Main/Camera2D")
+
 @warning_ignore("unused_signal")
 signal production_menu_opened
 @warning_ignore("unused_signal")
@@ -67,7 +69,7 @@ func update_visual():
 	# Cambiar color del sprite según dueño
 	match team:
 		0: $Sprite2D.modulate = Color(1, 1, 1)      # Neutral
-		1: $Sprite2D.modulate = Color(0.5, 1, 0.5)  # Player 1
+		1: $Sprite2D.modulate = Color(0.0, 0.396, 0.957, 1.0)  # Player 1
 		2: $Sprite2D.modulate = Color(1, 0.5, 0.5)  # Player 2
 
 	# Actualizar label
@@ -252,7 +254,7 @@ func _on_unit_button_pressed(unit: String, cost: int):
 	
 	hud.update_income_funds()
 	main.all_units.append(unit_instance)
-	main.update_fog_of_war()
+	
 	# Sincronizar producción en multiplayer (solo si existe el método y estamos conectados)
 	if main.has_method("sync_unit_production") and main.multiplayer.multiplayer_peer != null:
 		main.sync_unit_production.rpc(building_position.x, building_position.y, unit, team, cost)

@@ -2,9 +2,9 @@
 
 [ext_resource type="PackedScene" uid="uid://d3tyw1iai4n62" path="res://scenes/units/base_unit.tscn" id="1_yck7h"]
 [ext_resource type="Script" uid="uid://iscc74kim8s8" path="res://scripts/raider.gd" id="2_2643g"]
-[ext_resource type="Texture2D" uid="uid://va6kdmmptkux" path="res://art/units/Raider2.png" id="3_ajnv4"]
+[ext_resource type="Texture2D" uid="uid://va6kdmmptkux" path="res://art/units/Raider.png" id="3_ajnv4"]
 
-[node name="RaiderUnit" instance=ExtResource("1_yck7h")]
+[node name="Raider" instance=ExtResource("1_yck7h")]
 script = ExtResource("2_2643g")
 mark_range = 4
 movement_range = 4
