@@ -24,7 +24,10 @@ var save_path = "user://savegame.save"
 var action_menu_instance = null
 var is_menu_open := false
 var attack_mode := false
+var bash_mode := false
 var mark_mode := false
+var thrust_mode := false
+var volley_mode := false
 var selected_unit: MapUnit
 var potential_targets: Array[MapUnit] = []
 var is_ai_processing := false
@@ -64,7 +67,25 @@ var is_tracing_path: bool = false
 var last_cursor_pos: Vector2i
 var is_collapsed_to_astar: bool = false
 const UNIT_TERRAIN_COSTS = {
-	"Infantry": {
+	"Sword": {
+		"PLAINS": 1,
+		"MOUNTAIN": 3,  # Infantry pay 2 MP for mountains
+		"WALL": 99,    # Infantry move through forests easily
+		"RIVER": 2,     # Rivers cost 2 MP
+		"FOREST": 2,
+		"OCEAN": 99,      # Cannot move on water
+		"CITY": 1,
+	},
+	"Archer": {
+		"PLAINS": 1,
+		"MOUNTAIN": 3,  # Infantry pay 2 MP for mountains
+		"WALL": 99,    # Infantry move through forests easily
+		"RIVER": 2,     # Rivers cost 2 MP
+		"FOREST": 2,
+		"OCEAN": 99,      # Cannot move on water
+		"CITY": 1,
+	},
+	"Spear": {
 		"PLAINS": 1,
 		"MOUNTAIN": 3,  # Infantry pay 2 MP for mountains
 		"WALL": 99,    # Infantry move through forests easily
@@ -82,7 +103,7 @@ const UNIT_TERRAIN_COSTS = {
 		"OCEAN": 1,      # Cannot move on water
 		"CITY": 1,
 	},
-	"Naval": {
+	"Junker": {
 		"PLAINS": 99,
 		"MOUNTAIN": 99, # Recon cannot cross mountains
 		"FOREST": 99,    # Forests slow recon
@@ -104,7 +125,17 @@ var ai_units: Array[MapUnit] = []
 var active_overlay: TileMap
 var active_units: Node
 var active_fog_tilemap: TileMap
-
+var bash_overlay_set: Array[Vector2i] = []
+var thrust_overlay_up: Array[Vector2i] = []
+var thrust_overlay_down: Array[Vector2i] = []
+var thrust_overlay_right: Array[Vector2i] = []
+var thrust_overlay_left: Array[Vector2i] = []
+var thrust_positions = thrust_overlay_up \
+	+ thrust_overlay_down \
+	+ thrust_overlay_right \
+	+ thrust_overlay_left
+var volley_tiles: Array[Vector2i] = []
+var archer_attack_range_tiles: Array[Vector2i] = []
 ### ========================== UNIT MOVEMENT LOGIC ========================== ###
 
 # MOVEMENT FUNCTIONS (WRAPPED + NORMAL)
@@ -550,6 +581,10 @@ func update_fog_of_war():
 	all_visible_tiles = raider_visible_tiles + mapunit_visible_tiles
 	
 
+	for b in $MapLayer/Buildings.get_children():
+		if b.team ==  1:
+			fog_tilemap.set_cell(0, b.building_position, -1)
+
 	for unit in all_units:
 		if unit.team == 2:
 			if unit.is_raider():
@@ -905,6 +940,26 @@ func _unhandled_input(event):
 		
 		if attack_mode:
 			try_attack(grid_pos)
+
+		if bash_mode:
+			for pos in bash_overlay_set:
+				if grid_pos == pos:
+					try_bash(bash_overlay_set)
+
+		if thrust_mode:
+			if grid_pos in thrust_overlay_up:
+				try_thrust(thrust_overlay_up)
+			if grid_pos in thrust_overlay_down:
+				try_thrust(thrust_overlay_down)
+			if grid_pos in thrust_overlay_right:
+				try_thrust(thrust_overlay_right)
+			if grid_pos in thrust_overlay_left:
+				try_thrust(thrust_overlay_left)
+
+		if volley_mode:
+			if grid_pos in volley_tiles:
+				try_volley(volley_tiles)
+
 		else:
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:
@@ -940,12 +995,14 @@ func _unhandled_input(event):
 						break
 
 	if event.is_action_pressed("RMClick"):
-		if attack_mode or mark_mode:
+		if attack_mode or mark_mode or bash_mode or thrust_mode or volley_mode:
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:
 					unit.grid_position = unit.original_position
 					end_attack_mode()
 					end_mark_mode()
+					end_bash_mode()
+					end_thrust_mode()
 					unit.select()
 					return
 		else:
@@ -1178,6 +1235,9 @@ func show_action_menu(unit: MapUnit):
 	var attack_btn = action_menu_instance.get_node("VBoxContainer/Attack")
 	var mark_btn = action_menu_instance.get_node("VBoxContainer/Mark")  # Add this line
 	var capture_btn = action_menu_instance.get_node("VBoxContainer/Capture")
+	var bash_btn = action_menu_instance.get_node("VBoxContainer/Bash")
+	var thrust_btn = action_menu_instance.get_node("VBoxContainer/Thrust")
+	var volley_btn = action_menu_instance.get_node("VBoxContainer/Volley")
 	var has_targets = false
 	var has_mark_targets = false
 
@@ -1194,16 +1254,79 @@ func show_action_menu(unit: MapUnit):
 
 	attack_btn.visible = has_targets
 	mark_btn.visible = has_mark_targets and unit is Raider_Unit  # Only show for raiders
-	capture_btn.visible = unit.unit_type == "Infantry" and building_underneath != null and building_underneath.team != unit.team
+	capture_btn.visible = (unit.unit_type == "Sword" or "Archer" or "Spear") and (building_underneath != null) and (building_underneath.team != unit.team)
+	bash_btn.visible = unit.unit_type == "Spear"
+	thrust_btn.visible = unit.unit_type == "Sword"
+	volley_btn.visible = unit.unit_type == "Archer"
 
 	attack_btn.pressed.connect(_on_attack_pressed.bind())
 	mark_btn.pressed.connect(_on_mark_pressed.bind())  # Connect mark button
 	cancel_btn.pressed.connect(_on_cancel_pressed)
 	move_btn.pressed.connect(_on_move_confirmed)
 	capture_btn.pressed.connect(_on_capture_pressed.bind(unit, building_underneath))
+	bash_btn.pressed.connect(_on_bash_pressed.bind())
+	thrust_btn.pressed.connect(_on_thrust_pressed.bind())
+	volley_btn.pressed.connect(_on_volley_pressed.bind())
 
 	is_menu_open = true
 	update_cursor_visibility()
+
+func _on_thrust_pressed():
+	thrust_overlay_up.clear()
+	thrust_overlay_down.clear()
+	thrust_overlay_right.clear()
+	thrust_overlay_left.clear()
+	thrust_positions.clear()
+	active_overlay.clear()
+	close_action_menu()
+	thrust_mode = true
+
+	for i in range(1,3):
+		thrust_overlay_up.append(selected_unit.grid_position + Vector2i(0,-i))
+		active_overlay.set_cell(0, selected_unit.grid_position + Vector2i(0,-i), 0, Vector2i.ZERO)
+		thrust_overlay_down.append(selected_unit.grid_position + Vector2i(0,i))
+		active_overlay.set_cell(0, selected_unit.grid_position + Vector2i(0,i), 0, Vector2i.ZERO)
+		thrust_overlay_right.append(selected_unit.grid_position + Vector2i(i,0))
+		active_overlay.set_cell(0, selected_unit.grid_position + Vector2i(i,0), 0, Vector2i.ZERO)
+		thrust_overlay_left.append(selected_unit.grid_position + Vector2i(-i,0))
+		active_overlay.set_cell(0, selected_unit.grid_position + Vector2i(-i,0), 0, Vector2i.ZERO)
+
+	for u in active_units.get_children():
+		u.update_visual_state()
+		if u.grid_position in thrust_positions and u.team != selected_unit.team:
+			u.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+
+func _on_bash_pressed():
+	bash_overlay_set.clear()
+	active_overlay.clear()
+	close_action_menu()
+	bash_mode = true
+	for x in range(-1, 2):
+		for y in range(-1,2):
+			if x == 0 and y == 0:
+				continue
+			bash_overlay_set.append(selected_unit.grid_position + Vector2i(x,y))
+
+			# Poner el tile del highlight
+	for pos in bash_overlay_set:
+		active_overlay.set_cell(0, pos, 0, Vector2i.ZERO)
+
+	for u in active_units.get_children():
+		u.update_visual_state()
+		for pos in bash_overlay_set:
+			if u.grid_position == pos and u.team != selected_unit.team:
+				u.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+
+func _on_volley_pressed():
+	volley_tiles.clear()
+	archer_attack_range_tiles.clear()
+	active_overlay.clear()
+	close_action_menu()
+	volley_mode = true
+	for a in range(-selected_unit.attack_range, selected_unit.attack_range + 1):
+		for b in range(-selected_unit.attack_range, selected_unit.attack_range + 1):
+			if abs(a) + abs(b) <= selected_unit.attack_range:
+				archer_attack_range_tiles.append(selected_unit.grid_position + Vector2i(a,b))
 
 func close_action_menu():
 	if action_menu_instance:
@@ -1231,7 +1354,8 @@ func _on_cancel_pressed():
 		is_tracing_path = false
 		cursor_path.clear()
 	close_action_menu()
-	#active_overlay.clear()
+	active_overlay.clear()
+	bash_overlay_set.clear()
 
 func _on_mark_pressed():
 	close_action_menu()
@@ -1266,7 +1390,13 @@ func _on_move_confirmed():
 
 func _on_attack_pressed():
 	close_action_menu()
-	show_attack_options(selected_unit)
+	attack_mode = true
+	potential_targets.clear()
+	for target in active_units.get_children():
+		# Only **visible units** can be targeted
+		if target.visible and selected_unit.can_attack(target):
+			potential_targets.append(target)
+			target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
 
 func get_building_at(pos: Vector2i) -> Building:
 	for b in $MapLayer/Buildings.get_children():
@@ -1342,7 +1472,6 @@ func get_attackable_tiles(unit: MapUnit) -> Array[Vector2i]:
 		for x in range(-unit.attack_range, unit.attack_range + 1):
 			for y in range(-unit.attack_range, unit.attack_range + 1):
 				var attack_pos = move_cell + Vector2i(x, y)
-				
 				# Verificar si está dentro del rango de ataque (patrón diamante)
 				if (abs(x) + abs(y)) <= unit.attack_range and _in_bounds(attack_pos):
 					# Añadir si no está ya en la lista
@@ -1378,17 +1507,6 @@ func hide_attack_range():
 	showing_attack_range = false
 	current_attack_range_unit = null
 
-func show_attack_options(unit: MapUnit):
-	update_active_layers()
-	selected_unit = unit
-	attack_mode = true
-	potential_targets.clear()
-	for target in active_units.get_children():
-		# Only **visible units** can be targeted
-		if target.visible and unit.can_attack(target):
-			potential_targets.append(target)
-			target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
-
 func try_attack(grid_pos: Vector2i):
 	update_active_layers()
 	for unit in active_units.get_children():
@@ -1397,6 +1515,28 @@ func try_attack(grid_pos: Vector2i):
 			end_attack_mode()
 			active_overlay.clear()
 			return
+
+func try_bash(bash_pos: Array[Vector2i]):
+	for pos in bash_pos:
+		for unit in active_units.get_children():
+			if unit.grid_position == pos and unit.team != selected_unit.team:
+				selected_unit.bash_attacking(unit)
+				unit.update_visual_state()
+	selected_unit.current_state = MapUnit.UnitState.MOVED
+	active_overlay.clear()
+	end_bash_mode()
+	return
+
+func try_thrust(thrust_pos):
+	for pos in thrust_pos:
+		for unit in active_units.get_children():
+			if unit.grid_position == pos and unit.team != selected_unit.team:
+				selected_unit.thrust_attacking(unit)
+				unit.update_visual_state()
+	selected_unit.current_state = MapUnit.UnitState.MOVED
+	active_overlay.clear()
+	end_thrust_mode()
+	return
 
 func try_mark(grid_pos: Vector2i):
 	update_active_layers()
@@ -1407,21 +1547,61 @@ func try_mark(grid_pos: Vector2i):
 			active_overlay.clear()
 			return
 
+func try_volley(volley_pos: Array[Vector2i]):
+	for pos in volley_pos:
+		for unit in active_units.get_children():
+			if unit.grid_position == pos and unit.team != selected_unit.team:
+				selected_unit.volley_attacking(unit)
+				unit.update_visual_state()
+	selected_unit.current_state = MapUnit.UnitState.MOVED
+	active_overlay.clear()
+	end_volley_mode()
+	return
+
+func end_volley_mode():
+	update_active_layers()
+	volley_mode = false
+	volley_tiles.clear()
+	archer_attack_range_tiles.clear()
+	active_overlay.clear()
+	for unit in all_units:
+		unit.update_visual_state()
+	update_fog_of_war()
+
 func end_mark_mode():
 	update_active_layers()
 	mark_mode = false
-	for unit in active_units.get_children():
-		if unit in potential_targets or unit.modulate == Color(1, 0.5, 0.5):
-			unit.update_visual_state()
+	for unit in all_units:
+		unit.update_visual_state()
 	potential_targets.clear()
+	update_fog_of_war()
+
+func end_thrust_mode():
+	update_active_layers()
+	thrust_mode = false
+	thrust_overlay_up.clear()
+	thrust_overlay_down.clear()
+	thrust_overlay_right.clear()
+	thrust_overlay_left.clear()
+	thrust_positions.clear()
+	active_overlay.clear()
+	for unit in all_units:
+		unit.update_visual_state()
+	update_fog_of_war()
+
+func end_bash_mode():
+	update_active_layers()
+	bash_mode = false
+	bash_overlay_set.clear()
+	for unit in all_units:
+		unit.update_visual_state()
 	update_fog_of_war()
 
 func end_attack_mode():
 	update_active_layers()
 	attack_mode = false
-	for unit in active_units.get_children():
-		if unit in potential_targets or unit.modulate == Color(2, 0.5, 0.5):
-			unit.update_visual_state()
+	for unit in all_units:
+		unit.update_visual_state()
 	potential_targets.clear()
 	update_fog_of_war()
 
@@ -1437,17 +1617,62 @@ func _process(_delta):
 		cursor_highlight.set_cell(0, cursor_grid_pos, 0, Vector2i.ZERO)
 		
 		# Show movement arrow when a unit is selected
-		if not attack_mode and not is_menu_open and not input_locked and not mark_mode:
+		if not (attack_mode or is_menu_open or input_locked or mark_mode or bash_mode or thrust_mode or volley_mode):
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:
 					update_movement_arrow(unit, cursor_grid_pos)
 					break  # Only show arrow for one selected unit
 	else:
 		cursor_highlight.clear()
+	
+	if thrust_mode == true:
+		for pos in thrust_overlay_up:
+			if cursor_grid_pos in thrust_overlay_up:
+					active_overlay.set_cell(0,pos,1,Vector2i.ZERO)
+			else:
+				active_overlay.set_cell(0,pos,0,Vector2i.ZERO)
+		for pos in thrust_overlay_down:
+			if cursor_grid_pos in thrust_overlay_down:
+					active_overlay.set_cell(0,pos,1,Vector2i.ZERO)
+			else:
+				active_overlay.set_cell(0,pos,0,Vector2i.ZERO)
+		for pos in thrust_overlay_right:
+			if cursor_grid_pos in thrust_overlay_right:
+					active_overlay.set_cell(0,pos,1,Vector2i.ZERO)
+			else:
+				active_overlay.set_cell(0,pos,0,Vector2i.ZERO)
+		for pos in thrust_overlay_left:
+			if cursor_grid_pos in thrust_overlay_left:
+					active_overlay.set_cell(0,pos,1,Vector2i.ZERO)
+			else:
+				active_overlay.set_cell(0,pos,0,Vector2i.ZERO)
+
+	if volley_mode == true:
+		active_overlay.clear()
+		volley_tiles.clear()
+		if cursor_grid_pos in archer_attack_range_tiles:
+			active_overlay.set_cell(0,cursor_grid_pos,0,Vector2i.ZERO)
+			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(0,1),0,Vector2i.ZERO)
+			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(0,-1),0,Vector2i.ZERO)
+			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(1,0),0,Vector2i.ZERO)
+			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(-1,0),0,Vector2i.ZERO)
+			volley_tiles.append(cursor_grid_pos)
+			volley_tiles.append(cursor_grid_pos + Vector2i(0,1))
+			volley_tiles.append(cursor_grid_pos + Vector2i(0,-1))
+			volley_tiles.append(cursor_grid_pos + Vector2i(1,0))
+			volley_tiles.append(cursor_grid_pos + Vector2i(-1,0))
+			for u in active_units.get_children():
+				u.update_visual_state()
+				if u.grid_position in volley_tiles and u.team != selected_unit.team:
+					u.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+		else:
+			for pos in archer_attack_range_tiles:
+				active_overlay.clear()
+			for u in active_units.get_children():
+				u.update_visual_state()
 
 func update_cursor_visibility():
 	cursor_highlight.visible = not is_menu_open
-
 
 ### ========================== AI LOGIC ========================== ###
 

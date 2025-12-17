@@ -31,6 +31,9 @@ var action_menu_instance = null
 var is_menu_open := false
 var attack_mode := false
 var mark_mode := false
+var bash_mode := false
+var thrust_mode := false
+var volley_mode := false
 var selected_unit: MapUnit
 var potential_targets: Array[MapUnit] = []
 var raider_view_enabled = false
@@ -56,35 +59,64 @@ var movement_arrow: Line2D
 var cursor_path: Array[Vector2i] = []
 var is_tracing_path: bool = false
 var is_collapsed_to_astar: bool = false
-
+var bash_overlay_set: Array[Vector2i] = []
+var thrust_overlay_up: Array[Vector2i] = []
+var thrust_overlay_down: Array[Vector2i] = []
+var thrust_overlay_right: Array[Vector2i] = []
+var thrust_overlay_left: Array[Vector2i] = []
+var thrust_positions = thrust_overlay_up \
+	+ thrust_overlay_down \
+	+ thrust_overlay_right \
+	+ thrust_overlay_left
+var volley_tiles: Array[Vector2i] = []
+var archer_attack_range_tiles: Array[Vector2i] = []
 const UNIT_TERRAIN_COSTS = {
-	"Infantry": {
+	"Sword": {
 		"PLAINS": 1,
-		"MOUNTAIN": 3,
-		"WALL": 99,
-		"RIVER": 2,
+		"MOUNTAIN": 3,  # Infantry pay 2 MP for mountains
+		"WALL": 99,    # Infantry move through forests easily
+		"RIVER": 2,     # Rivers cost 2 MP
 		"FOREST": 2,
-		"OCEAN": 99,
+		"OCEAN": 99,      # Cannot move on water
+		"CITY": 1,
+	},
+	"Archer": {
+		"PLAINS": 1,
+		"MOUNTAIN": 3,  # Infantry pay 2 MP for mountains
+		"WALL": 99,    # Infantry move through forests easily
+		"RIVER": 2,     # Rivers cost 2 MP
+		"FOREST": 2,
+		"OCEAN": 99,      # Cannot move on water
+		"CITY": 1,
+	},
+	"Spear": {
+		"PLAINS": 1,
+		"MOUNTAIN": 3,  # Infantry pay 2 MP for mountains
+		"WALL": 99,    # Infantry move through forests easily
+		"RIVER": 2,     # Rivers cost 2 MP
+		"FOREST": 2,
+		"OCEAN": 99,      # Cannot move on water
 		"CITY": 1,
 	},
 	"Raider": {
 		"PLAINS": 1,
-		"MOUNTAIN": 1,
-		"FOREST": 1,
-		"RIVER": 1,
+		"MOUNTAIN": 1, # Tanks CANNOT cross mountains
+		"FOREST": 1,    # Forests slow down tanks
+		"RIVER": 1,    # Tanks cannot cross rivers
 		"WALL": 1,
-		"OCEAN": 1,
+		"OCEAN": 1,      # Cannot move on water
 		"CITY": 1,
 	},
-	"Naval": {
+	"Junker": {
 		"PLAINS": 99,
-		"MOUNTAIN": 99,
-		"FOREST": 99,
-		"RIVER": 99,
-		"ROAD": 99,
+		"MOUNTAIN": 99, # Recon cannot cross mountains
+		"FOREST": 99,    # Forests slow recon
+		"RIVER": 99,    # Cannot cross rivers
+		"ROAD": 99,      # Roads are fast
 		"OCEAN": 1,
 		"CITY": 99,
 	},
+	# Add more unit types as needed
 }
 
 ### ========================== ACTIVE CONTEXT ========================== ###
@@ -382,7 +414,6 @@ func sync_game_state(state: Dictionary):
 	start_turn(current_player_team)
 	update_fog_of_war()
 	hud.update_income_funds()
-
 
 ### ========================== MOVEMENT FUNCTIONS (copiadas del PvE) ========================== ###
 
@@ -946,7 +977,11 @@ func update_fog_of_war():
 							mapunit_visible_tiles.append(pos)
 	
 	all_visible_tiles = raider_visible_tiles + mapunit_visible_tiles
-	
+
+	for b in $MapLayer/Buildings.get_children():
+		if b.team ==  viewing_team:
+			fog_tilemap.set_cell(0, b.building_position, -1)
+
 	# Agregar posiciones reveladas por ambush
 	for pos in ambush_revealed_positions:
 		if pos not in all_visible_tiles:
@@ -1135,24 +1170,44 @@ func _unhandled_input(event):
 		return
 	if current_player_team != player_id or input_locked:
 		return
-	
+
 	if event.is_action_pressed("LMClick"):
 		if is_menu_open:
 			return
-		
+
 		if cursor_path:
 			cursor_path.clear()
 		is_tracing_path = false
-		
+
 		var mouse_pos = get_global_mouse_position()
 		var grid_pos = Vector2i(mouse_pos / 32)
-		
+
 		if mark_mode:
 			try_mark(grid_pos)
 			return
-		
+
 		if attack_mode:
 			try_attack(grid_pos)
+
+		if bash_mode:
+			for pos in bash_overlay_set:
+				if grid_pos == pos:
+					try_bash(bash_overlay_set)
+
+		if thrust_mode:
+			if grid_pos in thrust_overlay_up:
+				try_thrust(thrust_overlay_up)
+			if grid_pos in thrust_overlay_down:
+				try_thrust(thrust_overlay_down)
+			if grid_pos in thrust_overlay_right:
+				try_thrust(thrust_overlay_right)
+			if grid_pos in thrust_overlay_left:
+				try_thrust(thrust_overlay_left)
+
+		if volley_mode:
+			if grid_pos in volley_tiles:
+				try_volley(volley_tiles)
+
 		else:
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:
@@ -1185,14 +1240,15 @@ func _unhandled_input(event):
 					if unit.grid_position == grid_pos:
 						show_action_menu(unit)
 						break
-	
+
 	if event.is_action_pressed("RMClick"):
-		if attack_mode or mark_mode:
+		if attack_mode or mark_mode or bash_mode or thrust_mode or volley_mode:
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:
 					unit.grid_position = unit.original_position
 					end_attack_mode()
 					end_mark_mode()
+					end_bash_mode()
 					unit.select()
 					return
 		else:
@@ -1206,7 +1262,7 @@ func _unhandled_input(event):
 					if unit.grid_position == grid_pos and unit.visible and unit.current_state != unit.UnitState.SELECTED:
 						clicked_unit = unit
 						break
-				
+
 				if clicked_unit:
 					show_attack_range(clicked_unit)
 				else:
@@ -1377,8 +1433,12 @@ func show_action_menu(unit: MapUnit):
 	var attack_btn = action_menu_instance.get_node("VBoxContainer/Attack")
 	var mark_btn = action_menu_instance.get_node("VBoxContainer/Mark")
 	var capture_btn = action_menu_instance.get_node("VBoxContainer/Capture")
+	var bash_btn = action_menu_instance.get_node("VBoxContainer/Bash")
+	var thrust_btn = action_menu_instance.get_node("VBoxContainer/Thrust")
+	var volley_btn = action_menu_instance.get_node("VBoxContainer/Volley")
 	var has_targets = false
 	var has_mark_targets = false
+	
 	
 	for other in active_units.get_children():
 		if other.visible:
@@ -1391,16 +1451,223 @@ func show_action_menu(unit: MapUnit):
 	
 	attack_btn.visible = has_targets
 	mark_btn.visible = has_mark_targets and unit is Raider_Unit
-	capture_btn.visible = unit.unit_type == "Infantry" and building_underneath != null and building_underneath.team != unit.team
-	
+	capture_btn.visible = (unit.unit_type == "Sword" or "Archer" or "Spear") and (building_underneath != null) and (building_underneath.team != unit.team)
+	bash_btn.visible = unit.unit_type == "Spear"
+	thrust_btn.visible = unit.unit_type == "Sword"
+	volley_btn.visible = unit.unit_type == "Archer"
+
 	attack_btn.pressed.connect(_on_attack_pressed)
 	mark_btn.pressed.connect(_on_mark_pressed)
 	cancel_btn.pressed.connect(_on_cancel_pressed)
 	move_btn.pressed.connect(_on_move_confirmed)
 	capture_btn.pressed.connect(_on_capture_pressed.bind(unit, building_underneath))
-	
+	bash_btn.pressed.connect(_on_bash_pressed.bind())
+	thrust_btn.pressed.connect(_on_thrust_pressed.bind())
+	volley_btn.pressed.connect(_on_volley_pressed.bind())
+
 	is_menu_open = true
 	update_cursor_visibility()
+
+func _on_volley_pressed():
+	volley_tiles.clear()
+	archer_attack_range_tiles.clear()
+	active_overlay.clear()
+	close_action_menu()
+	volley_mode = true
+	for a in range(-selected_unit.attack_range, selected_unit.attack_range + 1):
+		for b in range(-selected_unit.attack_range, selected_unit.attack_range + 1):
+			if abs(a) + abs(b) <= selected_unit.attack_range:
+				archer_attack_range_tiles.append(selected_unit.grid_position + Vector2i(a,b))
+
+func _on_bash_pressed():
+	bash_overlay_set.clear()
+	active_overlay.clear()
+	close_action_menu()
+	bash_mode = true
+	for x in range(-1, 2):
+		for y in range(-1,2):
+			if x == 0 and y == 0:
+				continue
+			bash_overlay_set.append(selected_unit.grid_position + Vector2i(x,y))
+
+			# Poner el tile del highlight
+	for pos in bash_overlay_set:
+		active_overlay.set_cell(0, pos, 0, Vector2i.ZERO)
+
+	for u in active_units.get_children():
+		u.update_visual_state()
+		for pos in bash_overlay_set:
+			if u.grid_position == pos and u.team != selected_unit.team:
+				u.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+
+func _on_thrust_pressed():
+	thrust_overlay_up.clear()
+	thrust_overlay_down.clear()
+	thrust_overlay_right.clear()
+	thrust_overlay_left.clear()
+	thrust_positions.clear()
+	active_overlay.clear()
+	close_action_menu()
+	thrust_mode = true
+
+	for i in range(1,3):
+		thrust_overlay_up.append(selected_unit.grid_position + Vector2i(0,-i))
+		active_overlay.set_cell(0, selected_unit.grid_position + Vector2i(0,-i), 0, Vector2i.ZERO)
+		thrust_overlay_down.append(selected_unit.grid_position + Vector2i(0,i))
+		active_overlay.set_cell(0, selected_unit.grid_position + Vector2i(0,i), 0, Vector2i.ZERO)
+		thrust_overlay_right.append(selected_unit.grid_position + Vector2i(i,0))
+		active_overlay.set_cell(0, selected_unit.grid_position + Vector2i(i,0), 0, Vector2i.ZERO)
+		thrust_overlay_left.append(selected_unit.grid_position + Vector2i(-i,0))
+		active_overlay.set_cell(0, selected_unit.grid_position + Vector2i(-i,0), 0, Vector2i.ZERO)
+
+	for u in active_units.get_children():
+		u.update_visual_state()
+		if u.grid_position in thrust_positions and u.team != selected_unit.team:
+			u.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+
+func try_volley(volley_pos: Array[Vector2i]):
+	var attacker_id = get_unit_identifier(selected_unit)
+	var path_x: Array = []
+	var path_y: Array = []
+	var is_wrapped = false
+	var attacker_old_x = selected_unit.original_position.x
+	var attacker_old_y = selected_unit.original_position.y
+	var volley_targets: Array = []
+
+	for pos in volley_pos:
+		for unit in active_units.get_children():
+			if unit.grid_position == pos and unit.team != selected_unit.team:
+				selected_unit.volley_attacking(unit)
+				volley_targets.append(get_unit_identifier(unit))
+				unit.update_visual_state()
+
+	# Movimiento (igual que attack)
+	if multiplayer.multiplayer_peer != null:
+		if selected_unit.current_state == MapUnit.UnitState.MOVED:
+			if selected_unit.has_meta("pending_move_path"):
+				var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+				for p in pending_path:
+					path_x.append(p.x)
+					path_y.append(p.y)
+				if selected_unit.has_meta("pending_move_is_wrapped"):
+					is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+		sync_unit_move_and_volley.rpc(
+			attacker_old_x, attacker_old_y,
+			path_x, path_y, is_wrapped,
+			attacker_id.team, attacker_id.unit_type,
+			volley_targets
+		)
+
+	selected_unit.current_state = MapUnit.UnitState.MOVED
+	active_overlay.clear()
+	end_volley_mode()
+	return
+
+func try_thrust(thrust_pos):
+	var attacker_id = get_unit_identifier(selected_unit)
+	var path_x: Array = []
+	var path_y: Array = []
+	var is_wrapped = false
+	var attacker_old_x = selected_unit.original_position.x
+	var attacker_old_y = selected_unit.original_position.y
+	var thrust_targets: Array = []
+
+	for pos in thrust_pos:
+		for unit in active_units.get_children():
+			if unit.grid_position == pos and unit.team != selected_unit.team:
+				selected_unit.thrust_attacking(unit)
+				thrust_targets.append(get_unit_identifier(unit))
+				unit.update_visual_state()
+
+	# Movimiento (igual que attack)
+	if multiplayer.multiplayer_peer != null:
+		if selected_unit.current_state == MapUnit.UnitState.MOVED:
+			if selected_unit.has_meta("pending_move_path"):
+				var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+				for p in pending_path:
+					path_x.append(p.x)
+					path_y.append(p.y)
+				if selected_unit.has_meta("pending_move_is_wrapped"):
+					is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+		sync_unit_move_and_thrust.rpc(
+			attacker_old_x, attacker_old_y,
+			path_x, path_y, is_wrapped,
+			attacker_id.team, attacker_id.unit_type,
+			thrust_targets
+		)
+
+	selected_unit.current_state = MapUnit.UnitState.MOVED
+	active_overlay.clear()
+	end_thrust_mode()
+
+func try_bash(bash_pos: Array[Vector2i]):
+	var attacker_id = get_unit_identifier(selected_unit)
+	var path_x: Array = []
+	var path_y: Array = []
+	var is_wrapped = false
+	var attacker_old_x = selected_unit.original_position.x
+	var attacker_old_y = selected_unit.original_position.y
+	var bash_targets: Array = []
+
+	for pos in bash_pos:
+		for unit in active_units.get_children():
+			if unit.grid_position == pos and unit.team != selected_unit.team:
+				selected_unit.bash_attacking(unit)
+				bash_targets.append(get_unit_identifier(unit))
+				unit.update_visual_state()
+
+	# Movimiento (igual que attack)
+	if multiplayer.multiplayer_peer != null:
+		if selected_unit.current_state == MapUnit.UnitState.MOVED:
+			if selected_unit.has_meta("pending_move_path"):
+				var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+				for p in pending_path:
+					path_x.append(p.x)
+					path_y.append(p.y)
+				if selected_unit.has_meta("pending_move_is_wrapped"):
+					is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+
+		sync_unit_move_and_bash.rpc(
+			attacker_old_x, attacker_old_y,
+			path_x, path_y, is_wrapped,
+			attacker_id.team, attacker_id.unit_type,
+			bash_targets
+		)
+
+	selected_unit.current_state = MapUnit.UnitState.MOVED
+	active_overlay.clear()
+	end_bash_mode()
+
+func end_volley_mode():
+	update_active_layers()
+	volley_mode = false
+	volley_tiles.clear()
+	archer_attack_range_tiles.clear()
+	active_overlay.clear()
+	for unit in all_units:
+		unit.update_visual_state()
+	update_fog_of_war()
+
+func end_bash_mode():
+	update_active_layers()
+	bash_mode = false
+	bash_overlay_set.clear()
+	for unit in all_units:
+		unit.update_visual_state()
+	update_fog_of_war()
+
+func end_thrust_mode():
+	update_active_layers()
+	thrust_mode = false
+	thrust_overlay_up.clear()
+	thrust_overlay_down.clear()
+	thrust_overlay_right.clear()
+	thrust_overlay_left.clear()
+	thrust_positions.clear()
+	active_overlay.clear()
+	for unit in all_units:
+		unit.update_visual_state()
+	update_fog_of_war()
 
 func close_action_menu():
 	if action_menu_instance:
@@ -1573,19 +1840,19 @@ func try_attack(grid_pos: Vector2i):
 	for unit in active_units.get_children():
 		if unit.grid_position == grid_pos && selected_unit.can_attack(unit):
 			selected_unit.attacking(unit)
-			
+
 			# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
 			if multiplayer.multiplayer_peer != null:
 				var attacker_id = get_unit_identifier(selected_unit)
 				var target_id = get_unit_identifier(unit)
-				
+
 				# Si la unidad se movió, enviar path completo; si no, enviar path vacío
 				var path_x: Array = []
 				var path_y: Array = []
 				var is_wrapped = false
 				var attacker_old_x = selected_unit.original_position.x
 				var attacker_old_y = selected_unit.original_position.y
-				
+
 				if selected_unit.current_state == MapUnit.UnitState.MOVED:
 					# La unidad se movió este turno, enviar su path
 					if selected_unit.has_meta("pending_move_path"):
@@ -1595,7 +1862,7 @@ func try_attack(grid_pos: Vector2i):
 							path_y.append(p.y)
 						if selected_unit.has_meta("pending_move_is_wrapped"):
 							is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
-				
+
 				# Enviar RPC con movimiento y ataque atomicamente
 				sync_unit_move_and_attack.rpc(
 					attacker_old_x, attacker_old_y,
@@ -1603,15 +1870,149 @@ func try_attack(grid_pos: Vector2i):
 					attacker_id.team, attacker_id.unit_type,
 					target_id.x, target_id.y, target_id.team, target_id.unit_type
 				)
-			
+
 			# Limpiar selección visual sin cambiar el estado MOVED
 			selected_unit.update_visual_state()
 			hud.hide_unit_info()
 			selected_unit = null
-			
 			end_attack_mode()
 			active_overlay.clear()
 			return
+
+@rpc("any_peer", "reliable")
+func sync_unit_move_and_volley(
+	attacker_old_x: int, attacker_old_y: int,
+	path_x: Array, path_y: Array, is_wrapped: bool,
+	attacker_team: int, attacker_type: String,
+	volley_targets: Array):
+
+	var sender_id = multiplayer.get_remote_sender_id()
+	var sender_player_id = 1 if sender_id == 1 else 2
+
+	if sender_player_id != current_player_team:
+		return
+	if sender_player_id == player_id:
+		return
+
+	var attacker = find_unit_by_identifier({
+		"x": attacker_old_x,
+		"y": attacker_old_y,
+		"team": attacker_team,
+		"unit_type": attacker_type
+	})
+	if not attacker:
+		return
+
+	# Movimiento (idéntico a attack)
+	if not path_x.is_empty():
+		var path: Array[Vector2i] = []
+		for i in range(path_x.size()):
+			path.append(Vector2i(path_x[i], path_y[i]))
+
+		if is_wrapped:
+			move_unit_along_wrapped_path(attacker, path, true)
+		else:
+			move_unit_along_path(attacker, path, true)
+
+		await get_tree().create_timer(path.size() * 0.14).timeout
+
+	# BASH REAL
+	for t in volley_targets:
+		var target = find_unit_by_identifier(t)
+		if target:
+			attacker.thrust_attacking(target)
+
+	update_fog_of_war()
+
+@rpc("any_peer", "reliable")
+func sync_unit_move_and_bash(
+	attacker_old_x: int, attacker_old_y: int,
+	path_x: Array, path_y: Array, is_wrapped: bool,
+	attacker_team: int, attacker_type: String,
+	bash_targets: Array):
+
+	var sender_id = multiplayer.get_remote_sender_id()
+	var sender_player_id = 1 if sender_id == 1 else 2
+
+	if sender_player_id != current_player_team:
+		return
+	if sender_player_id == player_id:
+		return
+
+	var attacker = find_unit_by_identifier({
+		"x": attacker_old_x,
+		"y": attacker_old_y,
+		"team": attacker_team,
+		"unit_type": attacker_type
+	})
+	if not attacker:
+		return
+
+	# Movimiento (idéntico a attack)
+	if not path_x.is_empty():
+		var path: Array[Vector2i] = []
+		for i in range(path_x.size()):
+			path.append(Vector2i(path_x[i], path_y[i]))
+
+		if is_wrapped:
+			move_unit_along_wrapped_path(attacker, path, true)
+		else:
+			move_unit_along_path(attacker, path, true)
+
+		await get_tree().create_timer(path.size() * 0.14).timeout
+
+	# BASH REAL
+	for t in bash_targets:
+		var target = find_unit_by_identifier(t)
+		if target:
+			attacker.bash_attacking(target)
+
+	update_fog_of_war()
+
+@rpc("any_peer", "reliable")
+func sync_unit_move_and_thrust(
+	attacker_old_x: int, attacker_old_y: int,
+	path_x: Array, path_y: Array, is_wrapped: bool,
+	attacker_team: int, attacker_type: String,
+	thrust_targets: Array):
+
+	var sender_id = multiplayer.get_remote_sender_id()
+	var sender_player_id = 1 if sender_id == 1 else 2
+
+	if sender_player_id != current_player_team:
+		return
+	if sender_player_id == player_id:
+		return
+
+	var attacker = find_unit_by_identifier({
+		"x": attacker_old_x,
+		"y": attacker_old_y,
+		"team": attacker_team,
+		"unit_type": attacker_type
+	})
+	if not attacker:
+		return
+
+	# Movimiento (idéntico a attack)
+	if not path_x.is_empty():
+		var path: Array[Vector2i] = []
+		for i in range(path_x.size()):
+			path.append(Vector2i(path_x[i], path_y[i]))
+
+		if is_wrapped:
+			move_unit_along_wrapped_path(attacker, path, true)
+		else:
+			move_unit_along_path(attacker, path, true)
+
+		await get_tree().create_timer(path.size() * 0.14).timeout
+
+	# BASH REAL
+	for t in thrust_targets:
+		var target = find_unit_by_identifier(t)
+		if target:
+			attacker.thrust_attacking(target)
+
+	update_fog_of_war()
 
 @rpc("any_peer", "reliable")
 func sync_unit_move_and_attack(
@@ -1622,13 +2023,13 @@ func sync_unit_move_and_attack(
 	
 	var sender_id = multiplayer.get_remote_sender_id()
 	var sender_player_id = 1 if sender_id == 1 else 2
-	
+
 	if sender_player_id != current_player_team:
 		return
-	
+
 	if sender_player_id == player_id:
 		return
-	
+
 	# Buscar la unidad atacante por su posición vieja (antes del movimiento)
 	var attacker = find_unit_by_identifier({
 		"x": attacker_old_x,
@@ -1636,26 +2037,26 @@ func sync_unit_move_and_attack(
 		"team": attacker_team,
 		"unit_type": attacker_type
 	})
-	
+
 	if not attacker:
 		return
-	
+
 	# PASO 1: Si hay path, reproducir el movimiento
 	if not path_x.is_empty():
 		# Reconstruir path desde arrays
 		var path: Array[Vector2i] = []
 		for i in range(path_x.size()):
 			path.append(Vector2i(path_x[i], path_y[i]))
-		
+
 		# Aplicar movimiento visual (tween) y actualización de estado
 		if is_wrapped:
 			move_unit_along_wrapped_path(attacker, path, true)
 		else:
 			move_unit_along_path(attacker, path, true)
-		
+
 		# Esperar a que el tween termine (0.14s por tile aproximadamente)
 		await get_tree().create_timer(path.size() * 0.14).timeout
-	
+
 	# PASO 2: Ejecutar el ataque
 	var target = find_unit_by_identifier({
 		"x": target_x,
@@ -1663,7 +2064,7 @@ func sync_unit_move_and_attack(
 		"team": target_team,
 		"unit_type": target_type
 	})
-	
+
 	if target:
 		attacker.attacking(target)
 		update_fog_of_war()
@@ -1793,20 +2194,15 @@ func sync_building_capture(building_x: int, building_y: int, new_team: int, capt
 
 @rpc("any_peer", "reliable")
 func sync_unit_production(building_x: int, building_y: int, unit_type: String, team: int, cost: int):
-	var sender_id = multiplayer.get_remote_sender_id()
-	if sender_id != current_player_team:
-		return
-	
-	var building = get_building_at(Vector2i(building_x, building_y))
-	if not building:
-		return
-	
 	var unit_scene = load("res://scenes/units/" + unit_type + ".tscn")
-	if not unit_scene:
-		return
-	
 	var unit_instance = unit_scene.instantiate()
+	var color_suffix = "_Blue" if team == 1 else "_Red"
+	var sprite_path = "res://art/units/%s1%s.png" % [unit_type, color_suffix]
 	$Units.add_child(unit_instance)
+
+	if unit_instance.get_node("Sprite2D") and ResourceLoader.exists(sprite_path):
+		unit_instance.get_node("Sprite2D").texture = load(sprite_path)
+
 	unit_instance.team = team
 	unit_instance.grid_position = Vector2i(building_x, building_y)
 	unit_instance.current_state = MapUnit.UnitState.MOVED
@@ -1929,13 +2325,59 @@ func _process(_delta):
 	if _in_bounds(cursor_grid_pos):
 		cursor_highlight.set_cell(0, cursor_grid_pos, 0, Vector2i.ZERO)
 		
-		if not attack_mode and not is_menu_open and not input_locked and not mark_mode:
+		if not(attack_mode or is_menu_open or input_locked or mark_mode or bash_mode or thrust_mode or volley_mode):
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:
 					update_movement_arrow(unit, cursor_grid_pos)
 					break
 	else:
 		cursor_highlight.clear()
+
+	if thrust_mode == true:
+		for pos in thrust_overlay_up:
+			if cursor_grid_pos in thrust_overlay_up:
+					active_overlay.set_cell(0,pos,1,Vector2i.ZERO)
+			else:
+				active_overlay.set_cell(0,pos,0,Vector2i.ZERO)
+		for pos in thrust_overlay_down:
+			if cursor_grid_pos in thrust_overlay_down:
+					active_overlay.set_cell(0,pos,1,Vector2i.ZERO)
+			else:
+				active_overlay.set_cell(0,pos,0,Vector2i.ZERO)
+		for pos in thrust_overlay_right:
+			if cursor_grid_pos in thrust_overlay_right:
+					active_overlay.set_cell(0,pos,1,Vector2i.ZERO)
+			else:
+				active_overlay.set_cell(0,pos,0,Vector2i.ZERO)
+		for pos in thrust_overlay_left:
+			if cursor_grid_pos in thrust_overlay_left:
+					active_overlay.set_cell(0,pos,1,Vector2i.ZERO)
+			else:
+				active_overlay.set_cell(0,pos,0,Vector2i.ZERO)
+
+	if volley_mode == true:
+		active_overlay.clear()
+		volley_tiles.clear()
+		if cursor_grid_pos in archer_attack_range_tiles:
+			active_overlay.set_cell(0,cursor_grid_pos,0,Vector2i.ZERO)
+			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(0,1),0,Vector2i.ZERO)
+			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(0,-1),0,Vector2i.ZERO)
+			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(1,0),0,Vector2i.ZERO)
+			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(-1,0),0,Vector2i.ZERO)
+			volley_tiles.append(cursor_grid_pos)
+			volley_tiles.append(cursor_grid_pos + Vector2i(0,1))
+			volley_tiles.append(cursor_grid_pos + Vector2i(0,-1))
+			volley_tiles.append(cursor_grid_pos + Vector2i(1,0))
+			volley_tiles.append(cursor_grid_pos + Vector2i(-1,0))
+			for u in active_units.get_children():
+				u.update_visual_state()
+				if u.grid_position in volley_tiles and u.team != selected_unit.team:
+					u.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+		else:
+			for pos in archer_attack_range_tiles:
+				active_overlay.clear()
+			for u in active_units.get_children():
+				u.update_visual_state()
 
 func update_cursor_visibility():
 	cursor_highlight.visible = not is_menu_open

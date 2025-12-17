@@ -30,6 +30,24 @@ theme_override_colors/font_hover_color = Color(0.972549, 0.0666667, 0, 1)
 text = "Capture
 "
 
+[node name="Bash" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.0666667, 0, 1)
+text = "Bash
+"
+
+[node name="Thrust" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.0666667, 0, 1)
+text = "Thrust
+"
+
+[node name="Volley" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.0666667, 0, 1)
+text = "Volley
+"
+
 [node name="Cancel" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.0666667, 0, 1)

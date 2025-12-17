@@ -2,16 +2,16 @@ class_name MapUnit
 extends Area2D
 
 # Core Properties
-@export var movement_range := 3
+@export var movement_range : int
 @export var health : int = 100:
 	set(value):
 		health = value
 		$HealthLabel.text = str(health)
-@export var attack := 10
-@export var attack_range := 1
-@export var defense := 2
+@export var attack : int 
+@export var attack_range : int
+@export var defense : int
 @export var team := 1
-@export var vision_range := 4
+@export var vision_range : int
 @onready var main = get_node("/root/Main")
 @onready var hud = get_node("/root/Main/UI/HUD")
 enum UnitState { UNSELECTED, SELECTED, MOVED, UNSELECTABLE }
@@ -22,7 +22,45 @@ var grid_position : Vector2i:
 var current_player_team: int = 1  # Default to team 1
 var original_position : Vector2i
 var marked_turns: int = 0
-@export var unit_type: String  # Can be "Infantry", "Tank", "Recon", etc.
+@export var unit_type: String  # Can be "Sword", "Spear", "Archer", etc.
+const damage_matrix = {
+	"Sword": {
+		"Sword": 1,
+		"Archer": 2.5,
+		"Spear": .6,
+		"Junker": .2,
+		"Raider": 0,
+	},
+	"Archer": {
+		"Sword": .6,
+		"Archer": 1,
+		"Spear": 2.5,
+		"Junker": .5,
+		"Raider": 0,
+	},
+	"Spear": {
+		"Sword": 2.5,
+		"Archer": 1.5,
+		"Spear": 1,
+		"Junker": .5,
+		"Raider": 0,
+	},
+	"Raider": {
+		"Sword": 0,
+		"Archer": 0,
+		"Spear": 0,
+		"Junker": 0,
+		"Raider": 99,
+	},
+	"Junker": {
+		"Sword": 1,
+		"Archer": 1,
+		"Spear": 1,
+		"Junker": 1,
+		"Raider": 0,
+	},
+	# Add more unit types as needed
+}
 
 func _ready():
 	$HealthLabel.text = str(health)
@@ -128,8 +166,44 @@ func check_death():
 		queue_free()
 
 func attacking(target: MapUnit):
-	var damage = max(1, attack - target.defense)  # Basic damage formula
-	target.health -= damage
+	var multiplier_attacker = damage_matrix[unit_type][target.unit_type]
+	var damage_attacker = (multiplier_attacker * attack * health/100) - target.defense  # Basic damage formula
+	target.health -= damage_attacker
+	target.current_state = UnitState.UNSELECTABLE
+	target.check_death()
+
+	var multiplier_defender = damage_matrix[target.unit_type][unit_type]
+	var damage_defender = (multiplier_defender * target.attack * target.health/100) - defense  # Basic damage formula
+	health -= damage_defender
+	check_death()
+	current_state = UnitState.MOVED  # Can't move after attacking
+	update_visual_state()
+
+func bash_attacking(target: MapUnit):
+	var multiplier_attacker = .6*damage_matrix[unit_type][target.unit_type]
+	var damage_attacker = (multiplier_attacker * attack * health/100) - target.defense  # Basic damage formula
+	
+	target.health -= damage_attacker
+	target.current_state = UnitState.UNSELECTABLE
+	target.check_death()
+	current_state = UnitState.MOVED  # Can't move after attacking
+	update_visual_state()
+
+func thrust_attacking(target: MapUnit):
+	var multiplier_attacker = .7*damage_matrix[unit_type][target.unit_type]
+	var damage_attacker = (multiplier_attacker * attack * health/100) - target.defense  # Basic damage formula
+	
+	target.health -= damage_attacker
+	target.current_state = UnitState.UNSELECTABLE
+	target.check_death()
+	current_state = UnitState.MOVED  # Can't move after attacking
+	update_visual_state()
+
+func volley_attacking(target: MapUnit):
+	var multiplier_attacker = damage_matrix[unit_type][target.unit_type]
+	var damage_attacker = (multiplier_attacker * attack * health/100) - target.defense  # Basic damage formula
+	
+	target.health -= damage_attacker
 	target.current_state = UnitState.UNSELECTABLE
 	target.check_death()
 	current_state = UnitState.MOVED  # Can't move after attacking

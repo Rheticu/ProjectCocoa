@@ -27,8 +27,8 @@
 [ext_resource type="Texture2D" uid="uid://cs3ngdmmdba20" path="res://art/units/Raider_Red.png" id="21_57kmi"]
 [ext_resource type="Texture2D" uid="uid://cimgomiw77yli" path="res://art/ui/Grid.png" id="22_6ip0j"]
 [ext_resource type="Texture2D" uid="uid://bvrn7jgepab5i" path="res://art/units/Raider_Blue.png" id="22_l2b3n"]
-[ext_resource type="AudioStream" uid="uid://cs4gik3mpjq2m" path="res://music/Music_PVP1.mp3" id="23_i5efl"]
 [ext_resource type="Script" uid="uid://besjo1x5nximl" path="res://scripts/camera_script.gd" id="24_fikkh"]
+[ext_resource type="AudioStream" uid="uid://bs8xkoyryfryj" path="res://music/Music_PVE1.mp3" id="28_57kmi"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ir72a"]
 texture = ExtResource("3_t7m8u")
@@ -722,9 +722,6 @@ position = Vector2(176, 240)
 [node name="City7" parent="MapLayer/Buildings" instance=ExtResource("13_vl358")]
 position = Vector2(208, 176)
 
-[node name="City8" parent="MapLayer/Buildings" instance=ExtResource("13_vl358")]
-position = Vector2(336, 176)
-
 [node name="City10" parent="MapLayer/Buildings" instance=ExtResource("13_vl358")]
 position = Vector2(432, 144)
 
@@ -795,14 +792,6 @@ position = Vector2(624, 112)
 position = Vector2(336, 400)
 team = 2
 
-[node name="Barracks" parent="MapLayer/Buildings" instance=ExtResource("15_0nl4k")]
-position = Vector2(432, 400)
-team = 2
-
-[node name="Barracks2" parent="MapLayer/Buildings" instance=ExtResource("15_0nl4k")]
-position = Vector2(400, 368)
-team = 2
-
 [node name="Barracks3" parent="MapLayer/Buildings" instance=ExtResource("15_0nl4k")]
 position = Vector2(560, 400)
 team = 2
@@ -810,10 +799,6 @@ team = 2
 [node name="Barracks4" parent="MapLayer/Buildings" instance=ExtResource("15_0nl4k")]
 position = Vector2(592, 368)
 team = 2
-
-[node name="Barracks5" parent="MapLayer/Buildings" instance=ExtResource("15_0nl4k")]
-position = Vector2(208, 48)
-team = 1
 
 [node name="Barracks6" parent="MapLayer/Buildings" instance=ExtResource("15_0nl4k")]
 position = Vector2(176, 80)
@@ -823,21 +808,17 @@ team = 1
 position = Vector2(176, 144)
 team = 1
 
-[node name="Barracks8" parent="MapLayer/Buildings" instance=ExtResource("15_0nl4k")]
-position = Vector2(144, 176)
-team = 1
-
 [node name="Units" type="Node2D" parent="."]
 z_index = 4
 
-[node name="Sword" parent="Units" instance=ExtResource("16_4nerc")]
-position = Vector2(48, 144)
+[node name="Sword8" parent="Units" instance=ExtResource("16_4nerc")]
+position = Vector2(112, 112)
 
-[node name="Sprite2D" parent="Units/Sword" index="0"]
+[node name="Sprite2D" parent="Units/Sword8" index="0"]
 texture = ExtResource("17_t35fj")
 
 [node name="Sword2" parent="Units" instance=ExtResource("16_4nerc")]
-position = Vector2(48, 208)
+position = Vector2(592, 176)
 team = 2
 
 [node name="Sprite2D" parent="Units/Sword2" index="0"]
@@ -865,18 +846,18 @@ layer_0/tile_data = PackedInt32Array(458765, 0, 0, 524301, 0, 0, 524302, 0, 0, 5
 [node name="RaiderUnits" type="Node2D" parent="."]
 z_index = 6
 
-[node name="RaiderUnit2" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(144, 112)
+[node name="RaiderUnit7" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
+position = Vector2(528, 304)
 team = 2
 
-[node name="Sprite2D" parent="RaiderUnits/RaiderUnit2" index="0"]
+[node name="Sprite2D" parent="RaiderUnits/RaiderUnit7" index="0"]
 texture = ExtResource("21_57kmi")
 flip_h = false
 
-[node name="RaiderUnit3" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(528, 336)
+[node name="RaiderUnit4" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
+position = Vector2(112, 144)
 
-[node name="Sprite2D" parent="RaiderUnits/RaiderUnit3" index="0"]
+[node name="Sprite2D" parent="RaiderUnits/RaiderUnit4" index="0"]
 texture = ExtResource("22_l2b3n")
 
 [node name="UI" type="Node2D" parent="."]
@@ -908,8 +889,7 @@ layer_0/tile_data = PackedInt32Array(0, 1, 0, 65536, 1, 0, 131072, 1, 0, 196608,
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
 visible = false
-stream = ExtResource("23_i5efl")
-autoplay = true
+stream = ExtResource("28_57kmi")
 attenuation = 1e-05
 parameters/looping = true
 metadata/_edit_lock_ = true
@@ -920,7 +900,7 @@ position = Vector2(320, 176)
 script = ExtResource("24_fikkh")
 metadata/_edit_lock_ = true
 
-[editable path="Units/Sword"]
+[editable path="Units/Sword8"]
 [editable path="Units/Sword2"]
-[editable path="RaiderUnits/RaiderUnit2"]
-[editable path="RaiderUnits/RaiderUnit3"]
+[editable path="RaiderUnits/RaiderUnit7"]
+[editable path="RaiderUnits/RaiderUnit4"]

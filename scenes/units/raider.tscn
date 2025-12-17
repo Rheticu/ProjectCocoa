@@ -7,8 +7,11 @@
 [node name="Raider" instance=ExtResource("1_yck7h")]
 script = ExtResource("2_2643g")
 mark_range = 4
-movement_range = 4
+movement_range = 3
 attack = 5
+attack_range = 1
+defense = 10
+vision_range = 4
 unit_type = "Raider"
 
 [node name="Sprite2D" parent="." index="0"]

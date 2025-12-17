@@ -26,10 +26,10 @@ var production_menu_instance = null
 var production_data = {
 	"Barracks": {
 		"units": ["Sword", "Archer", "Spear"],
-		"costs": {"Sword": 1000, "Archer": 800, "Spear": 2000}},
+		"costs": {"Sword": 2000, "Archer": 1000, "Spear": 5000}},
 	"Port": {
 		"units": ["Junker"],
-		"costs": {"Junker": 3000}}
+		"costs": {"Junker": 7000}}
 }
 
 func _ready():
@@ -69,7 +69,7 @@ func update_visual():
 	# Cambiar color del sprite según dueño
 	match team:
 		0: $Sprite2D.modulate = Color(1, 1, 1)      # Neutral
-		1: $Sprite2D.modulate = Color(0.0, 0.396, 0.957, 1.0)  # Player 1
+		1: $Sprite2D.modulate = Color(0.0, 0.635, 0.957, 1.0)  # Player 1
 		2: $Sprite2D.modulate = Color(1, 0.5, 0.5)  # Player 2
 
 	# Actualizar label
@@ -254,6 +254,7 @@ func _on_unit_button_pressed(unit: String, cost: int):
 	
 	hud.update_income_funds()
 	main.all_units.append(unit_instance)
+	main.update_fog_of_war()
 	
 	# Sincronizar producción en multiplayer (solo si existe el método y estamos conectados)
 	if main.has_method("sync_unit_production") and main.multiplayer.multiplayer_peer != null:

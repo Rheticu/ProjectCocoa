@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Cocoa_0.0.1"
-run/main_scene="res://scenes/Mains/PVPMain1.tscn"
+run/main_scene="uid://yhoimdm5imww"
 config/features=PackedStringArray("4.5", "Forward Plus")
 
 [display]

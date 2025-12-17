@@ -9,7 +9,7 @@ attack = 15
 attack_range = 3
 defense = 1
 vision_range = 1
-unit_type = "Infantry"
+unit_type = "Archer"
 
 [node name="Sprite2D" parent="." index="0"]
 position = Vector2(0, -5)
