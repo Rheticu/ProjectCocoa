@@ -80,7 +80,7 @@ func _on_input_event(_viewport, event, _shape_idx):
 	# Verificar is_ai_processing solo si existe (PvE), en PvP no existe
 	if "is_ai_processing" in main and main.is_ai_processing:
 		return 
-	
+
 	if not main.raider_view_enabled:
 		if event.is_action_pressed("LMClick"):
 			# Verificar si es PvP y si es mi turno
@@ -91,7 +91,7 @@ func _on_input_event(_viewport, event, _shape_idx):
 			else:
 				# PvE: solo team 1 puede seleccionar
 				can_select = (team == 1)
-			
+
 			# Player unit selection
 			if (current_state == UnitState.UNSELECTED
 				and can_select
@@ -99,7 +99,7 @@ func _on_input_event(_viewport, event, _shape_idx):
 				and not main.attack_mode
 				and not main.mark_mode):
 				select()
-			
+
 			# Enemy unit inspection (right-click functionality moved to left-click)
 			elif (team != main.current_player_team
 				and not main.is_menu_open
@@ -110,10 +110,10 @@ func _on_input_event(_viewport, event, _shape_idx):
 				for unit in main.active_units.get_children():
 					if unit.team == main.current_player_team and unit.current_state != MapUnit.UnitState.MOVED:
 						unit.deselect()
-				
+
 				main.update_active_layers()
 				main.active_overlay.clear()
-				
+
 				# Show movement range of this enemy unit
 				var reachable = main.get_reachable_cells(self.grid_position, self.movement_range, self, self.is_raider())
 				for pos in reachable:
@@ -167,13 +167,15 @@ func check_death():
 
 func attacking(target: MapUnit):
 	var multiplier_attacker = damage_matrix[unit_type][target.unit_type]
-	var damage_attacker = (multiplier_attacker * attack * health/100) - target.defense  # Basic damage formula
+	var damage_attacker = max(0.0, (multiplier_attacker * attack * health/100) - target.defense)  # Basic damage formula
 	target.health -= damage_attacker
 	target.current_state = UnitState.UNSELECTABLE
 	target.check_death()
 
 	var multiplier_defender = damage_matrix[target.unit_type][unit_type]
-	var damage_defender = (multiplier_defender * target.attack * target.health/100) - defense  # Basic damage formula
+	var damage_defender = max(0.0, (multiplier_defender * target.attack * target.health/100) - defense)  # Basic damage formula
+	if (unit_type == "Archer" and target.unit_type != "Archer"):
+		return 
 	health -= damage_defender
 	check_death()
 	current_state = UnitState.MOVED  # Can't move after attacking
@@ -181,7 +183,7 @@ func attacking(target: MapUnit):
 
 func bash_attacking(target: MapUnit):
 	var multiplier_attacker = .6*damage_matrix[unit_type][target.unit_type]
-	var damage_attacker = (multiplier_attacker * attack * health/100) - target.defense  # Basic damage formula
+	var damage_attacker = max(0.0, (multiplier_attacker * attack * health/100) - target.defense)  # Basic damage formula
 	
 	target.health -= damage_attacker
 	target.current_state = UnitState.UNSELECTABLE
@@ -191,7 +193,7 @@ func bash_attacking(target: MapUnit):
 
 func thrust_attacking(target: MapUnit):
 	var multiplier_attacker = .7*damage_matrix[unit_type][target.unit_type]
-	var damage_attacker = (multiplier_attacker * attack * health/100) - target.defense  # Basic damage formula
+	var damage_attacker = max(0.0, (multiplier_attacker * attack * health/100) - target.defense)  # Basic damage formula
 	
 	target.health -= damage_attacker
 	target.current_state = UnitState.UNSELECTABLE
@@ -201,7 +203,7 @@ func thrust_attacking(target: MapUnit):
 
 func volley_attacking(target: MapUnit):
 	var multiplier_attacker = damage_matrix[unit_type][target.unit_type]
-	var damage_attacker = (multiplier_attacker * attack * health/100) - target.defense  # Basic damage formula
+	var damage_attacker = max(0.0, (multiplier_attacker * attack * health/100) - target.defense)  # Basic damage formula
 	
 	target.health -= damage_attacker
 	target.current_state = UnitState.UNSELECTABLE

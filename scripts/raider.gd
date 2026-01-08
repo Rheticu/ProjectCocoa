@@ -26,12 +26,14 @@ func _on_input_event(_viewport, event, _shape_idx):
 				current_state == UnitState.UNSELECTED
 				and can_select
 				and not main.is_menu_open
-				and not main.attack_mode):
+				and not main.attack_mode
+				and not main.mark_mode):
 				select()
 			if (
 				team != main.current_player_team
 				and not main.is_menu_open
 				and not main.attack_mode
+				and not main.mark_mode
 				and current_state != UnitState.UNSELECTABLE):
 				main.update_active_layers()
 				main.active_overlay.clear()
@@ -64,7 +66,7 @@ func can_mark(target: MapUnit) -> bool:
 
 func marking(target: MapUnit):
 	# Mark the target unit
-	target.marked_turns = 6  # Mark for 3 turns
+	target.marked_turns = 4  # Mark for 3 turns
 	current_state = UnitState.MOVED  # Can't move after marking
 	update_visual_state()
 	

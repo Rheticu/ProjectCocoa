@@ -44,6 +44,9 @@ var current_player_team: int = 1
 var team1_income: int = 0
 var team2_income: int = 0
 var turn: int = 1
+enum Element { FIRE, WATER, EARTH, WOOD, METAL }
+var current_element: Element = Element.FIRE
+
 
 ### ========================== MAP CONFIG ========================== ###
 @export var map_size := Vector2i(22, 15)
@@ -147,7 +150,7 @@ func find_unit_by_identifier(identifier: Dictionary) -> MapUnit:
 func _ready():
 	# Configurar multiplayer
 	setup_multiplayer()
-	
+
 	# Inicializar juego
 	hud.visible = true
 	update_active_layers()
@@ -155,9 +158,9 @@ func _ready():
 	for unit in $RaiderUnits.get_children():
 		unit.visible = false
 	$RaiderLayer.visible = false
-	
+
 	hud.end_turn_requested.connect(_on_end_turn_pressed)
-	
+
 	# Inicializar pathfinding
 	astar.region = Rect2i(Vector2i(0, 0), map_size)
 	astar.cell_size = Vector2(32, 32)
@@ -165,7 +168,7 @@ func _ready():
 	astar.default_estimate_heuristic = AStarGrid2D.HEURISTIC_MANHATTAN
 	astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
 	astar.update()
-	
+
 	astar_raider.clear()
 	astar_raider.region = Rect2i(Vector2i(-map_size.x, 0), Vector2i(map_size.x * 3, map_size.y))
 	astar_raider.cell_size = Vector2(32, 32)
@@ -173,7 +176,7 @@ func _ready():
 	astar_raider.default_estimate_heuristic = AStarGrid2D.HEURISTIC_MANHATTAN
 	astar_raider.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
 	astar_raider.update()
-	
+
 	# Calcular ingresos iniciales
 	team1_income = 0
 	team2_income = 0
@@ -185,25 +188,20 @@ func _ready():
 			team1_income += b.income_per_turn
 		elif b.team == 2:
 			team2_income += b.income_per_turn
-	
-	if current_player_team == 1:
-		team1_funds += team1_income
-	elif current_player_team == 2:
-		team2_funds += team2_income
-	
+
 	hud.update_income_funds()
-	
+
 	# Configurar menú de pausa
 	pause_menu.resume_game.connect(_on_resume_game)
 	pause_menu.exit_game.connect(_on_exit_game)
-	
+
 	# Input actions
 	if not InputMap.has_action("ui_cancel"):
 		var event = InputEventKey.new()
 		event.keycode = KEY_ESCAPE
 		InputMap.add_action("ui_cancel")
 		InputMap.action_add_event("ui_cancel", event)
-	
+
 	# Conectar menú de multiplayer
 	if multiplayer_menu:
 		multiplayer_menu.create_game_pressed.connect(_on_create_game_pressed)
@@ -280,7 +278,6 @@ func create_host():
 		multiplayer_menu.hide()
 
 func join_host():
-	
 	var peer = ENetMultiplayerPeer.new()
 	var error = peer.create_client(connection_ip, connection_port)
 	
@@ -298,13 +295,11 @@ func join_host():
 		multiplayer_menu.set_status("Conectando...")
 
 func _on_player_connected(id: int):
-
 	if player_id == 1:  # Si soy el host
 		await get_tree().create_timer(0.5).timeout
 		send_game_state_to_client(id)
 
 func _on_player_disconnected(_id: int):
-
 	# Volver al menú de conexión
 	if multiplayer_menu:
 		multiplayer_menu.show()
@@ -1033,13 +1028,15 @@ func update_fog_of_war():
 					unit.modulate.a = 1.0
 			else:
 				unit.modulate.a = 1.0
-	
+
 	# Manejar raiders
 	for unit in $RaiderUnits.get_children():
 		if unit.team == viewing_team:
 			unit.visible = raider_view_enabled
 		else:
-			if raider_view_enabled:
+			if unit.marked_turns > 0:
+				unit.visible = true
+			elif raider_view_enabled:
 				unit.visible = unit.grid_position in raider_visible_tiles
 			else:
 				unit.visible = false
@@ -1118,24 +1115,30 @@ func _on_end_turn_pressed():
 
 func end_turn():
 	update_active_layers()
-	
+
 	for unit in all_units:
 		if unit.marked_turns > 0:
 			unit.marked_turns -= 1
-	
+
 	current_player_team = 2 if current_player_team == 1 else 1
-	
+
 	# Sincronizar cambio de turno
 	if multiplayer.multiplayer_peer != null:
 		sync_turn_change.rpc(current_player_team)
-	
+
 	for unit in all_units:
 		if unit.team == current_player_team:
 			unit.current_state = MapUnit.UnitState.UNSELECTED
 			unit.update_visual_state()
-	
+
 	start_turn(current_player_team)
 	update_fog_of_war()
+	if multiplayer.is_server():
+		advance_element()
+		sync_element_change.rpc(current_element)
+
+func advance_element():
+	current_element = ((current_element + 1) % Element.size()) as Element
 
 @rpc("any_peer", "reliable")
 func sync_turn_change(new_team: int):
@@ -1156,6 +1159,10 @@ func sync_turn_change(new_team: int):
 	current_player_team = new_team
 	start_turn(new_team)
 	update_fog_of_war()
+
+@rpc("authority", "reliable")
+func sync_element_change(new_element: int):
+	current_element = new_element as Element
 
 ### ========================== INPUT HANDLING ========================== ###
 
@@ -1188,25 +1195,32 @@ func _unhandled_input(event):
 
 		if attack_mode:
 			try_attack(grid_pos)
+			return
 
 		if bash_mode:
 			for pos in bash_overlay_set:
 				if grid_pos == pos:
 					try_bash(bash_overlay_set)
+					return
 
 		if thrust_mode:
 			if grid_pos in thrust_overlay_up:
 				try_thrust(thrust_overlay_up)
+				return
 			if grid_pos in thrust_overlay_down:
 				try_thrust(thrust_overlay_down)
+				return
 			if grid_pos in thrust_overlay_right:
 				try_thrust(thrust_overlay_right)
+				return
 			if grid_pos in thrust_overlay_left:
 				try_thrust(thrust_overlay_left)
+				return
 
 		if volley_mode:
 			if grid_pos in volley_tiles:
 				try_volley(volley_tiles)
+				return
 
 		else:
 			for unit in active_units.get_children():
@@ -1249,6 +1263,8 @@ func _unhandled_input(event):
 					end_attack_mode()
 					end_mark_mode()
 					end_bash_mode()
+					end_thrust_mode()
+					end_volley_mode()
 					unit.select()
 					return
 		else:
@@ -1386,19 +1402,7 @@ func toggle_raider_view():
 	$MapLayer/FogOfWar.visible = not raider_view_enabled
 	$MapLayer/MoveRangeOverlay.visible = not raider_view_enabled
 	$RaiderLayer.visible = raider_view_enabled
-	
-	# Calcular viewing_team igual que en update_fog_of_war()
-	var viewing_team = player_id if player_id > 0 else 1
-	
-	for unit in $RaiderUnits.get_children():
-		if unit.team == viewing_team:
-			unit.visible = raider_view_enabled
-		else:
-			if raider_view_enabled:
-				unit.visible = unit.grid_position in raider_visible_tiles
-			else:
-				unit.visible = false
-	
+
 	for unit in active_units.get_children():
 		if unit.current_state == MapUnit.UnitState.SELECTED:
 			unit.deselect()
@@ -1438,17 +1442,17 @@ func show_action_menu(unit: MapUnit):
 	var volley_btn = action_menu_instance.get_node("VBoxContainer/Volley")
 	var has_targets = false
 	var has_mark_targets = false
-	
-	
+
+
 	for other in active_units.get_children():
 		if other.visible:
 			if unit.can_attack(other):
 				has_targets = true
-	
+
 	for other in all_units:
 		if unit is Raider_Unit and unit.can_mark(other):
 			has_mark_targets = true
-	
+
 	attack_btn.visible = has_targets
 	mark_btn.visible = has_mark_targets and unit is Raider_Unit
 	capture_btn.visible = (unit.unit_type == "Sword" or "Archer" or "Spear") and (building_underneath != null) and (building_underneath.team != unit.team)
@@ -1916,11 +1920,11 @@ func sync_unit_move_and_volley(
 
 		await get_tree().create_timer(path.size() * 0.14).timeout
 
-	# BASH REAL
+	# VOLLEY REAL
 	for t in volley_targets:
 		var target = find_unit_by_identifier(t)
 		if target:
-			attacker.thrust_attacking(target)
+			attacker.volley_attacking(target)
 
 	update_fog_of_war()
 
@@ -2069,41 +2073,10 @@ func sync_unit_move_and_attack(
 		attacker.attacking(target)
 		update_fog_of_war()
 
-@rpc("any_peer", "reliable")
-func sync_attack(attacker_x: int, attacker_y: int, attacker_team: int, attacker_type: String,
-				target_x: int, target_y: int, target_team: int, target_type: String):
-	var sender_id = multiplayer.get_remote_sender_id()
-	# Validar que el sender tiene el turno actual
-	var sender_player_id = 1 if sender_id == 1 else 2
-	
-	if sender_player_id != current_player_team:
-		return
-	
-	# No procesar si es mi propia acción (ya la hice localmente)
-	if sender_player_id == player_id:
-		return
-	
-	var attacker = find_unit_by_identifier({
-		"x": attacker_x,
-		"y": attacker_y,
-		"team": attacker_team,
-		"unit_type": attacker_type
-	})
-	var target = find_unit_by_identifier({
-		"x": target_x,
-		"y": target_y,
-		"team": target_team,
-		"unit_type": target_type
-	})
-	
-	if attacker and target:
-		attacker.attacking(target)
-		update_fog_of_war()
-
 func end_attack_mode():
 	update_active_layers()
 	attack_mode = false
-	for unit in active_units.get_children():
+	for unit in all_units:
 		if unit in potential_targets or unit.modulate == Color(2, 0.5, 0.5):
 			unit.update_visual_state()
 	potential_targets.clear()
@@ -2111,65 +2084,115 @@ func end_attack_mode():
 
 func _on_mark_pressed():
 	close_action_menu()
-	show_mark_options(selected_unit)
-
-func show_mark_options(unit: Raider_Unit):
 	update_active_layers()
-	selected_unit = unit
 	mark_mode = true
 	potential_targets.clear()
 	for target in all_units:
-		if target.visible and unit.can_mark(target):
+		if target.visible and selected_unit.can_mark(target):
 			potential_targets.append(target)
 			target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
 
 func try_mark(grid_pos: Vector2i):
 	update_active_layers()
 	for unit in all_units:
-		if unit.grid_position == grid_pos && selected_unit.can_mark(unit) && selected_unit.is_raider():
+		if unit.grid_position == grid_pos && selected_unit.can_mark(unit):
 			selected_unit.marking(unit)
-			
-			# SINCRONIZAR MARK
+
+			# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
 			if multiplayer.multiplayer_peer != null:
-				var marker_id = get_unit_identifier(selected_unit)
+				var attacker_id = get_unit_identifier(selected_unit)
 				var target_id = get_unit_identifier(unit)
-				sync_mark.rpc(marker_id.x, marker_id.y, marker_id.team, marker_id.unit_type,
-					target_id.x, target_id.y, target_id.team, target_id.unit_type)
-			
-			end_mark_mode()
-			active_overlay.clear()
-			return
+
+				# Si la unidad se movió, enviar path completo; si no, enviar path vacío
+				var path_x: Array = []
+				var path_y: Array = []
+				var is_wrapped = false
+				var attacker_old_x = selected_unit.original_position.x
+				var attacker_old_y = selected_unit.original_position.y
+
+				if selected_unit.current_state == MapUnit.UnitState.MOVED:
+					# La unidad se movió este turno, enviar su path
+					if selected_unit.has_meta("pending_move_path"):
+						var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+						for p in pending_path:
+							path_x.append(p.x)
+							path_y.append(p.y)
+						if selected_unit.has_meta("pending_move_is_wrapped"):
+							is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+
+				# Enviar RPC con movimiento y ataque atomicamente
+				sync_mark.rpc(
+					attacker_old_x, attacker_old_y,
+					path_x, path_y, is_wrapped,
+					attacker_id.team, attacker_id.unit_type,
+					target_id.x, target_id.y, target_id.team, target_id.unit_type
+				)
+
+	selected_unit.current_state = MapUnit.UnitState.MOVED
+	active_overlay.clear()
+	end_mark_mode()
 
 @rpc("any_peer", "reliable")
-func sync_mark(marker_x: int, marker_y: int, marker_team: int, marker_type: String,
-			  target_x: int, target_y: int, target_team: int, target_type: String):
-	var sender_id = multiplayer.get_remote_sender_id()
-	if sender_id != current_player_team:
-		return
+func sync_mark(
+		attacker_old_x: int, attacker_old_y: int,
+		path_x: Array, path_y: Array, is_wrapped: bool,
+		attacker_team: int, attacker_type: String,
+		target_x: int, target_y: int, target_team: int, target_type: String):
 	
-	var marker = find_unit_by_identifier({
-		"x": marker_x,
-		"y": marker_y,
-		"team": marker_team,
-		"unit_type": marker_type
+	var sender_id = multiplayer.get_remote_sender_id()
+	var sender_player_id = 1 if sender_id == 1 else 2
+
+	if sender_player_id != current_player_team:
+		return
+
+	if sender_player_id == player_id:
+		return
+
+	# Buscar la unidad atacante por su posición vieja (antes del movimiento)
+	var attacker = find_unit_by_identifier({
+		"x": attacker_old_x,
+		"y": attacker_old_y,
+		"team": attacker_team,
+		"unit_type": attacker_type
 	})
+
+	if not attacker:
+		return
+
+	# PASO 1: Si hay path, reproducir el movimiento
+	if not path_x.is_empty():
+		# Reconstruir path desde arrays
+		var path: Array[Vector2i] = []
+		for i in range(path_x.size()):
+			path.append(Vector2i(path_x[i], path_y[i]))
+
+		# Aplicar movimiento visual (tween) y actualización de estado
+		if is_wrapped:
+			move_unit_along_wrapped_path(attacker, path, true)
+		else:
+			move_unit_along_path(attacker, path, true)
+
+		# Esperar a que el tween termine (0.14s por tile aproximadamente)
+		await get_tree().create_timer(path.size() * 0.14).timeout
+
+	# PASO 2: Ejecutar el ataque
 	var target = find_unit_by_identifier({
 		"x": target_x,
 		"y": target_y,
 		"team": target_team,
 		"unit_type": target_type
 	})
-	
-	if marker and target:
-		marker.marking(target)
-		update_fog_of_war()
+
+	if target:
+		attacker.marking(target)
+
+	update_fog_of_war()
 
 func end_mark_mode():
 	update_active_layers()
 	mark_mode = false
-	for unit in active_units.get_children():
-		if unit in potential_targets or unit.modulate == Color(1, 0.5, 0.5):
-			unit.update_visual_state()
+	for unit in all_units:
+		unit.update_visual_state()
 	potential_targets.clear()
 	update_fog_of_war()
 

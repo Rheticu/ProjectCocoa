@@ -1,4 +1,4 @@
-[gd_scene load_steps=49 format=3 uid="uid://yhoimdm5imww"]
+[gd_scene load_steps=54 format=3 uid="uid://yhoimdm5imww"]
 
 [ext_resource type="Script" uid="uid://b6e3b3t2lgeaj" path="res://scripts/PVPmain.gd" id="1_l8vrk"]
 [ext_resource type="PackedScene" path="res://scenes/UI/MultiplayerMenu.tscn" id="1_multiplayer"]
@@ -22,11 +22,16 @@
 [ext_resource type="Texture2D" uid="uid://sxitdcwrhrcj" path="res://art/units/Sword1_Red.png" id="18_6vq0k"]
 [ext_resource type="PackedScene" uid="uid://byh7snpnf3bsp" path="res://scenes/units/raider.tscn" id="18_yxu57"]
 [ext_resource type="Texture2D" uid="uid://dtdwjl5542sfv" path="res://art/ui/Azul1.png" id="19_aamli"]
+[ext_resource type="PackedScene" uid="uid://cuf1c4vjray5e" path="res://scenes/units/Archer.tscn" id="19_iotnw"]
+[ext_resource type="Texture2D" uid="uid://dcpgap4gwge0m" path="res://art/units/Archer1_Blue.png" id="20_meiya"]
 [ext_resource type="PackedScene" uid="uid://bntl4xh52v78l" path="res://scenes/UI/HUD.tscn" id="20_rd7is"]
 [ext_resource type="PackedScene" uid="uid://de8ekkjxtbtho" path="res://scenes/UI/PauseMenu.tscn" id="21_50gm2"]
 [ext_resource type="Texture2D" uid="uid://cs3ngdmmdba20" path="res://art/units/Raider_Red.png" id="21_57kmi"]
+[ext_resource type="Texture2D" uid="uid://dfmqq3i5c2k6k" path="res://art/units/Archer1_Red.png" id="21_obkvy"]
+[ext_resource type="PackedScene" uid="uid://cwuvcd8l431ts" path="res://scenes/units/Spear.tscn" id="22_6ce04"]
 [ext_resource type="Texture2D" uid="uid://cimgomiw77yli" path="res://art/ui/Grid.png" id="22_6ip0j"]
 [ext_resource type="Texture2D" uid="uid://bvrn7jgepab5i" path="res://art/units/Raider_Blue.png" id="22_l2b3n"]
+[ext_resource type="Texture2D" uid="uid://eadp1jqv7s8f" path="res://art/units/Spear1_Blue.png" id="23_ahm5y"]
 [ext_resource type="Script" uid="uid://besjo1x5nximl" path="res://scripts/camera_script.gd" id="24_fikkh"]
 [ext_resource type="AudioStream" uid="uid://bs8xkoyryfryj" path="res://music/Music_PVE1.mp3" id="28_57kmi"]
 
@@ -812,18 +817,46 @@ team = 1
 z_index = 4
 
 [node name="Sword8" parent="Units" instance=ExtResource("16_4nerc")]
-position = Vector2(112, 112)
+position = Vector2(208, 208)
 
 [node name="Sprite2D" parent="Units/Sword8" index="0"]
 texture = ExtResource("17_t35fj")
 
 [node name="Sword2" parent="Units" instance=ExtResource("16_4nerc")]
-position = Vector2(592, 176)
+position = Vector2(336, 176)
+movement_range = 5
 team = 2
 
 [node name="Sprite2D" parent="Units/Sword2" index="0"]
 texture = ExtResource("18_6vq0k")
 flip_h = true
+
+[node name="Archer" parent="Units" instance=ExtResource("19_iotnw")]
+position = Vector2(240, 176)
+
+[node name="Sprite2D" parent="Units/Archer" index="0"]
+texture = ExtResource("20_meiya")
+
+[node name="Archer2" parent="Units" instance=ExtResource("19_iotnw")]
+position = Vector2(304, 208)
+team = 2
+
+[node name="Sprite2D" parent="Units/Archer2" index="0"]
+texture = ExtResource("21_obkvy")
+flip_h = true
+
+[node name="Spear" parent="Units" instance=ExtResource("22_6ce04")]
+position = Vector2(336, 208)
+team = 2
+
+[node name="Sprite2D" parent="Units/Spear" index="0"]
+flip_h = true
+
+[node name="Spear2" parent="Units" instance=ExtResource("22_6ce04")]
+position = Vector2(240, 208)
+
+[node name="Sprite2D" parent="Units/Spear2" index="0"]
+texture = ExtResource("23_ahm5y")
 
 [node name="RaiderLayer" type="Node2D" parent="."]
 visible = false
@@ -847,17 +880,67 @@ layer_0/tile_data = PackedInt32Array(458765, 0, 0, 524301, 0, 0, 524302, 0, 0, 5
 z_index = 6
 
 [node name="RaiderUnit7" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(528, 304)
+position = Vector2(272, 272)
 team = 2
+vision_range = 3
 
 [node name="Sprite2D" parent="RaiderUnits/RaiderUnit7" index="0"]
 texture = ExtResource("21_57kmi")
 flip_h = false
 
+[node name="RaiderUnit8" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
+position = Vector2(272, 144)
+team = 2
+vision_range = 3
+
+[node name="Sprite2D" parent="RaiderUnits/RaiderUnit8" index="0"]
+texture = ExtResource("21_57kmi")
+flip_h = false
+
+[node name="RaiderUnit10" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
+position = Vector2(304, 272)
+team = 2
+vision_range = 3
+
+[node name="Sprite2D" parent="RaiderUnits/RaiderUnit10" index="0"]
+texture = ExtResource("21_57kmi")
+flip_h = false
+
+[node name="RaiderUnit9" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
+position = Vector2(240, 272)
+team = 2
+vision_range = 3
+
+[node name="Sprite2D" parent="RaiderUnits/RaiderUnit9" index="0"]
+texture = ExtResource("21_57kmi")
+flip_h = false
+
 [node name="RaiderUnit4" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(112, 144)
+position = Vector2(240, 144)
+vision_range = 3
 
 [node name="Sprite2D" parent="RaiderUnits/RaiderUnit4" index="0"]
+texture = ExtResource("22_l2b3n")
+
+[node name="RaiderUnit11" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
+position = Vector2(336, 144)
+vision_range = 3
+
+[node name="Sprite2D" parent="RaiderUnits/RaiderUnit11" index="0"]
+texture = ExtResource("22_l2b3n")
+
+[node name="RaiderUnit5" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
+position = Vector2(336, 272)
+vision_range = 3
+
+[node name="Sprite2D" parent="RaiderUnits/RaiderUnit5" index="0"]
+texture = ExtResource("22_l2b3n")
+
+[node name="RaiderUnit6" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
+position = Vector2(304, 144)
+vision_range = 3
+
+[node name="Sprite2D" parent="RaiderUnits/RaiderUnit6" index="0"]
 texture = ExtResource("22_l2b3n")
 
 [node name="UI" type="Node2D" parent="."]
@@ -902,5 +985,15 @@ metadata/_edit_lock_ = true
 
 [editable path="Units/Sword8"]
 [editable path="Units/Sword2"]
+[editable path="Units/Archer"]
+[editable path="Units/Archer2"]
+[editable path="Units/Spear"]
+[editable path="Units/Spear2"]
 [editable path="RaiderUnits/RaiderUnit7"]
+[editable path="RaiderUnits/RaiderUnit8"]
+[editable path="RaiderUnits/RaiderUnit10"]
+[editable path="RaiderUnits/RaiderUnit9"]
 [editable path="RaiderUnits/RaiderUnit4"]
+[editable path="RaiderUnits/RaiderUnit11"]
+[editable path="RaiderUnits/RaiderUnit5"]
+[editable path="RaiderUnits/RaiderUnit6"]
