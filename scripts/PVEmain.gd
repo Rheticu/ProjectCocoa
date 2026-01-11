@@ -1540,11 +1540,15 @@ func try_thrust(thrust_pos):
 
 func try_mark(grid_pos: Vector2i):
 	update_active_layers()
+	# Limpiar overlay inmediatamente para prevenir que unidades enemigas muestren su rango
+	active_overlay.clear()
+	
 	for unit in all_units:
 		if unit.grid_position == grid_pos && selected_unit.can_mark(unit) && selected_unit.is_raider():
 			selected_unit.marking(unit)
-			end_mark_mode()
+			# Limpiar overlay nuevamente después del mark para asegurar
 			active_overlay.clear()
+			end_mark_mode()
 			return
 
 func try_volley(volley_pos: Array[Vector2i]):

@@ -11,8 +11,17 @@ func _on_input_event(_viewport, event, _shape_idx):
 	# Verificar is_ai_processing solo si existe (PvE), en PvP no existe
 	if "is_ai_processing" in main and main.is_ai_processing:
 		return 
+	
+	# Si estamos en mark_mode, no procesar eventos de unidades (el mark se maneja en _unhandled_input)
+	if "mark_mode" in main and main.mark_mode:
+		return
+	
 	if main.raider_view_enabled:
 		if event.is_action_pressed("LMClick"):
+			# Si estamos en mark_mode, no hacer nada (el mark se maneja en _unhandled_input)
+			if "mark_mode" in main and main.mark_mode:
+				return
+			
 			# Verificar si es PvP y si es mi turno
 			var can_select = false
 			if "player_id" in main:
@@ -29,7 +38,7 @@ func _on_input_event(_viewport, event, _shape_idx):
 				and not main.attack_mode
 				and not main.mark_mode):
 				select()
-			if (
+			elif (
 				team != main.current_player_team
 				and not main.is_menu_open
 				and not main.attack_mode

@@ -80,6 +80,10 @@ func _on_input_event(_viewport, event, _shape_idx):
 	# Verificar is_ai_processing solo si existe (PvE), en PvP no existe
 	if "is_ai_processing" in main and main.is_ai_processing:
 		return 
+	
+	# Si estamos en mark_mode, no procesar eventos de unidades (el mark se maneja en _unhandled_input)
+	if "mark_mode" in main and main.mark_mode:
+		return
 
 	if not main.raider_view_enabled:
 		if event.is_action_pressed("LMClick"):
@@ -130,7 +134,7 @@ func select():
 	main.show_movement_range(grid_position, self)
 	hud.show_unit_info(self)
 	main.hide_attack_range()
-	main.show_possible_attack_targets(self)
+	print(main.team1_funds, ",", main.team2_funds)
 
 func deselect():
 	# No cambiar el estado si la unidad ya está en MOVED (después de atacar o moverse)
@@ -175,11 +179,14 @@ func attacking(target: MapUnit):
 	var multiplier_defender = damage_matrix[target.unit_type][unit_type]
 	var damage_defender = max(0.0, (multiplier_defender * target.attack * target.health/100) - defense)  # Basic damage formula
 	if (unit_type == "Archer" and target.unit_type != "Archer"):
-		return 
-	health -= damage_defender
-	check_death()
-	current_state = UnitState.MOVED  # Can't move after attacking
-	update_visual_state()
+		check_death()
+		current_state = UnitState.MOVED  # Can't move after attacking
+		update_visual_state()
+	else:
+		health -= damage_defender
+		check_death()
+		current_state = UnitState.MOVED  # Can't move after attacking
+		update_visual_state()
 
 func bash_attacking(target: MapUnit):
 	var multiplier_attacker = .6*damage_matrix[unit_type][target.unit_type]

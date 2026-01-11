@@ -18,7 +18,7 @@ func _ready():
 	move_limit.x = (main.map_size.x * 32) - (viewport_size.x / 2)
 	move_limit.y =  (main.map_size.y * 32) - (viewport_size.y / 2)
 	min_x = (viewport_size.x / 2)
-	min_y = (viewport_size.y / 2) - 32
+	min_y = (viewport_size.y / 2)
 
 func _on_production_menu_opened():
 	production_menu_open = true

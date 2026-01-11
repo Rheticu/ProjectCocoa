@@ -39,14 +39,14 @@ var potential_targets: Array[MapUnit] = []
 var raider_view_enabled = false
 var input_locked: bool = false
 var current_player_team: int = 1
-@export var team1_funds: int = 0
-@export var team2_funds: int = 0
+var team1_funds: int
+var team2_funds: int
 var team1_income: int = 0
 var team2_income: int = 0
 var turn: int = 1
 enum Element { FIRE, WATER, EARTH, WOOD, METAL }
 var current_element: Element = Element.FIRE
-
+var inspected_unit: MapUnit = null
 
 ### ========================== MAP CONFIG ========================== ###
 @export var map_size := Vector2i(22, 15)
@@ -63,6 +63,11 @@ var cursor_path: Array[Vector2i] = []
 var is_tracing_path: bool = false
 var is_collapsed_to_astar: bool = false
 var bash_overlay_set: Array[Vector2i] = []
+var bash_overlay_up: Array[Vector2i] = []
+var bash_overlay_down: Array[Vector2i] = []
+var bash_overlay_right: Array[Vector2i] = []
+var bash_overlay_left: Array[Vector2i] = []
+var current_bash_overlay: Array[Vector2i] = []
 var thrust_overlay_up: Array[Vector2i] = []
 var thrust_overlay_down: Array[Vector2i] = []
 var thrust_overlay_right: Array[Vector2i] = []
@@ -159,7 +164,6 @@ func _ready():
 		unit.visible = false
 	$RaiderLayer.visible = false
 
-	hud.end_turn_requested.connect(_on_end_turn_pressed)
 
 	# Inicializar pathfinding
 	astar.region = Rect2i(Vector2i(0, 0), map_size)
@@ -189,8 +193,6 @@ func _ready():
 		elif b.team == 2:
 			team2_income += b.income_per_turn
 
-	hud.update_income_funds()
-
 	# Configurar menú de pausa
 	pause_menu.resume_game.connect(_on_resume_game)
 	pause_menu.exit_game.connect(_on_exit_game)
@@ -208,6 +210,19 @@ func _ready():
 		multiplayer_menu.join_game_pressed.connect(_on_join_game_pressed)
 		multiplayer_menu.ip_changed.connect(_on_ip_changed)
 		multiplayer_menu.show()  # Mostrar al inicio
+
+	await get_tree().process_frame
+	_force_canvas_refresh()
+
+	get_viewport().size_changed.connect(_on_viewport_resized)
+
+func _force_canvas_refresh():
+	var vp := get_viewport()
+	vp.canvas_transform = Transform2D()
+	vp.global_canvas_transform = Transform2D()
+
+func _on_viewport_resized():
+	_force_canvas_refresh()
 
 func setup_multiplayer():
 	multiplayer.set_multiplayer_peer(null)
@@ -266,7 +281,7 @@ func create_host():
 	multiplayer.set_multiplayer_peer(peer)
 	player_id = 1
 	current_player_team = 1
-
+	hud.update_income_funds()
 	# Cambiar título de ventana
 	get_window().title = "Player 1 - HOST"
 
@@ -276,6 +291,7 @@ func create_host():
 	if multiplayer_menu:
 		multiplayer_menu.set_status("Esperando jugador...")
 		multiplayer_menu.hide()
+	start_turn(1)
 
 func join_host():
 	var peer = ENetMultiplayerPeer.new()
@@ -314,7 +330,7 @@ func _on_connected_to_server():
 	# Para simplificar, asignamos player_id = 2 al cliente
 	player_id = 2
 	current_player_team = player_id
-
+	hud.update_income_funds()
 	# Cambiar título de ventana
 	get_window().title = "Player 2 - Client"
 
@@ -1087,7 +1103,6 @@ func start_turn(team: int):
 	
 	# Solo permitir input si es mi turno
 	if current_player_team == player_id:
-		hud.set_end_turn_enabled(true)
 		# Resetear TODAS las unidades del equipo (tanto Units como RaiderUnits)
 		for unit in all_units:
 			if unit.team == team:
@@ -1098,8 +1113,6 @@ func start_turn(team: int):
 					unit.remove_meta("pending_move_path")
 					unit.remove_meta("pending_move_is_wrapped")
 	else:
-		hud.set_end_turn_enabled(false)
-		# Deseleccionar cualquier unidad seleccionada
 		for unit in all_units:
 			if unit.current_state == MapUnit.UnitState.SELECTED:
 				unit.deselect()
@@ -1178,10 +1191,12 @@ func _unhandled_input(event):
 	if current_player_team != player_id or input_locked:
 		return
 
+	if event.is_action_pressed("Enter"):
+		_on_end_turn_pressed()
+
 	if event.is_action_pressed("LMClick"):
 		if is_menu_open:
 			return
-
 		if cursor_path:
 			cursor_path.clear()
 		is_tracing_path = false
@@ -1198,10 +1213,9 @@ func _unhandled_input(event):
 			return
 
 		if bash_mode:
-			for pos in bash_overlay_set:
-				if grid_pos == pos:
-					try_bash(bash_overlay_set)
-					return
+			if grid_pos in current_bash_overlay:
+				try_bash(current_bash_overlay)
+				return
 
 		if thrust_mode:
 			if grid_pos in thrust_overlay_up:
@@ -1280,14 +1294,26 @@ func _unhandled_input(event):
 						break
 
 				if clicked_unit:
-					show_attack_range(clicked_unit)
+					if inspected_unit == clicked_unit:
+						# Click derecho otra vez en la misma unidad → toggle OFF
+						hide_attack_range()
+						inspected_unit = null
+					else:
+						# Click derecho en una unidad distinta → switch
+						hide_attack_range()
+						show_attack_range(clicked_unit)
+						inspected_unit = clicked_unit
 				else:
+					# Click derecho en tile vacío → comportamiento original
+					inspected_unit = null
+					hide_attack_range()
+
 					for unit in active_units.get_children():
 						if unit.current_state != MapUnit.UnitState.MOVED:
 							unit.deselect()
-							active_overlay.clear()
+						active_overlay.clear()
+
 					close_action_menu()
-					hide_attack_range()
 
 func create_movement_arrow():
 	if movement_arrow:
@@ -1484,6 +1510,10 @@ func _on_volley_pressed():
 				archer_attack_range_tiles.append(selected_unit.grid_position + Vector2i(a,b))
 
 func _on_bash_pressed():
+	bash_overlay_up.clear()
+	bash_overlay_down.clear()
+	bash_overlay_right.clear()
+	bash_overlay_left.clear()
 	bash_overlay_set.clear()
 	active_overlay.clear()
 	close_action_menu()
@@ -1497,6 +1527,12 @@ func _on_bash_pressed():
 			# Poner el tile del highlight
 	for pos in bash_overlay_set:
 		active_overlay.set_cell(0, pos, 0, Vector2i.ZERO)
+
+	for i in range(-1,2):
+		bash_overlay_up.append(selected_unit.grid_position + Vector2i(i,-1))
+		bash_overlay_down.append(selected_unit.grid_position + Vector2i(i,1))
+		bash_overlay_right.append(selected_unit.grid_position + Vector2i(1,i))
+		bash_overlay_left.append(selected_unit.grid_position + Vector2i(-1,i))
 
 	for u in active_units.get_children():
 		u.update_visual_state()
@@ -1656,6 +1692,7 @@ func end_bash_mode():
 	update_active_layers()
 	bash_mode = false
 	bash_overlay_set.clear()
+	current_bash_overlay.clear()
 	for unit in all_units:
 		unit.update_visual_state()
 	update_fog_of_war()
@@ -2094,6 +2131,9 @@ func _on_mark_pressed():
 
 func try_mark(grid_pos: Vector2i):
 	update_active_layers()
+	# Limpiar overlay inmediatamente para prevenir que unidades enemigas muestren su rango
+	active_overlay.clear()
+	
 	for unit in all_units:
 		if unit.grid_position == grid_pos && selected_unit.can_mark(unit):
 			selected_unit.marking(unit)
@@ -2127,6 +2167,10 @@ func try_mark(grid_pos: Vector2i):
 					attacker_id.team, attacker_id.unit_type,
 					target_id.x, target_id.y, target_id.team, target_id.unit_type
 				)
+			
+			# Limpiar overlay nuevamente después del mark para asegurar
+			active_overlay.clear()
+			break
 
 	selected_unit.current_state = MapUnit.UnitState.MOVED
 	active_overlay.clear()
@@ -2278,19 +2322,6 @@ func hide_attack_range():
 	showing_attack_range = false
 	current_attack_range_unit = null
 
-func show_possible_attack_targets(unit: MapUnit):
-	potential_targets.clear()
-	for enemy in all_units:
-		if enemy.team != unit.team:
-			enemy.update_visual_state()
-	
-	for target in all_units:
-		if (target.visible and 
-			target.team != unit.team and 
-			unit.can_attack(target)):
-			potential_targets.append(target)
-			target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
-
 func _on_building_ownership_changed(_building: Building):
 	team1_income = 0
 	team2_income = 0
@@ -2312,7 +2343,6 @@ func _in_bounds(p: Vector2i) -> bool:
 	return p.x >= 0 and p.x < map_size.x and p.y >= 0 and p.y < map_size.y
 
 func _process(_delta):
-	# PASO 1: Confirmar que _process() se ejecuta
 	# Verificar estado de conexión cuando estamos intentando conectarnos como cliente
 	if is_connecting and multiplayer.multiplayer_peer != null:
 		connection_check_timer += _delta
@@ -2378,15 +2408,53 @@ func _process(_delta):
 			else:
 				active_overlay.set_cell(0,pos,0,Vector2i.ZERO)
 
+	if bash_mode == true:
+		var new_overlay: Array[Vector2i] = []
+
+		# 1) Detectar ancla (solo 4 tiles)
+		if cursor_grid_pos == selected_unit.grid_position + Vector2i(0, -1):
+			new_overlay = bash_overlay_up
+		elif cursor_grid_pos == selected_unit.grid_position + Vector2i(0, 1):
+			new_overlay = bash_overlay_down
+		elif cursor_grid_pos == selected_unit.grid_position + Vector2i(-1, 0):
+			new_overlay = bash_overlay_left
+		elif cursor_grid_pos == selected_unit.grid_position + Vector2i(1, 0):
+			new_overlay = bash_overlay_right
+
+		# 2) Si no tocó ancla, pero sigue dentro del overlay actual, mantenerlo
+		elif current_bash_overlay.size() > 0 and cursor_grid_pos in current_bash_overlay:
+			new_overlay = current_bash_overlay
+
+		# 3) Si no está en ningún lado, limpiar
+		else:
+			new_overlay = []
+
+		# 4) Aplicar solo si cambió
+		if new_overlay != current_bash_overlay:
+			current_bash_overlay = new_overlay
+			active_overlay.clear()
+
+			# Base gris
+			for pos in bash_overlay_set:
+				active_overlay.set_cell(0, pos, 0, Vector2i.ZERO)
+
+			# Amarillo
+			for pos in current_bash_overlay:
+				active_overlay.set_cell(0, pos, 1, Vector2i.ZERO)
+
+
 	if volley_mode == true:
 		active_overlay.clear()
 		volley_tiles.clear()
+		for pos in archer_attack_range_tiles:
+			active_overlay.set_cell(0,pos,0,Vector2i.ZERO)
+
 		if cursor_grid_pos in archer_attack_range_tiles:
-			active_overlay.set_cell(0,cursor_grid_pos,0,Vector2i.ZERO)
-			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(0,1),0,Vector2i.ZERO)
-			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(0,-1),0,Vector2i.ZERO)
-			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(1,0),0,Vector2i.ZERO)
-			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(-1,0),0,Vector2i.ZERO)
+			active_overlay.set_cell(0,cursor_grid_pos,1,Vector2i.ZERO)
+			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(0,1),1,Vector2i.ZERO)
+			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(0,-1),1,Vector2i.ZERO)
+			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(1,0),1,Vector2i.ZERO)
+			active_overlay.set_cell(0,cursor_grid_pos + Vector2i(-1,0),1,Vector2i.ZERO)
 			volley_tiles.append(cursor_grid_pos)
 			volley_tiles.append(cursor_grid_pos + Vector2i(0,1))
 			volley_tiles.append(cursor_grid_pos + Vector2i(0,-1))
