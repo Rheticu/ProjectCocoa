@@ -44,8 +44,8 @@ var team2_funds: int
 var team1_income: int = 0
 var team2_income: int = 0
 var turn: int = 1
-enum Element { FIRE, WATER, EARTH, WOOD, METAL }
-var current_element: Element = Element.FIRE
+enum Element { EARTH, METAL, WATER, WOOD, FIRE }
+var current_element: Element = Element.EARTH
 var inspected_unit: MapUnit = null
 
 ### ========================== MAP CONFIG ========================== ###
@@ -282,11 +282,12 @@ func create_host():
 	player_id = 1
 	current_player_team = 1
 	hud.update_income_funds()
+	hud.update_element_ui()
 	# Cambiar título de ventana
 	get_window().title = "Player 1 - HOST"
 
 	# Posicionar ventana del host
-	position_window_for_player()
+	#position_window_for_player()
 
 	if multiplayer_menu:
 		multiplayer_menu.set_status("Esperando jugador...")
@@ -331,11 +332,12 @@ func _on_connected_to_server():
 	player_id = 2
 	current_player_team = player_id
 	hud.update_income_funds()
+	hud.update_element_ui()
 	# Cambiar título de ventana
 	get_window().title = "Player 2 - Client"
 
 	# Posicionar ventana del cliente
-	position_window_for_player()
+	#position_window_for_player()
 
 	if multiplayer_menu:
 		multiplayer_menu.set_status("Conectado como jugador " + str(player_id))
@@ -425,6 +427,7 @@ func sync_game_state(state: Dictionary):
 	start_turn(current_player_team)
 	update_fog_of_war()
 	hud.update_income_funds()
+	hud.update_element_ui()
 
 ### ========================== MOVEMENT FUNCTIONS (copiadas del PvE) ========================== ###
 
@@ -990,8 +993,11 @@ func update_fog_of_war():
 	all_visible_tiles = raider_visible_tiles + mapunit_visible_tiles
 
 	for b in $MapLayer/Buildings.get_children():
-		if b.team ==  viewing_team:
+		if b.team == viewing_team:
 			fog_tilemap.set_cell(0, b.building_position, -1)
+		var _visible = b.building_position in all_visible_tiles
+		if b.has_node("CaptureLabel"):
+			b.get_node("CaptureLabel").visible = _visible
 
 	# Agregar posiciones reveladas por ambush
 	for pos in ambush_revealed_positions:
@@ -1100,7 +1106,7 @@ func start_turn(team: int):
 		team2_funds += team2_income
 	
 	hud.update_income_funds()
-	
+
 	# Solo permitir input si es mi turno
 	if current_player_team == player_id:
 		# Resetear TODAS las unidades del equipo (tanto Units como RaiderUnits)
@@ -1129,6 +1135,10 @@ func _on_end_turn_pressed():
 func end_turn():
 	update_active_layers()
 
+	if current_player_team == 2:
+		advance_element()
+		sync_element_change.rpc(current_element)
+		hud.update_element_ui()
 	for unit in all_units:
 		if unit.marked_turns > 0:
 			unit.marked_turns -= 1
@@ -1146,9 +1156,6 @@ func end_turn():
 
 	start_turn(current_player_team)
 	update_fog_of_war()
-	if multiplayer.is_server():
-		advance_element()
-		sync_element_change.rpc(current_element)
 
 func advance_element():
 	current_element = ((current_element + 1) % Element.size()) as Element
@@ -1173,10 +1180,10 @@ func sync_turn_change(new_team: int):
 	start_turn(new_team)
 	update_fog_of_war()
 
-@rpc("authority", "reliable")
+@rpc("any_peer", "reliable")
 func sync_element_change(new_element: int):
 	current_element = new_element as Element
-
+	hud.update_element_ui()
 ### ========================== INPUT HANDLING ========================== ###
 
 func _input(event):
@@ -1186,9 +1193,7 @@ func _input(event):
 
 func _unhandled_input(event):
 	# No procesar input si no es mi turno, está bloqueado, o no hay conexión
-	if player_id == 0:
-		return
-	if current_player_team != player_id or input_locked:
+	if player_id == 0 or current_player_team != player_id or input_locked:
 		return
 
 	if event.is_action_pressed("Enter"):
@@ -1270,6 +1275,8 @@ func _unhandled_input(event):
 						break
 
 	if event.is_action_pressed("RMClick"):
+		active_overlay.clear()
+		attack_range_overlay.clear()
 		if attack_mode or mark_mode or bash_mode or thrust_mode or volley_mode:
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:
@@ -1308,10 +1315,10 @@ func _unhandled_input(event):
 					inspected_unit = null
 					hide_attack_range()
 
-					for unit in active_units.get_children():
-						if unit.current_state != MapUnit.UnitState.MOVED:
-							unit.deselect()
-						active_overlay.clear()
+				for unit in active_units.get_children():
+					if unit.current_state != MapUnit.UnitState.MOVED:
+						unit.deselect()
+					active_overlay.clear()
 
 					close_action_menu()
 

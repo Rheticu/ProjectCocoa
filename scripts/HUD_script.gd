@@ -9,6 +9,7 @@ extends CanvasLayer
 @onready var movement_label = $UnitInfoPanel/VBoxContainer/MovementLabel
 @onready var strong_label = $UnitInfoPanel/VBoxContainer/StrongLabel
 #@onready var weak_label = $UnitInfoPanel/VBoxContainer/WeakLabel
+@onready var element_label = $FundsPanel/VBoxContainer/ElementLabel
 @onready var funds_label = $FundsPanel/VBoxContainer/FundsLabel
 @onready var income_label = $FundsPanel/VBoxContainer/IncomeLabel
 #@onready var health_label = $UnitInfoPanel/HealthLabel
@@ -64,3 +65,19 @@ func _on_funds_panel_mouse_entered() -> void:
 		funds_panel.position.x = 560
 	else:
 		funds_panel.position.x = 16.0
+
+func update_element_ui():
+	var element_name = main.Element.keys()[main.current_element]
+	element_label.text = element_name
+
+	match element_name:
+		"FIRE":
+			element_label.modulate = Color.RED
+		"WATER":
+			element_label.modulate = Color.BLUE
+		"WOOD":
+			element_label.modulate = Color.GREEN # café madera
+		"EARTH":
+			element_label.modulate = Color.BROWN  # café tierra
+		"METAL":
+			element_label.modulate = Color.YELLOW

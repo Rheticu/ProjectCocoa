@@ -815,15 +815,15 @@ team = 1
 z_index = 5
 
 [node name="Sword8" parent="Units" instance=ExtResource("16_4nerc")]
-position = Vector2(144, 112)
+position = Vector2(176, 208)
 
 [node name="Sprite2D" parent="Units/Sword8" index="0"]
 texture = ExtResource("17_t35fj")
 
 [node name="Sword2" parent="Units" instance=ExtResource("16_4nerc")]
-position = Vector2(240, 208)
+position = Vector2(208, 208)
 movement_range = 5
-health = 1
+attack = 30
 team = 2
 
 [node name="Sprite2D" parent="Units/Sword2" index="0"]
@@ -840,8 +840,9 @@ texture = ExtResource("18_6vq0k")
 flip_h = true
 
 [node name="Sword4" parent="Units" instance=ExtResource("16_4nerc")]
-position = Vector2(272, 208)
+position = Vector2(208, 240)
 movement_range = 5
+attack = 2000
 team = 2
 
 [node name="Sprite2D" parent="Units/Sword4" index="0"]
@@ -857,6 +858,7 @@ texture = ExtResource("20_meiya")
 [node name="Archer2" parent="Units" instance=ExtResource("19_iotnw")]
 position = Vector2(304, 208)
 health = 1
+attack = 150
 team = 2
 
 [node name="Sprite2D" parent="Units/Archer2" index="0"]
@@ -872,7 +874,7 @@ team = 2
 flip_h = true
 
 [node name="Spear2" parent="Units" instance=ExtResource("22_6ce04")]
-position = Vector2(304, 240)
+position = Vector2(48, 304)
 
 [node name="Sprite2D" parent="Units/Spear2" index="0"]
 texture = ExtResource("23_ahm5y")
@@ -901,35 +903,8 @@ layer_0/tile_data = PackedInt32Array(458765, 0, 0, 524301, 0, 0, 524302, 0, 0, 5
 [node name="RaiderUnits" type="Node2D" parent="."]
 z_index = 6
 
-[node name="RaiderUnit7" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(272, 272)
-team = 2
-vision_range = 3
-
-[node name="Sprite2D" parent="RaiderUnits/RaiderUnit7" index="0"]
-texture = ExtResource("21_57kmi")
-flip_h = false
-
-[node name="RaiderUnit8" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(272, 144)
-team = 2
-vision_range = 3
-
-[node name="Sprite2D" parent="RaiderUnits/RaiderUnit8" index="0"]
-texture = ExtResource("21_57kmi")
-flip_h = false
-
-[node name="RaiderUnit10" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(304, 272)
-team = 2
-vision_range = 3
-
-[node name="Sprite2D" parent="RaiderUnits/RaiderUnit10" index="0"]
-texture = ExtResource("21_57kmi")
-flip_h = false
-
 [node name="RaiderUnit9" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(240, 272)
+position = Vector2(304, 272)
 team = 2
 vision_range = 3
 
@@ -938,31 +913,10 @@ texture = ExtResource("21_57kmi")
 flip_h = false
 
 [node name="RaiderUnit4" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(240, 144)
+position = Vector2(176, 240)
 vision_range = 3
 
 [node name="Sprite2D" parent="RaiderUnits/RaiderUnit4" index="0"]
-texture = ExtResource("22_l2b3n")
-
-[node name="RaiderUnit11" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(336, 144)
-vision_range = 3
-
-[node name="Sprite2D" parent="RaiderUnits/RaiderUnit11" index="0"]
-texture = ExtResource("22_l2b3n")
-
-[node name="RaiderUnit5" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(336, 272)
-vision_range = 3
-
-[node name="Sprite2D" parent="RaiderUnits/RaiderUnit5" index="0"]
-texture = ExtResource("22_l2b3n")
-
-[node name="RaiderUnit6" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(304, 144)
-vision_range = 3
-
-[node name="Sprite2D" parent="RaiderUnits/RaiderUnit6" index="0"]
 texture = ExtResource("22_l2b3n")
 
 [node name="UI" type="Node2D" parent="."]
@@ -1014,11 +968,5 @@ metadata/_edit_lock_ = true
 [editable path="Units/Archer2"]
 [editable path="Units/Spear"]
 [editable path="Units/Spear2"]
-[editable path="RaiderUnits/RaiderUnit7"]
-[editable path="RaiderUnits/RaiderUnit8"]
-[editable path="RaiderUnits/RaiderUnit10"]
 [editable path="RaiderUnits/RaiderUnit9"]
 [editable path="RaiderUnits/RaiderUnit4"]
-[editable path="RaiderUnits/RaiderUnit11"]
-[editable path="RaiderUnits/RaiderUnit5"]
-[editable path="RaiderUnits/RaiderUnit6"]

@@ -82,11 +82,13 @@ func _on_input_event(_viewport, event, _shape_idx):
 		return 
 	
 	# Si estamos en mark_mode, no procesar eventos de unidades (el mark se maneja en _unhandled_input)
-	if "mark_mode" in main and main.mark_mode:
+	if main.attack_mode or main.mark_mode or main.bash_mode or main.thrust_mode or main.volley_mode:
 		return
 
 	if not main.raider_view_enabled:
 		if event.is_action_pressed("LMClick"):
+			main.active_overlay.clear()
+			main.attack_range_overlay.clear()
 			# Verificar si es PvP y si es mi turno
 			var can_select = false
 			if "player_id" in main:
@@ -101,7 +103,10 @@ func _on_input_event(_viewport, event, _shape_idx):
 				and can_select
 				and not main.is_menu_open
 				and not main.attack_mode
-				and not main.mark_mode):
+				and not main.mark_mode
+				and not main.bash_mode
+				and not main.thrust_mode
+				and not main.volley_mode):
 				select()
 
 			# Enemy unit inspection (right-click functionality moved to left-click)
@@ -109,6 +114,9 @@ func _on_input_event(_viewport, event, _shape_idx):
 				and not main.is_menu_open
 				and not main.attack_mode
 				and not main.mark_mode
+				and not main.bash_mode
+				and not main.thrust_mode
+				and not main.volley_mode
 				and current_state != UnitState.UNSELECTABLE):
 				# Deselect all player units first
 				for unit in main.active_units.get_children():
@@ -134,7 +142,6 @@ func select():
 	main.show_movement_range(grid_position, self)
 	hud.show_unit_info(self)
 	main.hide_attack_range()
-	print(main.team1_funds, ",", main.team2_funds)
 
 func deselect():
 	# No cambiar el estado si la unidad ya está en MOVED (después de atacar o moverse)

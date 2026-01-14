@@ -13,13 +13,13 @@ func _on_input_event(_viewport, event, _shape_idx):
 		return 
 	
 	# Si estamos en mark_mode, no procesar eventos de unidades (el mark se maneja en _unhandled_input)
-	if "mark_mode" in main and main.mark_mode:
+	if main.attack_mode or main.mark_mode or main.bash_mode or main.thrust_mode or main.volley_mode:
 		return
 	
 	if main.raider_view_enabled:
 		if event.is_action_pressed("LMClick"):
 			# Si estamos en mark_mode, no hacer nada (el mark se maneja en _unhandled_input)
-			if "mark_mode" in main and main.mark_mode:
+			if main.attack_mode or main.mark_mode or main.bash_mode or main.thrust_mode or main.volley_mode:
 				return
 			
 			# Verificar si es PvP y si es mi turno
@@ -36,13 +36,19 @@ func _on_input_event(_viewport, event, _shape_idx):
 				and can_select
 				and not main.is_menu_open
 				and not main.attack_mode
-				and not main.mark_mode):
+				and not main.mark_mode
+				and not main.bash_mode
+				and not main.thrust_mode
+				and not main.volley_mode):
 				select()
 			elif (
 				team != main.current_player_team
 				and not main.is_menu_open
 				and not main.attack_mode
 				and not main.mark_mode
+				and not main.bash_mode
+				and not main.thrust_mode
+				and not main.volley_mode
 				and current_state != UnitState.UNSELECTABLE):
 				main.update_active_layers()
 				main.active_overlay.clear()

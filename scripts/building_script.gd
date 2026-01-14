@@ -39,8 +39,13 @@ func _ready():
 	update_visual()
 
 func capture(unit: MapUnit, amount: int, capturing_team: int):
-	if unit.unit_type == "Infantry":
+	if unit.unit_type in ["Sword", "Spear", "Archer"]:
 		capturing_unit = unit
+		
+		# Conectar a la señal de muerte de la unidad
+		if not unit.tree_exiting.is_connected(_on_capturer_destroyed):
+			unit.tree_exiting.connect(_on_capturer_destroyed.bind(unit))
+	
 	capture_points -= amount
 	if capture_points <= 0:
 		team = capturing_team
@@ -48,21 +53,20 @@ func capture(unit: MapUnit, amount: int, capturing_team: int):
 	update_visual()
 	emit_signal("ownership_changed", self)
 
-@warning_ignore("unused_parameter")
-func _process(delta):
-	if capturing_unit:
-	# Si la unidad muere
-		if not is_instance_valid(capturing_unit):
-			reset_capture()
-			return
-		# Si la unidad se mueve de su tile
-		if capturing_unit.grid_position != building_position and capturing_unit.current_state == MapUnit.UnitState.MOVED:
-			reset_capture()
-			return
+func _on_capturer_destroyed(unit: MapUnit):
+	# Solo resetear si es NUESTRO capturador
+	if capturing_unit == unit:
+		reset_capture()
 
 func reset_capture():
-	capturing_unit = null
+	if capturing_unit:
+		# Desconectar señal si existe
+		if capturing_unit.tree_exiting.is_connected(_on_capturer_destroyed):
+			capturing_unit.tree_exiting.disconnect(_on_capturer_destroyed)
+		capturing_unit = null
+	
 	capture_points = max_capture_points
+	main.sync_building_capture.rpc(building_position.x, building_position.y, team, capture_points)
 	update_visual()
 
 func update_visual():
@@ -107,6 +111,9 @@ func _on_input_event(_viewport, event, _shape_idx):
 		and not main.is_menu_open
 		and not main.attack_mode
 		and not main.mark_mode
+		and not main.bash_mode
+		and not main.thrust_mode
+		and not main.volley_mode
 		):
 		if event.is_action_pressed("LMClick"):
 			#if team == main.current_player_team and can_produce_units:

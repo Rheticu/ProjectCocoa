@@ -57,7 +57,7 @@ anchor_bottom = 1.0
 offset_left = 16.0
 offset_top = -328.0
 offset_right = 99.588684
-offset_bottom = -278.0
+offset_bottom = -251.0
 grow_vertical = 0
 scale = Vector2(0.76565385, 0.79738486)
 size_flags_horizontal = 0
@@ -68,6 +68,9 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_5fyfn")
 layout_mode = 2
 size_flags_horizontal = 0
 alignment = 1
+
+[node name="ElementLabel" type="Label" parent="FundsPanel/VBoxContainer"]
+layout_mode = 2
 
 [node name="FundsLabel" type="Label" parent="FundsPanel/VBoxContainer"]
 layout_mode = 2
