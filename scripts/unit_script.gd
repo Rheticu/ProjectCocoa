@@ -109,9 +109,8 @@ func _on_input_event(_viewport, event, _shape_idx):
 				and not main.volley_mode):
 				select()
 
-			# Enemy unit inspection (right-click functionality moved to left-click)
-			elif (team != main.current_player_team
-				and not main.is_menu_open
+			# Enemy unit inspection
+			elif (not main.is_menu_open
 				and not main.attack_mode
 				and not main.mark_mode
 				and not main.bash_mode

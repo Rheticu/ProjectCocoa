@@ -1193,86 +1193,87 @@ func _input(event):
 
 func _unhandled_input(event):
 	# No procesar input si no es mi turno, está bloqueado, o no hay conexión
-	if player_id == 0 or current_player_team != player_id or input_locked:
+	if player_id == 0 or input_locked:
 		return
 
-	if event.is_action_pressed("Enter"):
-		_on_end_turn_pressed()
+	if current_player_team == player_id:
+		if event.is_action_pressed("Enter"):
+			_on_end_turn_pressed()
 
-	if event.is_action_pressed("LMClick"):
-		if is_menu_open:
-			return
-		if cursor_path:
-			cursor_path.clear()
-		is_tracing_path = false
+		if event.is_action_pressed("LMClick"):
+			if is_menu_open:
+				return
+			if cursor_path:
+				cursor_path.clear()
+			is_tracing_path = false
 
-		var mouse_pos = get_global_mouse_position()
-		var grid_pos = Vector2i(mouse_pos / 32)
+			var mouse_pos = get_global_mouse_position()
+			var grid_pos = Vector2i(mouse_pos / 32)
 
-		if mark_mode:
-			try_mark(grid_pos)
-			return
-
-		if attack_mode:
-			try_attack(grid_pos)
-			return
-
-		if bash_mode:
-			if grid_pos in current_bash_overlay:
-				try_bash(current_bash_overlay)
+			if mark_mode:
+				try_mark(grid_pos)
 				return
 
-		if thrust_mode:
-			if grid_pos in thrust_overlay_up:
-				try_thrust(thrust_overlay_up)
-				return
-			if grid_pos in thrust_overlay_down:
-				try_thrust(thrust_overlay_down)
-				return
-			if grid_pos in thrust_overlay_right:
-				try_thrust(thrust_overlay_right)
-				return
-			if grid_pos in thrust_overlay_left:
-				try_thrust(thrust_overlay_left)
+			if attack_mode:
+				try_attack(grid_pos)
 				return
 
-		if volley_mode:
-			if grid_pos in volley_tiles:
-				try_volley(volley_tiles)
-				return
+			if bash_mode:
+				if grid_pos in current_bash_overlay:
+					try_bash(current_bash_overlay)
+					return
 
-		else:
-			for unit in active_units.get_children():
-				if unit.current_state == MapUnit.UnitState.SELECTED:
-					var final_path: Array[Vector2i] = []
-					var use_wrapped_movement = false
-					if is_position_free(grid_pos, unit, true):
-						if movement_arrow and movement_arrow.get_point_count() > 1:
-							for i in range(movement_arrow.get_point_count()):
-								var world_pos = movement_arrow.get_point_position(i)
-								var grid_pos_from_line = Vector2i(world_pos / 32)
-								final_path.append(grid_pos_from_line)
-						else:
-							var reachable = get_reachable_cells(unit.grid_position, unit.movement_range, unit, unit.is_raider())
-							if grid_pos in reachable:
-								update_astar_raider(unit.grid_position, grid_pos)
-								final_path = get_wrapped_tile_path(unit.grid_position, grid_pos)
-								use_wrapped_movement = true
-						
-						if not final_path.is_empty():
-							var movement_path = final_path.duplicate()
-							if use_wrapped_movement:
-								move_unit_along_wrapped_path(unit, movement_path)
+			if thrust_mode:
+				if grid_pos in thrust_overlay_up:
+					try_thrust(thrust_overlay_up)
+					return
+				if grid_pos in thrust_overlay_down:
+					try_thrust(thrust_overlay_down)
+					return
+				if grid_pos in thrust_overlay_right:
+					try_thrust(thrust_overlay_right)
+					return
+				if grid_pos in thrust_overlay_left:
+					try_thrust(thrust_overlay_left)
+					return
+
+			if volley_mode:
+				if grid_pos in volley_tiles:
+					try_volley(volley_tiles)
+					return
+
+			else:
+				for unit in active_units.get_children():
+					if unit.current_state == MapUnit.UnitState.SELECTED:
+						var final_path: Array[Vector2i] = []
+						var use_wrapped_movement = false
+						if is_position_free(grid_pos, unit, true):
+							if movement_arrow and movement_arrow.get_point_count() > 1:
+								for i in range(movement_arrow.get_point_count()):
+									var world_pos = movement_arrow.get_point_position(i)
+									var grid_pos_from_line = Vector2i(world_pos / 32)
+									final_path.append(grid_pos_from_line)
 							else:
-								move_unit_along_path(unit, movement_path)
-							is_tracing_path = false
-							cursor_path.clear()
-							if movement_arrow:
-								movement_arrow.clear_points()
-					
-					if unit.grid_position == grid_pos:
-						show_action_menu(unit)
-						break
+								var reachable = get_reachable_cells(unit.grid_position, unit.movement_range, unit, unit.is_raider())
+								if grid_pos in reachable:
+									update_astar_raider(unit.grid_position, grid_pos)
+									final_path = get_wrapped_tile_path(unit.grid_position, grid_pos)
+									use_wrapped_movement = true
+							
+							if not final_path.is_empty():
+								var movement_path = final_path.duplicate()
+								if use_wrapped_movement:
+									move_unit_along_wrapped_path(unit, movement_path)
+								else:
+									move_unit_along_path(unit, movement_path)
+								is_tracing_path = false
+								cursor_path.clear()
+								if movement_arrow:
+									movement_arrow.clear_points()
+						
+						if unit.grid_position == grid_pos:
+							show_action_menu(unit)
+							break
 
 	if event.is_action_pressed("RMClick"):
 		active_overlay.clear()
