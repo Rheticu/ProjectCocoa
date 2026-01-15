@@ -1,4 +1,4 @@
-[gd_scene load_steps=55 format=3 uid="uid://yhoimdm5imww"]
+[gd_scene load_steps=56 format=3 uid="uid://yhoimdm5imww"]
 
 [ext_resource type="Script" uid="uid://b6e3b3t2lgeaj" path="res://scripts/PVPmain.gd" id="1_l8vrk"]
 [ext_resource type="PackedScene" uid="uid://fh62f206lhjk" path="res://scenes/UI/MultiplayerMenu.tscn" id="1_multiplayer"]
@@ -34,6 +34,7 @@
 [ext_resource type="Texture2D" uid="uid://eadp1jqv7s8f" path="res://art/units/Spear1_Blue.png" id="23_ahm5y"]
 [ext_resource type="Script" uid="uid://besjo1x5nximl" path="res://scripts/camera_script.gd" id="24_fikkh"]
 [ext_resource type="PackedScene" uid="uid://ctgduopogq0b0" path="res://scenes/units/Junker.tscn" id="24_meiya"]
+[ext_resource type="PackedScene" uid="uid://dbrt2wxdjpbf2" path="res://scenes/units/Cannon.tscn" id="25_obkvy"]
 [ext_resource type="AudioStream" uid="uid://bs8xkoyryfryj" path="res://music/Music_PVE1.mp3" id="28_57kmi"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ir72a"]
@@ -880,7 +881,15 @@ position = Vector2(48, 304)
 texture = ExtResource("23_ahm5y")
 
 [node name="Junker" parent="Units" instance=ExtResource("24_meiya")]
-position = Vector2(304, 80)
+position = Vector2(240, 112)
+
+[node name="Cannon" parent="Units" instance=ExtResource("25_obkvy")]
+position = Vector2(144, 176)
+movement_range = 2
+attack = 30
+attack_range = 5
+defense = 10
+vision_range = 1
 
 [node name="RaiderLayer" type="Node2D" parent="."]
 visible = false
@@ -904,7 +913,7 @@ layer_0/tile_data = PackedInt32Array(458765, 0, 0, 524301, 0, 0, 524302, 0, 0, 5
 z_index = 6
 
 [node name="RaiderUnit9" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(304, 272)
+position = Vector2(272, 336)
 team = 2
 vision_range = 3
 
@@ -913,7 +922,7 @@ texture = ExtResource("21_57kmi")
 flip_h = false
 
 [node name="RaiderUnit4" parent="RaiderUnits" instance=ExtResource("18_yxu57")]
-position = Vector2(176, 240)
+position = Vector2(240, 336)
 vision_range = 3
 
 [node name="Sprite2D" parent="RaiderUnits/RaiderUnit4" index="0"]

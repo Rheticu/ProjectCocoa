@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://dbrt2wxdjpbf2"]
+
+[ext_resource type="PackedScene" uid="uid://d3tyw1iai4n62" path="res://scenes/units/base_unit.tscn" id="1_6m817"]
+[ext_resource type="Texture2D" uid="uid://dcipi4x5q5i6w" path="res://art/units/Cannon.png" id="2_fik54"]
+
+[node name="Cannon" instance=ExtResource("1_6m817")]
+scale = Vector2(2.45, 2.45)
+unit_type = "Cannon"
+
+[node name="Sprite2D" parent="." index="0"]
+position = Vector2(0, 0)
+texture = ExtResource("2_fik54")
+
+[node name="CollisionShape2D" parent="." index="1"]
+position = Vector2(0, 0)
+scale = Vector2(0.478, 0.452)
+
+[node name="HealthLabel" parent="." index="2"]
+offset_left = -0.4081633
+offset_top = 2.857143
+offset_right = 21.591837
+offset_bottom = 18.857143
+scale = Vector2(0.3658747, 0.34693885)

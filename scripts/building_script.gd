@@ -109,11 +109,7 @@ func _on_input_event(_viewport, event, _shape_idx):
 
 	if (not main.raider_view_enabled
 		and not main.is_menu_open
-		and not main.attack_mode
-		and not main.mark_mode
-		and not main.bash_mode
-		and not main.thrust_mode
-		and not main.volley_mode
+		and not main.is_action_mode()
 		):
 		if event.is_action_pressed("LMClick"):
 			#if team == main.current_player_team and can_produce_units:

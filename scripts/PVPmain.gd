@@ -78,53 +78,66 @@ var thrust_positions = thrust_overlay_up \
 	+ thrust_overlay_left
 var volley_tiles: Array[Vector2i] = []
 var archer_attack_range_tiles: Array[Vector2i] = []
+var overwatch_range_tiles: Array[Vector2i] = []
 const UNIT_TERRAIN_COSTS = {
 	"Sword": {
 		"PLAINS": 1,
-		"MOUNTAIN": 3,  # Infantry pay 2 MP for mountains
-		"WALL": 99,    # Infantry move through forests easily
-		"RIVER": 2,     # Rivers cost 2 MP
+		"MOUNTAIN": 3,
+		"ROAD":1,  
+		"WALL": 99,    
+		"RIVER": 2,     
 		"FOREST": 2,
-		"OCEAN": 99,      # Cannot move on water
+		"OCEAN": 99,      
 		"CITY": 1,
 	},
 	"Archer": {
 		"PLAINS": 1,
-		"MOUNTAIN": 3,  # Infantry pay 2 MP for mountains
-		"WALL": 99,    # Infantry move through forests easily
-		"RIVER": 2,     # Rivers cost 2 MP
+		"MOUNTAIN": 3,
+		"ROAD":1,  
+		"WALL": 99,    
+		"RIVER": 2,   
 		"FOREST": 2,
-		"OCEAN": 99,      # Cannot move on water
+		"OCEAN": 99,      
 		"CITY": 1,
 	},
 	"Spear": {
 		"PLAINS": 1,
-		"MOUNTAIN": 3,  # Infantry pay 2 MP for mountains
-		"WALL": 99,    # Infantry move through forests easily
-		"RIVER": 2,     # Rivers cost 2 MP
+		"MOUNTAIN": 3,
+		"ROAD":1,  
+		"WALL": 99,    
+		"RIVER": 2,     
 		"FOREST": 2,
-		"OCEAN": 99,      # Cannot move on water
+		"OCEAN": 99,      
 		"CITY": 1,
 	},
 	"Raider": {
 		"PLAINS": 1,
-		"MOUNTAIN": 1, # Tanks CANNOT cross mountains
-		"FOREST": 1,    # Forests slow down tanks
-		"RIVER": 1,    # Tanks cannot cross rivers
+		"MOUNTAIN": 1,
+		"ROAD":1, 
+		"FOREST": 1,    
+		"RIVER": 1,    
 		"WALL": 1,
-		"OCEAN": 1,      # Cannot move on water
+		"OCEAN": 1,     
 		"CITY": 1,
 	},
 	"Junker": {
 		"PLAINS": 99,
-		"MOUNTAIN": 99, # Recon cannot cross mountains
-		"FOREST": 99,    # Forests slow recon
-		"RIVER": 99,    # Cannot cross rivers
-		"ROAD": 99,      # Roads are fast
+		"MOUNTAIN": 99, 
+		"FOREST": 99,    
+		"RIVER": 99,    
+		"ROAD": 99,      
 		"OCEAN": 1,
 		"CITY": 99,
 	},
-	# Add more unit types as needed
+	"Cannon": {
+		"PLAINS": 2,
+		"MOUNTAIN": 3, 
+		"FOREST": 3,    
+		"RIVER": 99,    
+		"ROAD": 1,      
+		"OCEAN": 99,
+		"CITY": 1,
+	},
 }
 
 ### ========================== ACTIVE CONTEXT ========================== ###
@@ -1278,15 +1291,11 @@ func _unhandled_input(event):
 	if event.is_action_pressed("RMClick"):
 		active_overlay.clear()
 		attack_range_overlay.clear()
-		if attack_mode or mark_mode or bash_mode or thrust_mode or volley_mode:
+		if is_action_mode():
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:
 					unit.grid_position = unit.original_position
-					end_attack_mode()
-					end_mark_mode()
-					end_bash_mode()
-					end_thrust_mode()
-					end_volley_mode()
+					end_action_mode()
 					unit.select()
 					return
 		else:
@@ -1466,14 +1475,15 @@ func show_action_menu(unit: MapUnit):
 	elif unit_position.x > half_map_width and unit_position.y < half_map_height:
 		action_menu_instance.position = unit_position + Vector2(-75, 0)
 	
-	var cancel_btn = action_menu_instance.get_node("VBoxContainer/Cancel")
-	var move_btn = action_menu_instance.get_node("VBoxContainer/Move")
-	var attack_btn = action_menu_instance.get_node("VBoxContainer/Attack")
-	var mark_btn = action_menu_instance.get_node("VBoxContainer/Mark")
-	var capture_btn = action_menu_instance.get_node("VBoxContainer/Capture")
-	var bash_btn = action_menu_instance.get_node("VBoxContainer/Bash")
-	var thrust_btn = action_menu_instance.get_node("VBoxContainer/Thrust")
-	var volley_btn = action_menu_instance.get_node("VBoxContainer/Volley")
+	var cancel_btn = action_menu_instance.get_node("Cancel")
+	var move_btn = action_menu_instance.get_node("Move")
+	var attack_btn = action_menu_instance.get_node("Attack")
+	var mark_btn = action_menu_instance.get_node("Mark")
+	var capture_btn = action_menu_instance.get_node("Capture")
+	var bash_btn = action_menu_instance.get_node("Bash")
+	var thrust_btn = action_menu_instance.get_node("Thrust")
+	var volley_btn = action_menu_instance.get_node("Volley")
+	var overwatch_btn = action_menu_instance.get_node("Overwatch")
 	var has_targets = false
 	var has_mark_targets = false
 
@@ -1493,6 +1503,7 @@ func show_action_menu(unit: MapUnit):
 	bash_btn.visible = unit.unit_type == "Spear"
 	thrust_btn.visible = unit.unit_type == "Sword"
 	volley_btn.visible = unit.unit_type == "Archer"
+	overwatch_btn.visible = unit.unit_type == "Cannon"
 
 	attack_btn.pressed.connect(_on_attack_pressed)
 	mark_btn.pressed.connect(_on_mark_pressed)
@@ -1505,6 +1516,13 @@ func show_action_menu(unit: MapUnit):
 
 	is_menu_open = true
 	update_cursor_visibility()
+
+func is_action_mode() -> bool:
+	return attack_mode or mark_mode or bash_mode or thrust_mode or volley_mode
+
+func _on_overwatch_pressed():
+	overwatch_range_tiles.clear()
+	close_action_menu()
 
 func _on_volley_pressed():
 	volley_tiles.clear()
@@ -2344,6 +2362,18 @@ func _on_resume_game():
 	input_locked = false
 	update_cursor_visibility()
 
+func end_action_mode():
+	if attack_mode:
+		end_attack_mode()
+	if bash_mode:
+		end_bash_mode()
+	if mark_mode:
+		end_mark_mode()
+	if thrust_mode:
+		end_thrust_mode()
+	if volley_mode:
+		end_volley_mode()
+
 func _on_exit_game():
 	get_tree().quit()
 
@@ -2386,7 +2416,7 @@ func _process(_delta):
 	if _in_bounds(cursor_grid_pos):
 		cursor_highlight.set_cell(0, cursor_grid_pos, 0, Vector2i.ZERO)
 		
-		if not(attack_mode or is_menu_open or input_locked or mark_mode or bash_mode or thrust_mode or volley_mode):
+		if not(is_menu_open or input_locked or is_action_mode()):
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:
 					update_movement_arrow(unit, cursor_grid_pos)

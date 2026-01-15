@@ -28,6 +28,7 @@ const damage_matrix = {
 		"Sword": 1,
 		"Archer": 2.5,
 		"Spear": .6,
+		"Cannon": 2,
 		"Junker": .2,
 		"Raider": 0,
 	},
@@ -35,6 +36,7 @@ const damage_matrix = {
 		"Sword": .6,
 		"Archer": 1,
 		"Spear": 2.5,
+		"Cannon": 1,
 		"Junker": .5,
 		"Raider": 0,
 	},
@@ -42,6 +44,7 @@ const damage_matrix = {
 		"Sword": 2.5,
 		"Archer": 1.5,
 		"Spear": 1,
+		"Cannon": 1.2,
 		"Junker": .5,
 		"Raider": 0,
 	},
@@ -50,16 +53,25 @@ const damage_matrix = {
 		"Archer": 0,
 		"Spear": 0,
 		"Junker": 0,
+		"Cannon": 0,
 		"Raider": 99,
 	},
 	"Junker": {
 		"Sword": 1,
 		"Archer": 1,
 		"Spear": 1,
+		"Cannon": 1,
 		"Junker": 1,
 		"Raider": 0,
 	},
-	# Add more unit types as needed
+	"Cannon": {
+		"Sword": 3,
+		"Archer": 3,
+		"Spear": 3,
+		"Cannon": 1,
+		"Junker": 2,
+		"Raider": 0,
+	},
 }
 
 func _ready():
@@ -82,13 +94,14 @@ func _on_input_event(_viewport, event, _shape_idx):
 		return 
 	
 	# Si estamos en mark_mode, no procesar eventos de unidades (el mark se maneja en _unhandled_input)
-	if main.attack_mode or main.mark_mode or main.bash_mode or main.thrust_mode or main.volley_mode:
+	if main.is_action_mode():
 		return
 
 	if not main.raider_view_enabled:
 		if event.is_action_pressed("LMClick"):
 			main.active_overlay.clear()
 			main.attack_range_overlay.clear()
+
 			# Verificar si es PvP y si es mi turno
 			var can_select = false
 			if "player_id" in main:
@@ -102,20 +115,12 @@ func _on_input_event(_viewport, event, _shape_idx):
 			if (current_state == UnitState.UNSELECTED
 				and can_select
 				and not main.is_menu_open
-				and not main.attack_mode
-				and not main.mark_mode
-				and not main.bash_mode
-				and not main.thrust_mode
-				and not main.volley_mode):
+				and not main.is_action_mode()):
 				select()
 
 			# Enemy unit inspection
 			elif (not main.is_menu_open
-				and not main.attack_mode
-				and not main.mark_mode
-				and not main.bash_mode
-				and not main.thrust_mode
-				and not main.volley_mode
+				and not main.is_action_mode()
 				and current_state != UnitState.UNSELECTABLE):
 				# Deselect all player units first
 				for unit in main.active_units.get_children():
@@ -124,7 +129,7 @@ func _on_input_event(_viewport, event, _shape_idx):
 
 				main.update_active_layers()
 				main.active_overlay.clear()
-
+				hud.show_unit_info(self)
 				# Show movement range of this enemy unit
 				var reachable = main.get_reachable_cells(self.grid_position, self.movement_range, self, self.is_raider())
 				for pos in reachable:
