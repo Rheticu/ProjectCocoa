@@ -78,7 +78,7 @@ var thrust_positions = thrust_overlay_up \
 	+ thrust_overlay_left
 var volley_tiles: Array[Vector2i] = []
 var archer_attack_range_tiles: Array[Vector2i] = []
-var overwatch_range_tiles: Array[Vector2i] = []
+
 const UNIT_TERRAIN_COSTS = {
 	"Sword": {
 		"PLAINS": 1,
@@ -1289,8 +1289,6 @@ func _unhandled_input(event):
 							break
 
 	if event.is_action_pressed("RMClick"):
-		active_overlay.clear()
-		attack_range_overlay.clear()
 		if is_action_mode():
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:
@@ -1302,6 +1300,14 @@ func _unhandled_input(event):
 			if is_menu_open:
 				_on_cancel_pressed()
 			else:
+				if active_overlay.get_used_cells(0).size() > 0 or attack_range_overlay.get_used_cells(0).size() > 0:
+					active_overlay.clear()
+					attack_range_overlay.clear()
+					for unit in active_units.get_children():
+						if unit.current_state != MapUnit.UnitState.MOVED:
+							unit.deselect()
+					return
+
 				var mouse_pos = get_global_mouse_position()
 				var grid_pos = Vector2i(mouse_pos / 32)
 				var clicked_unit: MapUnit = null
@@ -1328,8 +1334,8 @@ func _unhandled_input(event):
 				for unit in active_units.get_children():
 					if unit.current_state != MapUnit.UnitState.MOVED:
 						unit.deselect()
-					active_overlay.clear()
 
+					active_overlay.clear()
 					close_action_menu()
 
 func create_movement_arrow():
@@ -1521,8 +1527,7 @@ func is_action_mode() -> bool:
 	return attack_mode or mark_mode or bash_mode or thrust_mode or volley_mode
 
 func _on_overwatch_pressed():
-	overwatch_range_tiles.clear()
-	close_action_menu()
+	return
 
 func _on_volley_pressed():
 	volley_tiles.clear()
