@@ -5,6 +5,11 @@
 
 [node name="Cannon" instance=ExtResource("1_6m817")]
 scale = Vector2(2.45, 2.45)
+movement_range = 3
+attack = 25
+attack_range = 4
+defense = 10
+vision_range = 1
 unit_type = "Cannon"
 
 [node name="Sprite2D" parent="." index="0"]

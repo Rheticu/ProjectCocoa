@@ -62,7 +62,7 @@ func _on_unit_info_panel_mouse_entered() -> void:
 
 func _on_funds_panel_mouse_entered() -> void:
 	if funds_panel.position.x < 100:
-		funds_panel.position.x = 560
+		funds_panel.position.x = 540
 	else:
 		funds_panel.position.x = 16.0
 

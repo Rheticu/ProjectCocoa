@@ -22,6 +22,8 @@ var grid_position : Vector2i:
 var current_player_team: int = 1  # Default to team 1
 var original_position : Vector2i
 var marked_turns: int = 0
+var is_in_overwatch: bool = false
+var unit_id: int = -1
 @export var unit_type: String  # Can be "Sword", "Spear", "Archer", etc.
 const damage_matrix = {
 	"Sword": {
@@ -75,7 +77,21 @@ const damage_matrix = {
 }
 
 func _ready():
+	if team == main.player_id:
+		unit_id = randi_range(1, 999999)
 	$HealthLabel.text = str(health)
+	main.multiplayer_ready.connect(create_id)
+
+func create_id():
+	var new_id
+	unit_id = randi_range(1, 999999)
+	sync_unit_id.rpc(unit_id)
+	new_id = unit_id
+	sync_unit_id.rpc(new_id)
+
+@rpc("any_peer","reliable")
+func sync_unit_id(new_id):
+	unit_id = new_id
 
 func update_visual_state():
 	match current_state:
@@ -99,6 +115,7 @@ func _on_input_event(_viewport, event, _shape_idx):
 
 	if not main.raider_view_enabled:
 		if event.is_action_pressed("LMClick"):
+			print(unit_id)
 			main.active_overlay.clear()
 			main.attack_range_overlay.clear()
 
@@ -177,19 +194,38 @@ func can_attack(target: MapUnit) -> bool:
 
 func check_death():
 	if health <= 0:
+		if has_meta("movement_tween"):
+			var tween: Tween = get_meta("movement_tween")
+			if tween:
+				tween.kill() # <- ESTO es clave
 		main.all_units.erase(self)
+		main.input_locked = false
 		queue_free()
+
+func get_total_defense() -> int:
+	var base_defense = defense
+	var tile_bonus = 0
+
+	if main and main.has_method("get_terrain_at"):
+		var terrain = main.get_terrain_at(grid_position)
+		if terrain in main.TILE_DEFENSE_BONUS:
+			tile_bonus = main.TILE_DEFENSE_BONUS[terrain]
+
+	return base_defense + tile_bonus
 
 func attacking(target: MapUnit):
 	var multiplier_attacker = damage_matrix[unit_type][target.unit_type]
-	var damage_attacker = max(0.0, (multiplier_attacker * attack * health/100) - target.defense)  # Basic damage formula
+	var damage_attacker = max(0.0, (multiplier_attacker * attack * health/100) - target.get_total_defense())  # Basic damage formula
 	target.health -= damage_attacker
 	target.current_state = UnitState.UNSELECTABLE
 	target.check_death()
 
 	var multiplier_defender = damage_matrix[target.unit_type][unit_type]
-	var damage_defender = max(0.0, (multiplier_defender * target.attack * target.health/100) - defense)  # Basic damage formula
-	if (unit_type == "Archer" and target.unit_type != "Archer"):
+	var damage_defender = max(0.0, (multiplier_defender * target.attack * target.health/100) - get_total_defense())  # Basic damage formula
+	if ( (unit_type == "Archer" and target.unit_type != "Archer") 
+		or (unit_type == "Cannon") 
+		or (unit_type == "Junker" and target.unit_type != "Junker")
+		):
 		check_death()
 		current_state = UnitState.MOVED  # Can't move after attacking
 		update_visual_state()
@@ -228,6 +264,11 @@ func volley_attacking(target: MapUnit):
 	target.check_death()
 	current_state = UnitState.MOVED  # Can't move after attacking
 	update_visual_state()
+
+func attack_overwatch(target: MapUnit):
+	attacking(target)  # Usa el mismo ataque normal
+	is_in_overwatch = false  # Desactivar después de usar
+	update_visual_state()  # Actualizar apariencia si es necesario
 
 # New virtual method for child classes to override
 func _set_grid_position(value: Vector2i) -> void:

@@ -47,6 +47,7 @@ var turn: int = 1
 enum Element { EARTH, METAL, WATER, WOOD, FIRE }
 var current_element: Element = Element.EARTH
 var inspected_unit: MapUnit = null
+signal multiplayer_ready
 
 ### ========================== MAP CONFIG ========================== ###
 @export var map_size := Vector2i(22, 15)
@@ -78,7 +79,7 @@ var thrust_positions = thrust_overlay_up \
 	+ thrust_overlay_left
 var volley_tiles: Array[Vector2i] = []
 var archer_attack_range_tiles: Array[Vector2i] = []
-
+var overwatch_units_tiles = {}
 const UNIT_TERRAIN_COSTS = {
 	"Sword": {
 		"PLAINS": 1,
@@ -139,6 +140,15 @@ const UNIT_TERRAIN_COSTS = {
 		"CITY": 1,
 	},
 }
+const TILE_DEFENSE_BONUS = {
+	"FOREST": 8,      
+	"ROAD": 0,         
+	"MOUNTAIN": 12,    
+	"WALL": 99,      
+	"PLAINS": 4,      
+	"RIVER": -4,      
+	"OCEAN": 4
+}
 
 ### ========================== ACTIVE CONTEXT ========================== ###
 var active_overlay: TileMap
@@ -163,6 +173,11 @@ func find_unit_by_identifier(identifier: Dictionary) -> MapUnit:
 			return unit
 	return null
 
+func find_unit_by_id(id: int) -> MapUnit:
+	for unit in all_units:
+		if unit.unit_id == id:
+			return unit
+	return null
 ### ========================== MULTIPLAYER CONNECTION ========================== ###
 
 func _ready():
@@ -243,19 +258,6 @@ func setup_multiplayer():
 	multiplayer.peer_disconnected.connect(_on_player_disconnected)
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 
-func position_window_for_player():
-	# Posicionar ventanas automáticamente para pruebas locales
-	if OS.get_name() == "Windows":
-		var screen_size = DisplayServer.screen_get_size()
-		var window_size = get_window().size
-		var vertical_offset = screen_size.y / 4  # Bajar las ventanas un poco
-		var horizontal_offset = screen_size.x / 8  # Mover hacia el centro horizontalmente
-		
-		if player_id == 1: # Host
-			get_window().position = Vector2i(horizontal_offset, vertical_offset)
-		elif player_id == 2: # Client
-			get_window().position = Vector2i(screen_size.x - window_size.x - horizontal_offset, vertical_offset)
-
 func _on_create_game_pressed():
 	create_host()
 
@@ -299,8 +301,6 @@ func create_host():
 	# Cambiar título de ventana
 	get_window().title = "Player 1 - HOST"
 
-	# Posicionar ventana del host
-	#position_window_for_player()
 
 	if multiplayer_menu:
 		multiplayer_menu.set_status("Esperando jugador...")
@@ -349,14 +349,12 @@ func _on_connected_to_server():
 	# Cambiar título de ventana
 	get_window().title = "Player 2 - Client"
 
-	# Posicionar ventana del cliente
-	#position_window_for_player()
-
 	if multiplayer_menu:
 		multiplayer_menu.set_status("Conectado como jugador " + str(player_id))
 		multiplayer_menu.hide()
 	# Solicitar estado inicial
 	request_game_state.rpc_id(1)
+	multiplayer_ready.emit()
 
 ### ========================== GAME STATE SYNC ========================== ###
 
@@ -717,45 +715,49 @@ func update_astar_raider(start: Vector2i, goal: Vector2i):
 func move_unit_along_path(unit: MapUnit, path: Array[Vector2i], from_rpc: bool = false) -> void:
 	if path.is_empty():
 		return
-	
+
 	input_locked = true
 	unit.original_position = unit.grid_position
 	var last_safe_tile = [unit.grid_position]
-	
+
 	# Guardar el path en la unidad para sincronizar cuando se confirme (solo si no viene de un RPC)
 	if not from_rpc:
 		unit.set_meta("pending_move_path", path)
 		unit.set_meta("pending_move_is_wrapped", false)
-	
+
 	# Si viene de RPC, asegurar que la unidad empiece desde su posición original visualmente
 	if from_rpc:
 		unit.grid_position = unit.original_position
 		unit.global_position = Vector2(unit.original_position * 32) + Vector2(16, 16)
 		update_fog_of_war()
-	
+
 	var tween := create_tween()
+	unit.set_meta("movement_tween", tween)
 	tween.set_parallel(false)
 	var move_time := 0.1
 	var pause_time := 0.04
-	
+
 	for tile in path:
 		var step_tile := tile
 		var pos: Vector2 = Vector2(step_tile * 32) + Vector2(16, 16)
-		
+
 		# NO actualizar grid_position antes del tween cuando viene de RPC
 		# Se actualizará en el callback después del movimiento visual
-		
+
 		tween.tween_property(unit, "global_position", pos, move_time)
 		tween.tween_interval(pause_time)
-		
+
 		# Actualizar posición lógica DESPUÉS del movimiento visual (en el callback)
 		if from_rpc:
 			tween.tween_callback(func():
+				if not is_instance_valid(unit):
+					return
 				unit.grid_position = step_tile
+				_check_overwatch(unit, step_tile)
 				# Solo verificar visibilidad (el fog of war ya está calculado)
 				_check_unit_visibility(unit)
 			)
-		
+
 		if get_hidden_enemy_at(step_tile, unit.team, unit.is_raider()):
 			tween.tween_callback(func() -> void:
 				var enemy := get_hidden_enemy_at(step_tile, unit.team, unit.is_raider())
@@ -763,11 +765,11 @@ func move_unit_along_path(unit: MapUnit, path: Array[Vector2i], from_rpc: bool =
 					# Agregar la posición a las posiciones reveladas por ambush (persistente)
 					if enemy.grid_position not in ambush_revealed_positions:
 						ambush_revealed_positions.append(enemy.grid_position)
-					
+
 					# Marcar la unidad como visible
 					enemy.visible = true
 					enemy.update_visual_state()
-					
+
 					# Actualizar posición de la unidad emboscada
 					var final_pos = last_safe_tile[0]
 					unit.grid_position = final_pos
@@ -775,7 +777,7 @@ func move_unit_along_path(unit: MapUnit, path: Array[Vector2i], from_rpc: bool =
 					show_ambush_effect(unit.global_position)
 					unit.current_state = MapUnit.UnitState.MOVED
 					unit.update_visual_state()
-					
+
 					# SINCRONIZAR: path hasta donde llegó (incluyendo la posición final) (solo si no viene de un RPC)
 					if not from_rpc and multiplayer.multiplayer_peer != null:
 						var ambush_path: Array[Vector2i] = []
@@ -785,20 +787,20 @@ func move_unit_along_path(unit: MapUnit, path: Array[Vector2i], from_rpc: bool =
 							if path[i] == step_tile:
 								break
 						ambush_path.append(final_pos)
-						
+
 						# Convertir path a arrays de x e y para RPC
 						var path_x: Array = []
 						var path_y: Array = []
 						for p in ambush_path:
 							path_x.append(p.x)
 							path_y.append(p.y)
-						
+
 						sync_unit_move.rpc(unit.original_position.x, unit.original_position.y, path_x, path_y, false, unit.team, unit.unit_type)
-					
+
 					# SINCRONIZAR: descubrimiento del enemigo
 					if multiplayer.multiplayer_peer != null:
 						sync_ambush_reveal.rpc(enemy.grid_position.x, enemy.grid_position.y, enemy.team, enemy.unit_type)
-					
+
 					update_fog_of_war()
 					active_overlay.clear()
 					input_locked = false
@@ -806,10 +808,17 @@ func move_unit_along_path(unit: MapUnit, path: Array[Vector2i], from_rpc: bool =
 			)
 		else:
 			tween.tween_callback(func() -> void:
+				if not is_instance_valid(unit):
+					return
 				last_safe_tile[0] = step_tile
+				unit.grid_position = step_tile
+				_check_overwatch(unit, step_tile)
 			)
-	
+
 	var end_move_callback = func() -> void:
+		if not is_instance_valid(unit):
+			input_locked = false
+			return
 		if input_locked:
 			unit.global_position = Vector2(path.back() * 32) + Vector2(16, 16)
 			# grid_position se actualiza cuando se confirma desde el menú
@@ -820,7 +829,7 @@ func move_unit_along_path(unit: MapUnit, path: Array[Vector2i], from_rpc: bool =
 			else:
 				# Si viene de un RPC, actualizar fog of war para ocultar la unidad si está fuera de visión
 				update_fog_of_war()
-	
+
 	tween.tween_callback(end_move_callback)
 	active_overlay.clear()
 
@@ -1102,16 +1111,17 @@ func start_turn(team: int):
 	update_active_layers()
 	update_fog_of_war()
 	current_player_team = team
-	
+
+
 	team1_income = 0
 	team2_income = 0
-	
+
 	for b in $MapLayer/Buildings.get_children():
 		if b.team == 1:
 			team1_income += b.income_per_turn
 		elif b.team == 2:
 			team2_income += b.income_per_turn
-	
+
 	if current_player_team == 1:
 		team1_funds += team1_income
 		turn += 1
@@ -1519,6 +1529,7 @@ func show_action_menu(unit: MapUnit):
 	bash_btn.pressed.connect(_on_bash_pressed.bind())
 	thrust_btn.pressed.connect(_on_thrust_pressed.bind())
 	volley_btn.pressed.connect(_on_volley_pressed.bind())
+	overwatch_btn.pressed.connect(_on_overwatch_pressed.bind(unit))
 
 	is_menu_open = true
 	update_cursor_visibility()
@@ -1526,8 +1537,69 @@ func show_action_menu(unit: MapUnit):
 func is_action_mode() -> bool:
 	return attack_mode or mark_mode or bash_mode or thrust_mode or volley_mode
 
-func _on_overwatch_pressed():
-	return
+func abort_unit_movement(unit: MapUnit) -> void:
+	if unit and unit.has_meta("movement_tween"):
+		var tween: Tween = unit.get_meta("movement_tween")
+		if tween:
+			tween.kill()
+
+	input_locked = false
+	active_overlay.clear()
+
+func _check_overwatch(moving_unit: MapUnit, tile: Vector2i):
+	if not is_instance_valid(moving_unit):
+		return
+
+	# Store tween reference BEFORE attack (in case unit dies)
+	var movement_tween = null
+	if moving_unit.has_meta("movement_tween"):
+		movement_tween = moving_unit.get_meta("movement_tween")
+
+	for overwatch_unit in overwatch_units_tiles:
+		if overwatch_unit.team != moving_unit.team and not overwatch_unit.is_raider():
+			if tile in overwatch_units_tiles[overwatch_unit]:
+				if tile in all_visible_tiles:
+					# Ejecutar localmente
+					overwatch_unit.attack_overwatch(moving_unit)
+
+					# If unit died, clean up everything
+					if not is_instance_valid(moving_unit):
+						if movement_tween and movement_tween.is_running():
+							movement_tween.kill()
+						input_locked = false  
+						active_overlay.clear()
+						update_fog_of_war()
+						return
+
+					overwatch_units_tiles.erase(overwatch_unit)
+					# Sincronizar con otro jugador
+					sync_overwatch_attack.rpc(overwatch_unit.unit_id, moving_unit.unit_id)
+					break
+
+@rpc("any_peer", "reliable")
+func sync_overwatch_attack(overwatch_id: int, target_id: int):
+	var overwatch_unit = find_unit_by_id(overwatch_id)
+	var target_unit = find_unit_by_id(target_id)
+
+	if overwatch_unit and target_unit:
+		overwatch_unit.attack_overwatch(target_unit)
+		if overwatch_units_tiles.has(overwatch_unit):
+			overwatch_units_tiles.erase(overwatch_unit)
+
+func _on_overwatch_pressed(unit: MapUnit):
+	close_action_menu()
+	unit.is_in_overwatch = true
+	unit.current_state = MapUnit.UnitState.MOVED
+
+	# Calcular tiles de overwatch
+	var overwatch_tiles = []
+	for x in range(-unit.attack_range, unit.attack_range + 1):
+		for y in range(-unit.attack_range, unit.attack_range + 1):
+			if abs(x) + abs(y) <= unit.attack_range:
+				overwatch_tiles.append(unit.grid_position + Vector2i(x, y))
+	overwatch_units_tiles[unit] = overwatch_tiles
+	# Confirmar movimiento (como _on_move_confirmed)
+	_on_move_confirmed()
 
 func _on_volley_pressed():
 	volley_tiles.clear()
@@ -2291,7 +2363,7 @@ func sync_building_capture(building_x: int, building_y: int, new_team: int, capt
 		_on_building_ownership_changed(building)
 
 @rpc("any_peer", "reliable")
-func sync_unit_production(building_x: int, building_y: int, unit_type: String, team: int, cost: int):
+func sync_unit_production(building_x: int, building_y: int, unit_type: String, team: int, cost: int, _new_id: int):
 	var unit_scene = load("res://scenes/units/" + unit_type + ".tscn")
 	var unit_instance = unit_scene.instantiate()
 	var color_suffix = "_Blue" if team == 1 else "_Red"
@@ -2305,6 +2377,7 @@ func sync_unit_production(building_x: int, building_y: int, unit_type: String, t
 	unit_instance.grid_position = Vector2i(building_x, building_y)
 	unit_instance.current_state = MapUnit.UnitState.MOVED
 	unit_instance.update_visual_state()
+	unit_instance.unit_id = _new_id
 	
 	if team == 1:
 		team1_funds -= cost

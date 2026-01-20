@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://de8ekkjxtbtho"]
 
-[ext_resource type="Script" path="res://scripts/pause_menu.gd" id="1_nxt3f"]
+[ext_resource type="Script" uid="uid://5s5eqffnje7u" path="res://scripts/pause_menu.gd" id="1_nxt3f"]
 
 [node name="Pause_menu" type="CanvasLayer"]
 script = ExtResource("1_nxt3f")
@@ -11,13 +11,13 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -112.0
-offset_top = -112.0
-offset_right = -42.0
-offset_bottom = 24.0
+offset_left = -144.0
+offset_top = -128.0
+offset_right = 62.0
+offset_bottom = 128.0
 grow_horizontal = 2
 grow_vertical = 2
-scale = Vector2(3, 1.64)
+scale = Vector2(1.08, 0.96)
 metadata/_edit_group_ = true
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PausePanel"]
@@ -25,33 +25,40 @@ layout_mode = 2
 
 [node name="ResumeButton" type="Button" parent="PausePanel/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 38
 text = "Resume"
 
 [node name="SaveButton" type="Button" parent="PausePanel/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 38
 text = "Save"
 
 [node name="LoadButton" type="Button" parent="PausePanel/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 38
 text = "Load"
 
 [node name="ExitButton" type="Button" parent="PausePanel/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 38
 text = "Quit Game"
 
 [node name="SaveSlots" type="PanelContainer" parent="."]
+visible = false
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -123.0
-offset_top = -112.0
-offset_right = -53.0
-offset_bottom = 24.0
+offset_left = -145.5
+offset_top = -139.5
+offset_right = 60.5
+offset_bottom = 116.5
 grow_horizontal = 2
 grow_vertical = 2
-scale = Vector2(3, 1.64)
+scale = Vector2(0.71999997, 0.5999982)
+size_flags_horizontal = 4
+size_flags_vertical = 4
 metadata/_edit_group_ = true
 
 [node name="VBoxContainer" type="VBoxContainer" parent="SaveSlots"]
@@ -59,18 +66,22 @@ layout_mode = 2
 
 [node name="SaveSlot1Button" type="Button" parent="SaveSlots/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 38
 text = "Save1
 "
 
 [node name="SaveSlot2Button" type="Button" parent="SaveSlots/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 38
 text = "Save2"
 
 [node name="SaveSlot3Button" type="Button" parent="SaveSlots/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 38
 text = "Save3"
 
 [node name="LoadSlots" type="PanelContainer" parent="."]
+visible = false
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -82,7 +93,7 @@ offset_right = -53.0
 offset_bottom = 24.0
 grow_horizontal = 2
 grow_vertical = 2
-scale = Vector2(3, 1.64)
+scale = Vector2(0.75999856, 0.7199994)
 metadata/_edit_group_ = true
 
 [node name="VBoxContainer" type="VBoxContainer" parent="LoadSlots"]
@@ -90,13 +101,16 @@ layout_mode = 2
 
 [node name="LoadSlot1Button" type="Button" parent="LoadSlots/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 38
 text = "Load1
 "
 
 [node name="LoadSlot2Button" type="Button" parent="LoadSlots/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 38
 text = "Load2"
 
 [node name="LoadSlot3Button" type="Button" parent="LoadSlots/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 38
 text = "Load3"
