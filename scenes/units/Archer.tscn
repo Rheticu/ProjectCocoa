@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://blnosuul4m2m5" path="res://art/units/Archer1.png" id="2_r0ufk"]
 
 [node name="Archer" instance=ExtResource("1_f2gn8")]
-movement_range = 2
+movement_range = 4
 attack = 40
 attack_range = 3
 defense = 1

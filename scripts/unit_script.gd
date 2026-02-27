@@ -22,6 +22,7 @@ var grid_position : Vector2i:
 var current_player_team: int = 1  # Default to team 1
 var original_position : Vector2i
 var marked_turns: int = 0
+var shield_turns: int = 0
 var is_in_overwatch: bool = false
 var unit_id: int = -1
 @export var unit_type: String  # Can be "Sword", "Spear", "Archer", etc.
@@ -115,7 +116,6 @@ func _on_input_event(_viewport, event, _shape_idx):
 
 	if not main.raider_view_enabled:
 		if event.is_action_pressed("LMClick"):
-			print(unit_id)
 			main.active_overlay.clear()
 			main.attack_range_overlay.clear()
 
@@ -151,6 +151,8 @@ func _on_input_event(_viewport, event, _shape_idx):
 				var reachable = main.get_reachable_cells(self.grid_position, self.movement_range, self, self.is_raider())
 				for pos in reachable:
 					main.active_overlay.set_cell(0, pos, 1, Vector2i.ZERO)
+
+	print("shield_turns:", " ", shield_turns)
 
 func select():
 	for unit in get_parent().get_children():
@@ -211,7 +213,10 @@ func get_total_defense() -> int:
 		if terrain in main.TILE_DEFENSE_BONUS:
 			tile_bonus = main.TILE_DEFENSE_BONUS[terrain]
 
-	return base_defense + tile_bonus
+	if shield_turns == 0:
+		return base_defense + tile_bonus
+	else:
+		return (base_defense)*(3) + tile_bonus
 
 func attacking(target: MapUnit):
 	var multiplier_attacker = damage_matrix[unit_type][target.unit_type]

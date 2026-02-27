@@ -25,6 +25,7 @@ var current_attack_range_unit: MapUnit = null
 @onready var camera2d = $Camera2D
 @onready var pause_menu = $UI/Pause_menu
 @onready var multiplayer_menu = $UI/MultiplayerMenu
+var production_menu_open: bool = false
 
 ### ========================== GAME STATE ========================== ###
 var action_menu_instance = null
@@ -34,6 +35,9 @@ var mark_mode := false
 var bash_mode := false
 var thrust_mode := false
 var volley_mode := false
+var scorch_mode := false
+var spawn_mode := false
+var shield_mode := false
 var selected_unit: MapUnit
 var potential_targets: Array[MapUnit] = []
 var raider_view_enabled = false
@@ -48,6 +52,7 @@ enum Element { EARTH, METAL, WATER, WOOD, FIRE }
 var current_element: Element = Element.EARTH
 var inspected_unit: MapUnit = null
 signal multiplayer_ready
+signal close_menu_production
 
 ### ========================== MAP CONFIG ========================== ###
 @export var map_size := Vector2i(22, 15)
@@ -214,6 +219,8 @@ func _ready():
 	team2_income = 0
 	for b in $MapLayer/Buildings.get_children():
 		b.ownership_changed.connect(_on_building_ownership_changed)
+		b.production_menu_opened.connect(_on_production_menu_opened)
+		b.production_menu_closed.connect(_on_production_menu_closed)
 		b.production_menu_opened.connect(camera2d._on_production_menu_opened)
 		b.production_menu_closed.connect(camera2d._on_production_menu_closed)
 		if b.team == 1:
@@ -1021,19 +1028,7 @@ func update_fog_of_war():
 		if b.has_node("CaptureLabel"):
 			b.get_node("CaptureLabel").visible = _visible
 
-	# Agregar posiciones reveladas por ambush
-	for pos in ambush_revealed_positions:
-		if pos not in all_visible_tiles:
-			all_visible_tiles.append(pos)
-		if pos not in raider_visible_tiles:
-			raider_visible_tiles.append(pos)
-		if pos not in mapunit_visible_tiles:
-			mapunit_visible_tiles.append(pos)
-		# Revelar el fog en esas posiciones
-		fog_tilemap.set_cell(0, pos, -1)
-		raider_fog_tilemap.set_cell(0, pos, -1)
-		raider_map.set_cell(0, pos, -1)
-	
+
 	# Actualizar visibilidad de unidades enemigas
 	for unit in all_units:
 		if unit.team != viewing_team:
@@ -1165,6 +1160,8 @@ func end_turn():
 	for unit in all_units:
 		if unit.marked_turns > 0:
 			unit.marked_turns -= 1
+		if unit.shield_turns > 0:
+			unit.shield_turns -= 1
 
 	current_player_team = 2 if current_player_team == 1 else 1
 
@@ -1224,6 +1221,8 @@ func _unhandled_input(event):
 			_on_end_turn_pressed()
 
 		if event.is_action_pressed("LMClick"):
+			if production_menu_open:
+				return
 			if is_menu_open:
 				return
 			if cursor_path:
@@ -1265,6 +1264,14 @@ func _unhandled_input(event):
 					try_volley(volley_tiles)
 					return
 
+			if scorch_mode:
+				try_scorch(grid_pos)
+				return
+
+			if shield_mode:
+				try_shield(grid_pos)
+				return
+
 			else:
 				for unit in active_units.get_children():
 					if unit.current_state == MapUnit.UnitState.SELECTED:
@@ -1299,6 +1306,8 @@ func _unhandled_input(event):
 							break
 
 	if event.is_action_pressed("RMClick"):
+		if production_menu_open:
+			close_menu_production.emit()
 		if is_action_mode():
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:
@@ -1500,9 +1509,10 @@ func show_action_menu(unit: MapUnit):
 	var thrust_btn = action_menu_instance.get_node("Thrust")
 	var volley_btn = action_menu_instance.get_node("Volley")
 	var overwatch_btn = action_menu_instance.get_node("Overwatch")
+	var scorch_btn = action_menu_instance.get_node("Scorch")
+	var shield_btn = action_menu_instance.get_node("Shield")
 	var has_targets = false
-	var has_mark_targets = false
-
+	var _has_mark_targets = false
 
 	for other in active_units.get_children():
 		if other.visible:
@@ -1511,10 +1521,12 @@ func show_action_menu(unit: MapUnit):
 
 	for other in all_units:
 		if unit is Raider_Unit and unit.can_mark(other):
-			has_mark_targets = true
+			_has_mark_targets = true
 
 	attack_btn.visible = has_targets
-	mark_btn.visible = has_mark_targets and unit is Raider_Unit
+	mark_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.WATER
+	scorch_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.FIRE
+	shield_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.METAL
 	capture_btn.visible = (unit.unit_type == "Sword" or "Archer" or "Spear") and (building_underneath != null) and (building_underneath.team != unit.team)
 	bash_btn.visible = unit.unit_type == "Spear"
 	thrust_btn.visible = unit.unit_type == "Sword"
@@ -1526,16 +1538,126 @@ func show_action_menu(unit: MapUnit):
 	cancel_btn.pressed.connect(_on_cancel_pressed)
 	move_btn.pressed.connect(_on_move_confirmed)
 	capture_btn.pressed.connect(_on_capture_pressed.bind(unit, building_underneath))
-	bash_btn.pressed.connect(_on_bash_pressed.bind())
-	thrust_btn.pressed.connect(_on_thrust_pressed.bind())
-	volley_btn.pressed.connect(_on_volley_pressed.bind())
+	bash_btn.pressed.connect(_on_bash_pressed)
+	thrust_btn.pressed.connect(_on_thrust_pressed)
+	volley_btn.pressed.connect(_on_volley_pressed)
 	overwatch_btn.pressed.connect(_on_overwatch_pressed.bind(unit))
+	scorch_btn.pressed.connect(_on_scorch_pressed.bind(unit))
+	shield_btn.pressed.connect(_on_shield_pressed.bind(unit))
 
 	is_menu_open = true
 	update_cursor_visibility()
 
+func _on_shield_pressed(unit: MapUnit):
+	close_action_menu()
+	shield_mode = true
+	active_overlay.clear()
+	potential_targets.clear()
+	for target in all_units:
+		if target.visible and unit.can_shield(target):
+			potential_targets.append(target)
+			target.get_node("Sprite2D").modulate = Color(0.0, 1.393, 0.094, 1.0)
+
+func try_shield(grid_pos: Vector2i):
+	update_active_layers()
+	for unit in all_units:
+		if unit.grid_position == grid_pos && selected_unit.can_shield(unit):
+			selected_unit.shielding(unit)
+
+			# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
+			if multiplayer.multiplayer_peer != null:
+				var attacker_id = get_unit_identifier(selected_unit)
+				var target_id = get_unit_identifier(unit)
+
+				# Si la unidad se movió, enviar path completo; si no, enviar path vacío
+				var path_x: Array = []
+				var path_y: Array = []
+				var is_wrapped = false
+				var attacker_old_x = selected_unit.original_position.x
+				var attacker_old_y = selected_unit.original_position.y
+
+				if selected_unit.current_state == MapUnit.UnitState.MOVED:
+					# La unidad se movió este turno, enviar su path
+					if selected_unit.has_meta("pending_move_path"):
+						var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+						for p in pending_path:
+							path_x.append(p.x)
+							path_y.append(p.y)
+						if selected_unit.has_meta("pending_move_is_wrapped"):
+							is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+
+				# Enviar RPC con movimiento y ataque atomicamente
+				sync_shield.rpc(
+					attacker_old_x, attacker_old_y,
+					path_x, path_y, is_wrapped,
+					attacker_id.team, attacker_id.unit_type,
+					target_id.x, target_id.y, target_id.team, target_id.unit_type
+				)
+
+			# Limpiar selección visual sin cambiar el estado MOVED
+			selected_unit.update_visual_state()
+			hud.hide_unit_info()
+			selected_unit = null
+			end_shield_mode()
+			active_overlay.clear()
+			return
+
+func _on_scorch_pressed(unit: MapUnit):
+	close_action_menu()
+	scorch_mode = true
+	active_overlay.clear()
+	potential_targets.clear()
+	for target in all_units:
+		if target.visible and unit.can_scorch(target):
+			potential_targets.append(target)
+			target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+
+func try_scorch(grid_pos: Vector2i):
+	update_active_layers()
+	for unit in all_units:
+		if unit.grid_position == grid_pos && selected_unit.can_scorch(unit):
+			selected_unit.scorching(unit)
+
+			# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
+			if multiplayer.multiplayer_peer != null:
+				var attacker_id = get_unit_identifier(selected_unit)
+				var target_id = get_unit_identifier(unit)
+
+				# Si la unidad se movió, enviar path completo; si no, enviar path vacío
+				var path_x: Array = []
+				var path_y: Array = []
+				var is_wrapped = false
+				var attacker_old_x = selected_unit.original_position.x
+				var attacker_old_y = selected_unit.original_position.y
+
+				if selected_unit.current_state == MapUnit.UnitState.MOVED:
+					# La unidad se movió este turno, enviar su path
+					if selected_unit.has_meta("pending_move_path"):
+						var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+						for p in pending_path:
+							path_x.append(p.x)
+							path_y.append(p.y)
+						if selected_unit.has_meta("pending_move_is_wrapped"):
+							is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+
+				# Enviar RPC con movimiento y ataque atomicamente
+				sync_unit_move_and_scorch.rpc(
+					attacker_old_x, attacker_old_y,
+					path_x, path_y, is_wrapped,
+					attacker_id.team, attacker_id.unit_type,
+					target_id.x, target_id.y, target_id.team, target_id.unit_type
+				)
+
+			# Limpiar selección visual sin cambiar el estado MOVED
+			selected_unit.update_visual_state()
+			hud.hide_unit_info()
+			selected_unit = null
+			end_scorch_mode()
+			active_overlay.clear()
+			return
+
 func is_action_mode() -> bool:
-	return attack_mode or mark_mode or bash_mode or thrust_mode or volley_mode
+	return attack_mode or mark_mode or bash_mode or thrust_mode or volley_mode or scorch_mode or shield_mode
 
 func abort_unit_movement(unit: MapUnit) -> void:
 	if unit and unit.has_meta("movement_tween"):
@@ -1588,6 +1710,7 @@ func sync_overwatch_attack(overwatch_id: int, target_id: int):
 
 func _on_overwatch_pressed(unit: MapUnit):
 	close_action_menu()
+	_on_move_confirmed()
 	unit.is_in_overwatch = true
 	unit.current_state = MapUnit.UnitState.MOVED
 
@@ -1599,7 +1722,8 @@ func _on_overwatch_pressed(unit: MapUnit):
 				overwatch_tiles.append(unit.grid_position + Vector2i(x, y))
 	overwatch_units_tiles[unit] = overwatch_tiles
 	# Confirmar movimiento (como _on_move_confirmed)
-	_on_move_confirmed()
+
+	unit.update_visual_state()
 
 func _on_volley_pressed():
 	volley_tiles.clear()
@@ -1846,39 +1970,38 @@ func _on_move_confirmed():
 	update_active_layers()
 	close_action_menu()
 	potential_targets.clear()
-	
+
 	for enemy in all_units:
 		if enemy.team != player_id:
 			enemy.update_visual_state()
-	
+
 	for unit in active_units.get_children():
 		if unit.current_state == MapUnit.UnitState.SELECTED:
 			# Actualizar grid_position a la posición final (donde está visualmente)
 			var final_pos = Vector2i(unit.global_position / 32)
 			unit.grid_position = final_pos
-			
+
 			# SINCRONIZAR: path completo SOLO cuando se confirma el movimiento
 			if multiplayer.multiplayer_peer != null and unit.has_meta("pending_move_path"):
 				var pending_path: Array[Vector2i] = unit.get_meta("pending_move_path")
 				var is_wrapped: bool = unit.get_meta("pending_move_is_wrapped")
-				
 				# Convertir path a arrays de x e y para RPC
 				var path_x: Array = []
 				var path_y: Array = []
 				for p in pending_path:
 					path_x.append(p.x)
 					path_y.append(p.y)
-				
+
 				sync_unit_move.rpc(unit.original_position.x, unit.original_position.y, path_x, path_y, is_wrapped, unit.team, unit.unit_type)
-				
+
 				# Limpiar metadata
 				unit.remove_meta("pending_move_path")
 				unit.remove_meta("pending_move_is_wrapped")
-			
+
 			unit.current_state = MapUnit.UnitState.MOVED
 			unit.update_visual_state()
 			break
-	
+
 	active_overlay.clear()
 	update_fog_of_war()
 
@@ -1943,11 +2066,11 @@ func _start_rpc_movement(unit: MapUnit, path_x: Array, path_y: Array, is_wrapped
 func sync_ambush_reveal(enemy_x: int, enemy_y: int, enemy_team: int, enemy_unit_type: String):
 	var sender_id = multiplayer.get_remote_sender_id()
 	var sender_player_id = 1 if sender_id == 1 else 2
-	
+
 	# No procesar si es mi propia acción (ya la hice localmente)
 	if sender_player_id == player_id:
 		return
-	
+
 	# Buscar la unidad enemiga
 	var enemy = find_unit_by_identifier({
 		"x": enemy_x,
@@ -1955,7 +2078,7 @@ func sync_ambush_reveal(enemy_x: int, enemy_y: int, enemy_team: int, enemy_unit_
 		"team": enemy_team,
 		"unit_type": enemy_unit_type
 	})
-	
+
 	if enemy:
 		# Agregar la posición a las posiciones reveladas por ambush
 		if enemy.grid_position not in ambush_revealed_positions:
@@ -2213,6 +2336,61 @@ func sync_unit_move_and_attack(
 		attacker.attacking(target)
 		update_fog_of_war()
 
+@rpc("any_peer", "reliable")
+func sync_unit_move_and_scorch(
+		attacker_old_x: int, attacker_old_y: int,
+		path_x: Array, path_y: Array, is_wrapped: bool,
+		attacker_team: int, attacker_type: String,
+		target_x: int, target_y: int, target_team: int, target_type: String):
+	
+	var sender_id = multiplayer.get_remote_sender_id()
+	var sender_player_id = 1 if sender_id == 1 else 2
+
+	if sender_player_id != current_player_team:
+		return
+
+	if sender_player_id == player_id:
+		return
+
+	# Buscar la unidad atacante por su posición vieja (antes del movimiento)
+	var attacker = find_unit_by_identifier({
+		"x": attacker_old_x,
+		"y": attacker_old_y,
+		"team": attacker_team,
+		"unit_type": attacker_type
+	})
+
+	if not attacker:
+		return
+
+	# PASO 1: Si hay path, reproducir el movimiento
+	if not path_x.is_empty():
+		# Reconstruir path desde arrays
+		var path: Array[Vector2i] = []
+		for i in range(path_x.size()):
+			path.append(Vector2i(path_x[i], path_y[i]))
+
+		# Aplicar movimiento visual (tween) y actualización de estado
+		if is_wrapped:
+			move_unit_along_wrapped_path(attacker, path, true)
+		else:
+			move_unit_along_path(attacker, path, true)
+
+		# Esperar a que el tween termine (0.14s por tile aproximadamente)
+		await get_tree().create_timer(path.size() * 0.14).timeout
+
+	# PASO 2: Ejecutar el ataque
+	var target = find_unit_by_identifier({
+		"x": target_x,
+		"y": target_y,
+		"team": target_team,
+		"unit_type": target_type
+	})
+
+	if target:
+		attacker.scorching(target)
+		update_fog_of_war()
+
 func end_attack_mode():
 	update_active_layers()
 	attack_mode = false
@@ -2335,6 +2513,62 @@ func sync_mark(
 
 	update_fog_of_war()
 
+@rpc("any_peer", "reliable")
+func sync_shield(
+		attacker_old_x: int, attacker_old_y: int,
+		path_x: Array, path_y: Array, is_wrapped: bool,
+		attacker_team: int, attacker_type: String,
+		target_x: int, target_y: int, target_team: int, target_type: String):
+	
+	var sender_id = multiplayer.get_remote_sender_id()
+	var sender_player_id = 1 if sender_id == 1 else 2
+
+	if sender_player_id != current_player_team:
+		return
+
+	if sender_player_id == player_id:
+		return
+
+	# Buscar la unidad atacante por su posición vieja (antes del movimiento)
+	var attacker = find_unit_by_identifier({
+		"x": attacker_old_x,
+		"y": attacker_old_y,
+		"team": attacker_team,
+		"unit_type": attacker_type
+	})
+
+	if not attacker:
+		return
+
+	# PASO 1: Si hay path, reproducir el movimiento
+	if not path_x.is_empty():
+		# Reconstruir path desde arrays
+		var path: Array[Vector2i] = []
+		for i in range(path_x.size()):
+			path.append(Vector2i(path_x[i], path_y[i]))
+
+		# Aplicar movimiento visual (tween) y actualización de estado
+		if is_wrapped:
+			move_unit_along_wrapped_path(attacker, path, true)
+		else:
+			move_unit_along_path(attacker, path, true)
+
+		# Esperar a que el tween termine (0.14s por tile aproximadamente)
+		await get_tree().create_timer(path.size() * 0.14).timeout
+
+	# PASO 2: Ejecutar el ataque
+	var target = find_unit_by_identifier({
+		"x": target_x,
+		"y": target_y,
+		"team": target_team,
+		"unit_type": target_type
+	})
+
+	if target:
+		attacker.shielding(target)
+
+	update_fog_of_war()
+
 func end_mark_mode():
 	update_active_layers()
 	mark_mode = false
@@ -2451,6 +2685,31 @@ func end_action_mode():
 		end_thrust_mode()
 	if volley_mode:
 		end_volley_mode()
+	if scorch_mode:
+		end_scorch_mode()
+	if spawn_mode:
+		end_spawn_mode()
+
+func end_scorch_mode():
+	update_active_layers()
+	scorch_mode = false
+	for unit in all_units:
+		if unit in potential_targets or unit.modulate == Color(2, 0.5, 0.5):
+			unit.update_visual_state()
+	potential_targets.clear()
+	update_fog_of_war()
+
+func end_shield_mode():
+	update_active_layers()
+	shield_mode = false
+	for unit in all_units:
+		if unit in potential_targets or unit.modulate == Color(0.0, 1.393, 0.094, 1.0):
+			unit.update_visual_state()
+	potential_targets.clear()
+	update_fog_of_war()
+
+func end_spawn_mode():
+	return
 
 func _on_exit_game():
 	get_tree().quit()
@@ -2588,3 +2847,9 @@ func _process(_delta):
 
 func update_cursor_visibility():
 	cursor_highlight.visible = not is_menu_open
+
+func _on_production_menu_opened():
+	production_menu_open = true
+
+func _on_production_menu_closed():
+	production_menu_open = false

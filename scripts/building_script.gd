@@ -20,7 +20,6 @@ signal ownership_changed(building: Building)
 
 var capturing_unit: MapUnit = null
 var capture_points: int
-var capture_progress = 0
 var building_position: Vector2i
 var production_menu_instance = null
 var production_data = {
@@ -37,21 +36,35 @@ func _ready():
 	if capture_points == 0:
 		capture_points = max_capture_points
 	update_visual()
+	main.close_menu_production.connect(close_production_menu)
+
+func _process(_delta):
+	if capturing_unit == null:
+		return
+
+	if capturing_unit.grid_position != building_position:
+		reset_capture()
 
 func capture(unit: MapUnit, amount: int, capturing_team: int):
+	var previous_team = team  # Guardar equipo anterior
+
 	if unit.unit_type in ["Sword", "Spear", "Archer"]:
 		capturing_unit = unit
-		
+
 		# Conectar a la señal de muerte de la unidad
 		if not unit.tree_exiting.is_connected(_on_capturer_destroyed):
 			unit.tree_exiting.connect(_on_capturer_destroyed.bind(unit))
-	
+
 	capture_points -= amount
 	if capture_points <= 0:
 		team = capturing_team
 		capture_points = max_capture_points
+
 	update_visual()
-	emit_signal("ownership_changed", self)
+
+	# Emitir señal SOLO si el equipo cambió
+	if team != previous_team:
+		emit_signal("ownership_changed", self)
 
 func _on_capturer_destroyed(unit: MapUnit):
 	# Solo resetear si es NUESTRO capturador
@@ -60,32 +73,34 @@ func _on_capturer_destroyed(unit: MapUnit):
 
 func reset_capture():
 	if capturing_unit:
-		# Desconectar señal si existe
+		# Desconectar señal de muerte si existe
 		if capturing_unit.tree_exiting.is_connected(_on_capturer_destroyed):
 			capturing_unit.tree_exiting.disconnect(_on_capturer_destroyed)
+
 		capturing_unit = null
-	
+
 	capture_points = max_capture_points
-	main.sync_building_capture.rpc(building_position.x, building_position.y, team, capture_points)
+
+	# Sincronizar en multiplayer si es necesario
+	if main and main.has_method("sync_building_capture"):
+		main.sync_building_capture.rpc(building_position.x, building_position.y, team, capture_points)
+
 	update_visual()
 
 func update_visual():
-	# Cambiar color del sprite según dueño
-	match team:
-		0: $Sprite2D.modulate = Color(1, 1, 1)      # Neutral
-		1: $Sprite2D.modulate = Color(0.0, 0.635, 0.957, 1.0)  # Player 1
-		2: $Sprite2D.modulate = Color(1, 0.5, 0.5)  # Player 2
+	
+		# Cambiar color del sprite según dueño
+		match team:
+			0: $Sprite2D.modulate = Color(1, 1, 1)      # Neutral
+			1: $Sprite2D.modulate = Color(0.0, 0.635, 0.957, 1.0)  # Player 1
+			2: $Sprite2D.modulate = Color(1, 0.5, 0.5)  # Player 2
 
-	# Actualizar label
-	if has_node("CaptureLabel"):
-		if capture_points < max_capture_points:
-			$CaptureLabel.text = str(capture_points)
-		else:
-			$CaptureLabel.text = ""
-
-func _unhandled_input(event):
-	if event.is_action_pressed("RMClick"):
-		close_production_menu()
+		# Actualizar label
+		if has_node("CaptureLabel"):
+			if capture_points < max_capture_points:
+				$CaptureLabel.text = str(capture_points)
+			else:
+				$CaptureLabel.text = ""
 
 func _on_input_event(_viewport, event, _shape_idx):
 	# Verificar is_ai_processing solo si existe (PvE)
@@ -117,14 +132,14 @@ func _on_input_event(_viewport, event, _shape_idx):
 
 func show_production_menu():
 	close_production_menu()
-	
+
 	production_menu_instance = PopupPanel.new()
 	main.add_child(production_menu_instance)
-	
+
 	# Tamaño del menú más ajustado
 	production_menu_instance.size = Vector2(320, 400)
 	production_menu_instance.position = Vector2(camera.position.x - 160, camera.position.y - 200)
-	
+
 	# Contenedor principal con márgenes
 	var main_container = MarginContainer.new()
 	main_container.add_theme_constant_override("margin_left", 10)
@@ -133,18 +148,18 @@ func show_production_menu():
 	main_container.add_theme_constant_override("margin_bottom", 10)
 	main_container.size = production_menu_instance.size
 	production_menu_instance.add_child(main_container)
-	
+
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 8)
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	main_container.add_child(vbox)
-	
+
 	# Título con estilo
 	var title_container = HBoxContainer.new()
 	title_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_child(title_container)
-	
+
 	var title_label = Label.new()
 	title_label.text = "PRODUCTION"
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -152,7 +167,7 @@ func show_production_menu():
 	title_label.add_theme_font_size_override("font_size", 18)
 	title_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
 	title_container.add_child(title_label)
-	
+
 	# Subtítulo con tipo de edificio
 	var subtitle_label = Label.new()
 	subtitle_label.text = building_type
@@ -161,17 +176,17 @@ func show_production_menu():
 	subtitle_label.add_theme_font_size_override("font_size", 14)
 	subtitle_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.9))
 	vbox.add_child(subtitle_label)
-	
+
 	# Separador decorativo
 	var separator = HSeparator.new()
 	separator.add_theme_constant_override("separation", 10)
 	vbox.add_child(separator)
-	
+
 	# Encabezado de columnas
 	var header_container = HBoxContainer.new()
 	header_container.add_theme_constant_override("separation", 15)
 	vbox.add_child(header_container)
-	
+
 	var unit_header = Label.new()
 	unit_header.text = "UNIT"
 	unit_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -179,7 +194,7 @@ func show_production_menu():
 	unit_header.add_theme_font_size_override("font_size", 14)
 	unit_header.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	header_container.add_child(unit_header)
-	
+
 	var cost_header = Label.new()
 	cost_header.text = "COST"
 	cost_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -187,41 +202,41 @@ func show_production_menu():
 	cost_header.add_theme_font_size_override("font_size", 14)
 	cost_header.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	header_container.add_child(cost_header)
-	
+
 	# Lista de unidades con scroll
 	var scroll_container = ScrollContainer.new()
 	scroll_container.custom_minimum_size = Vector2(0, 250)
 	scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(scroll_container)
-	
+
 	var units_container = VBoxContainer.new()
 	units_container.add_theme_constant_override("separation", 5)
 	units_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll_container.add_child(units_container)
-	
+
 	# Obtener datos de producción
 	var production_info = production_data.get(building_type, {})
 	var available_units = production_info.get("units", [])
 	var unit_costs = production_info.get("costs", {})
-	
+
 	# Fondos actuales del equipo
 	var current_funds = 0
 	if team == 1:
 		current_funds = main.team1_funds
 	elif team == 2:
 		current_funds = main.team2_funds
-	
+
 	# Unidades disponibles
 	for unit_type in available_units:
 		var unit_cost = unit_costs.get(unit_type, 0)
 		var can_afford = (current_funds >= unit_cost)
-		
+
 		# Fila de unidad
 		var unit_row = HBoxContainer.new()
 		unit_row.add_theme_constant_override("separation", 15)
 		unit_row.custom_minimum_size = Vector2(0, 36)
 		units_container.add_child(unit_row)
-		
+
 		# Nombre de la unidad
 		var name_label = Label.new()
 		name_label.text = unit_type
@@ -229,7 +244,7 @@ func show_production_menu():
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		name_label.add_theme_font_size_override("font_size", 16)
 		unit_row.add_child(name_label)
-		
+
 		# Costo
 		var cost_label = Label.new()
 		cost_label.text = "$" + str(unit_cost)
@@ -237,14 +252,14 @@ func show_production_menu():
 		cost_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		cost_label.add_theme_font_size_override("font_size", 16)
 		unit_row.add_child(cost_label)
-		
+
 		# Botón de producción
 		var unit_button = Button.new()
 		unit_button.text = "BUILD"
 		unit_button.custom_minimum_size = Vector2(80, 32)
 		unit_button.disabled = not can_afford
 		unit_button.pressed.connect(_on_unit_button_pressed.bind(unit_type, unit_cost))
-		
+
 		# Estilo del botón
 		if can_afford:
 			unit_button.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
@@ -262,11 +277,11 @@ func show_production_menu():
 			normal_style.corner_radius_bottom_left = 4
 			normal_style.corner_radius_bottom_right = 4
 			unit_button.add_theme_stylebox_override("normal", normal_style)
-			
+
 			var hover_style = normal_style.duplicate()
 			hover_style.bg_color = Color(0.3, 0.7, 0.3, 0.95)
 			unit_button.add_theme_stylebox_override("hover", hover_style)
-			
+
 			var pressed_style = normal_style.duplicate()
 			pressed_style.bg_color = Color(0.1, 0.5, 0.1, 0.9)
 			unit_button.add_theme_stylebox_override("pressed", pressed_style)
@@ -274,7 +289,7 @@ func show_production_menu():
 			# Botón gris cuando no se puede comprar
 			name_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 			cost_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-			
+
 			var disabled_style = StyleBoxFlat.new()
 			disabled_style.bg_color = Color(0.3, 0.3, 0.3, 0.7)
 			disabled_style.border_color = Color(0.4, 0.4, 0.4)
@@ -287,9 +302,9 @@ func show_production_menu():
 			disabled_style.corner_radius_bottom_left = 4
 			disabled_style.corner_radius_bottom_right = 4
 			unit_button.add_theme_stylebox_override("disabled", disabled_style)
-		
+
 		unit_row.add_child(unit_button)
-	
+
 	# Información de fondos
 	var funds_label = Label.new()
 	funds_label.text = "Available: $" + str(current_funds)
@@ -297,13 +312,13 @@ func show_production_menu():
 	funds_label.add_theme_font_size_override("font_size", 14)
 	funds_label.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
 	vbox.add_child(funds_label)
-	
+
 	# Botón de cerrar
 	var close_button = Button.new()
 	close_button.text = "CLOSE"
 	close_button.custom_minimum_size = Vector2(0, 35)
 	close_button.pressed.connect(close_production_menu)
-	
+
 	# Estilo del botón de cerrar
 	var close_style = StyleBoxFlat.new()
 	close_style.bg_color = Color(0.4, 0.4, 0.4, 0.9)
@@ -317,14 +332,14 @@ func show_production_menu():
 	close_style.corner_radius_bottom_left = 4
 	close_style.corner_radius_bottom_right = 4
 	close_button.add_theme_stylebox_override("normal", close_style)
-	
+
 	var close_hover_style = close_style.duplicate()
 	close_hover_style.bg_color = Color(0.5, 0.5, 0.5, 0.95)
 	close_button.add_theme_stylebox_override("hover", close_hover_style)
-	
+
 	close_button.add_theme_color_override("font_color", Color(0.95, 0.95, 0.95))
 	vbox.add_child(close_button)
-	
+
 	# Estilo del panel principal
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.08, 0.08, 0.12, 0.95)
@@ -340,7 +355,7 @@ func show_production_menu():
 	panel_style.shadow_color = Color(0, 0, 0, 0.5)
 	panel_style.shadow_size = 8
 	production_menu_instance.add_theme_stylebox_override("panel", panel_style)
-	
+
 	production_menu_instance.popup()
 	emit_signal("production_menu_opened")
 
@@ -351,6 +366,8 @@ func close_production_menu():
 	emit_signal("production_menu_closed")
 
 func _on_unit_button_pressed(unit: String, cost: int):
+	if capturing_unit != null:
+		return
 	var unit_scene = load("res://scenes/units/" + unit + ".tscn")
 	var unit_instance = unit_scene.instantiate()
 	var color_suffix = "_Blue" if team == 1 else "_Red"

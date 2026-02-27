@@ -34,8 +34,6 @@ func _process(delta):
 	
 	var mouse_pos = get_viewport().get_mouse_position()
 	var camera_move = Vector2.ZERO
-	if production_menu_open:
-		return
 
 	# Check edges and calculate movement vector
 	if mouse_pos.x < scroll_margin:
