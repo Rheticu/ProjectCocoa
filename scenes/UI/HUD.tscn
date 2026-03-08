@@ -48,6 +48,9 @@ layout_mode = 2
 [node name="StrongLabel" type="Label" parent="UnitInfoPanel/VBoxContainer"]
 layout_mode = 2
 
+[node name="StatusLabel" type="Label" parent="UnitInfoPanel/VBoxContainer"]
+layout_mode = 2
+
 [node name="FundsPanel" type="PanelContainer" parent="."]
 modulate = Color(1, 1, 1, 0.79607844)
 self_modulate = Color(0.0253638, 0.0253638, 0.025363795, 1)

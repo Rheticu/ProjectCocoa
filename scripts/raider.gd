@@ -1,12 +1,19 @@
 class_name Raider_Unit
 extends MapUnit
 
-enum Element { FIRE, WATER, EARTH, WOOD, METAL }
+enum Element { EARTH, METAL, WATER, WOOD, FIRE }
 @export var raider_element: Element = Element.FIRE
 @export var mark_range: int = 4
 @export var scorch_range: int = 4
 @export var spawn_range: int = 4
 @export var shield_range: int = 4
+@export var muddle_range: int = 4
+@export var boost_range: int = 4
+# Array con los nombres en el MISMO ORDEN que el enum
+const ELEMENT_NAMES = ["EARTH", "METAL", "WATER", "WOOD", "FIRE" ]
+
+func get_element_name() -> String:
+	return ELEMENT_NAMES[raider_element]
 
 func _ready():
 	# Configurar stats basados en elemento
@@ -24,7 +31,7 @@ func _setup_element_stats():
 
 		Element.WATER:
 			movement_range = 7  # Movimiento extra en ríos/océano
-			vision_range = 5
+			vision_range = 2
 			mark_range = 4
 			#max_ability_cooldown = 3
 			# Agua: puede moverse por agua sin costo
@@ -135,23 +142,13 @@ func can_mark(target: MapUnit) -> bool:
 
 func marking(target: MapUnit):
 	# Mark the target unit
-	target.marked_turns = 4  # Mark for 3 turns
+	if main.current_element == main.Element.WATER:
+		target.marked_turns = 4  # Mark for 6 turns
+		#target.water_marked = true
+	else:
+		target.marked_turns = 2
 	current_state = UnitState.MOVED  # Can't move after marking
 	update_visual_state()
-
-	# Visual feedback for marking
-	if target.has_node("Sprite2D"):
-		var sprite: Sprite2D = target.get_node("Sprite2D")
-		var original_modulate = sprite.modulate
-		sprite.modulate = Color(1, 1, 0)  # Yellow flash for marking
-
-		# Create a tween to flash back to normal
-		var tween = create_tween()
-		tween.tween_interval(0.3)
-		tween.tween_callback(func():
-			if is_instance_valid(sprite):
-				sprite.modulate = original_modulate
-		)
 
 	main.update_fog_of_war()  # Update fog to show marked unit
 
@@ -172,9 +169,13 @@ func can_scorch(target: MapUnit)-> bool:
 	return manhattan_distance <= scorch_range
 
 func scorching(target: MapUnit):
-	#var multiplier_attacker = damage_matrix[unit_type][target.unit_type]
-	@warning_ignore("integer_division")
-	var damage_attacker = max(0.0, (attack * health/100) - target.get_total_defense())  # Basic damage formula
+	var damage_attacker
+	if main.current_element == main.Element.FIRE:
+		@warning_ignore("integer_division")
+		damage_attacker = max(0.0, (5*attack * health/100) - target.get_total_defense())  # Basic damage formula
+	else:
+		@warning_ignore("integer_division")
+		damage_attacker = max(0.0, (attack * health/100) - target.get_total_defense())  # Basic damage formula
 	target.health -= damage_attacker
 	target.current_state = UnitState.UNSELECTABLE
 	target.check_death()
@@ -198,6 +199,60 @@ func can_shield(target: MapUnit)-> bool:
 	return manhattan_distance <= shield_range
 
 func shielding(target: MapUnit):
-	target.shield_turns = 4  # Shield for 3 turns
+	if main.current_element == main.Element.METAL:
+		target.shield_turns = 8
+	else:
+		target.shield_turns = 4 
+
+	current_state = UnitState.MOVED  # Can't move after shielding
+	update_visual_state()
+
+func can_muddle(target: MapUnit)-> bool:
+	if not target:
+		return false
+	if team == target.team:
+		return false
+	if current_state == UnitState.MOVED:
+		return false
+	if target.visible == false:
+		return false
+
+	var dx = abs(grid_position.x - target.grid_position.x)
+	var dy = abs(grid_position.y - target.grid_position.y)
+	var manhattan_distance = dx + dy
+
+	return manhattan_distance <= muddle_range
+
+func muddling(target: MapUnit):
+	if main.current_element == main.Element.EARTH:
+		target.muddle_turns = 8
+	else:
+		target.muddle_turns = 4 
+
+	current_state = UnitState.MOVED  # Can't move after shielding
+	update_visual_state()
+
+func can_boost(target: MapUnit)-> bool:
+	if not target:
+		return false
+	if team != target.team:
+		return false
+	if current_state == UnitState.MOVED:
+		return false
+	if target.visible == false:
+		return false
+
+	var dx = abs(grid_position.x - target.grid_position.x)
+	var dy = abs(grid_position.y - target.grid_position.y)
+	var manhattan_distance = dx + dy
+
+	return manhattan_distance <= boost_range
+
+func boosting(target: MapUnit):
+	if main.current_element == main.Element.WOOD:
+		target.boost_turns = 8
+	else:
+		target.boost_turns = 4 
+
 	current_state = UnitState.MOVED  # Can't move after shielding
 	update_visual_state()
