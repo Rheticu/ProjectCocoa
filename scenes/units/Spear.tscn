@@ -5,7 +5,7 @@
 
 [node name="Spear" instance=ExtResource("1_1lerb")]
 movement_range = 5
-attack = 65
+attack = 60
 attack_range = 1
 defense = 4
 vision_range = 2

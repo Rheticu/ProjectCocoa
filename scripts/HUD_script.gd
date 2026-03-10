@@ -9,6 +9,7 @@ extends CanvasLayer
 @onready var movement_label = $UnitInfoPanel/VBoxContainer/MovementLabel
 @onready var strong_label = $UnitInfoPanel/VBoxContainer/StrongLabel
 @onready var status_label = $UnitInfoPanel/VBoxContainer/StatusLabel
+@onready var raider_element_label = $UnitInfoPanel/VBoxContainer/RaiderElementLabel
 #@onready var weak_label = $UnitInfoPanel/VBoxContainer/WeakLabel
 @onready var element_label = $FundsPanel/VBoxContainer/ElementLabel
 @onready var funds_label = $FundsPanel/VBoxContainer/FundsLabel
@@ -26,7 +27,7 @@ func _ready():
 	unit_style.border_width_top = 2
 	unit_style.border_width_right = 2
 	unit_style.border_width_bottom = 2
-	unit_style.border_color = Color(0.3, 0.5, 0.8, 1)  # Borde azul
+	unit_style.border_color = Color(0.894, 0.093, 0.44, 1.0)  # Borde azul
 	unit_style.corner_radius_top_left = 5
 	unit_style.corner_radius_top_right = 5
 	unit_style.corner_radius_bottom_left = 5
@@ -55,11 +56,12 @@ func _ready():
 
 func show_unit_info(unit: MapUnit):
 	unit_info_panel.visible = true
-	health_label.visible = false
 	health_label.text = "HP: %d" % unit.health
 	attack_label.text = "Att: %d" % unit.attack
 	defense_label.text = "Def: %d" % unit.defense
 	movement_label.text = "Mov: %d" % unit.movement_range
+	
+	# Texto de ventaja (siempre visible)
 	if unit.unit_type == "Sword":
 		strong_label.text = "+vs: Archer"
 	elif unit.unit_type == "Spear":
@@ -70,24 +72,38 @@ func show_unit_info(unit: MapUnit):
 		strong_label.text = "+vs: Raider"
 	elif unit.unit_type == "Junker":
 		strong_label.text = "+vs: "
+	
+	# 👇 NUEVO: Mostrar elemento del raider (solo si es raider)
+	if unit.is_raider() and unit is Raider_Unit:
+		var raider = unit as Raider_Unit
+		var element_names = ["EARTH", "METAL", "WATER", "WOOD", "FIRE"]
+		var element_name = element_names[raider.raider_element]
+		raider_element_label.text = "Element: " + element_name
+		raider_element_label.visible = true
 		
+		# Color según elemento
+		match element_name:
+			"FIRE": raider_element_label.modulate = Color(1, 0.5, 0.5)  # Rojo claro
+			"WATER": raider_element_label.modulate = Color(0.5, 0.5, 1)  # Azul claro
+			"EARTH": raider_element_label.modulate = Color(0.6, 0.4, 0.2)  # Café
+			"WOOD": raider_element_label.modulate = Color(0.4, 0.8, 0.4)  # Verde
+			"METAL": raider_element_label.modulate = Color(0.9, 0.9, 0.5)  # Amarillo claro
+	else:
+		raider_element_label.visible = false  # 👈 Ocultar si no es raider
+	
+	# Status - recolectar estados activos
+	var status_texts = []
 	if unit.marked_turns != 0:
-		status_label.text = "Marked %d turns" % unit.marked_turns
-		status_label.visible = true
-	else:
-		status_label.visible = false
+		status_texts.append("Marked %d" % ceil(unit.marked_turns / 2.0))
 	if unit.shield_turns != 0:
-		status_label.text = "Shield %d turns" % unit.shield_turns
-		status_label.visible = true
-	else:
-		status_label.visible = false
+		status_texts.append("Shield %d" % ceil(unit.shield_turns / 2.0))
 	if unit.boost_turns != 0:
-		status_label.text = "Boost %d turns" % unit.boost_turns
-		status_label.visible = true
-	else:
-		status_label.visible = false
+		status_texts.append("Boost %d" % ceil(unit.boost_turns / 2.0 ))
 	if unit.muddle_turns != 0:
-		status_label.text = "Muddle %d turns" % unit.muddle_turns
+		status_texts.append("Muddle %d" % ceil(unit.muddle_turns / 2.0))
+	
+	if status_texts.size() > 0:
+		status_label.text = " | ".join(status_texts)
 		status_label.visible = true
 	else:
 		status_label.visible = false

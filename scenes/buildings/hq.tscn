@@ -5,6 +5,8 @@
 
 [node name="HQ" instance=ExtResource("1_vne00")]
 team = 1
+can_produce_units = true
+building_type = "HQ"
 
 [node name="Sprite2D" parent="." index="0"]
 position = Vector2(0, -10)

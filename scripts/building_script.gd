@@ -6,7 +6,6 @@ extends Area2D
 @export var income_per_turn := 1000
 @export var can_produce_units := false
 @export var building_type: String
-
 @onready var main = get_node("/root/Main")
 @onready var hud = get_node("/root/Main/UI/HUD")
 @onready var camera = get_node("/root/Main/Camera2D")
@@ -25,10 +24,22 @@ var production_menu_instance = null
 var production_data = {
 	"Barracks": {
 		"units": ["Sword", "Archer", "Spear", "Cannon"],
-		"costs": {"Sword": 2000, "Archer": 1000, "Spear": 5000, "Cannon":7500}},
+		"costs": {"Sword": 2000, "Archer": 1000, "Spear": 5000, "Cannon": 7500}
+	},
 	"Port": {
 		"units": ["Junker"],
-		"costs": {"Junker": 7000}}
+		"costs": {"Junker": 7000}
+	},
+	"HQ": {
+		"units": ["Raider_FIRE", "Raider_WATER", "Raider_EARTH", "Raider_WOOD", "Raider_METAL"],
+		"costs": {
+			"Raider_FIRE": 10000,
+			"Raider_WATER": 10000,
+			"Raider_EARTH": 10000,
+			"Raider_WOOD": 10000,
+			"Raider_METAL": 10000
+		}
+	}
 }
 
 func _ready():
@@ -226,10 +237,18 @@ func show_production_menu():
 	elif team == 2:
 		current_funds = main.team2_funds
 
-	# Unidades disponibles
 	for unit_type in available_units:
 		var unit_cost = unit_costs.get(unit_type, 0)
 		var can_afford = (current_funds >= unit_cost)
+		
+		# 👇 SOLO ESTO NUEVO: Verificar límite de raiders
+		var can_produce = true
+		if unit_type.begins_with("Raider_"):
+			var current_raiders = main.count_raiders_for_team(team)
+			can_produce = current_raiders < 5
+		
+		# 👇 Botón deshabilitado por dinero O por límite de raiders
+		var button_disabled = not can_afford or (unit_type.begins_with("Raider_") and not can_produce)
 
 		# Fila de unidad
 		var unit_row = HBoxContainer.new()
@@ -257,7 +276,7 @@ func show_production_menu():
 		var unit_button = Button.new()
 		unit_button.text = "BUILD"
 		unit_button.custom_minimum_size = Vector2(80, 32)
-		unit_button.disabled = not can_afford
+		unit_button.disabled = button_disabled
 		unit_button.pressed.connect(_on_unit_button_pressed.bind(unit_type, unit_cost))
 
 		# Estilo del botón
@@ -368,16 +387,51 @@ func close_production_menu():
 func _on_unit_button_pressed(unit: String, cost: int):
 	if capturing_unit != null:
 		return
-	var unit_scene = load("res://scenes/units/" + unit + ".tscn")
+	
+	var unit_scene
+	if unit.begins_with("Raider_"):
+		unit_scene = load("res://scenes/units/Raider.tscn")
+	else:
+		unit_scene = load("res://scenes/units/" + unit + ".tscn")
+	
+	if not unit_scene:
+		print("Error: No se pudo cargar la escena para ", unit)
+		return
+	
 	var unit_instance = unit_scene.instantiate()
+	
+	# Configurar sprite según equipo
 	var color_suffix = "_Blue" if team == 1 else "_Red"
-	var sprite_path = "res://art/units/%s1%s.png" % [unit, color_suffix]
-	main.get_node("Units").add_child(unit_instance)
+	
+	# Si es un raider, extraer el elemento del nombre
+	if unit.begins_with("Raider_") and unit_instance is Raider_Unit:
+		# Extraer el elemento (ej: "Raider_FIRE" → "FIRE")
+		var element_name = unit.trim_prefix("Raider_")
+		
+		# Convertir string a enum
+		match element_name:
+			"FIRE": unit_instance.raider_element = Raider_Unit.Element.FIRE
+			"WATER": unit_instance.raider_element = Raider_Unit.Element.WATER
+			"EARTH": unit_instance.raider_element = Raider_Unit.Element.EARTH
+			"WOOD": unit_instance.raider_element = Raider_Unit.Element.WOOD
+			"METAL": unit_instance.raider_element = Raider_Unit.Element.METAL
+		
+		# Llamar manualmente a la configuración (porque _ready() ya se ejecutó)
+		unit_instance._setup_element_stats()
+		unit_instance._update_element_visual()
+	else:
+		# Para unidades normales, usar sprite normal
+		var sprite_path = "res://art/units/%s1%s.png" % [unit, color_suffix]
+		if unit_instance.get_node("Sprite2D") and ResourceLoader.exists(sprite_path):
+			unit_instance.get_node("Sprite2D").texture = load(sprite_path)
+	
+# Con esto:
+	if unit.begins_with("Raider_"):
+		main.get_node("RaiderUnits").add_child(unit_instance)
+	else:
+		main.get_node("Units").add_child(unit_instance)
 	unit_instance.team = self.team
 	var _new_id = unit_instance.unit_id
-
-	if unit_instance.get_node("Sprite2D") and ResourceLoader.exists(sprite_path):
-		unit_instance.get_node("Sprite2D").texture = load(sprite_path)
 
 	unit_instance.grid_position = building_position
 	unit_instance.current_state = unit_instance.UnitState.MOVED
@@ -389,11 +443,15 @@ func _on_unit_button_pressed(unit: String, cost: int):
 		main.team1_funds -= cost
 	elif team == 2:
 		main.team2_funds -= cost
-	
+
+	if unit.begins_with("Raider_"):
+		main.toggle_raider_view()
+
 	hud.update_income_funds()
 	main.all_units.append(unit_instance)
 	main.update_fog_of_war()
 	
-	# Sincronizar producción en multiplayer (solo si existe el método y estamos conectados)
+	# Sincronizar producción en multiplayer
 	if main.has_method("sync_unit_production") and main.multiplayer.multiplayer_peer != null:
+		# Enviar el nombre completo (ej: "Raider_FIRE") para que el otro jugador sepa qué elemento crear
 		main.sync_unit_production.rpc(building_position.x, building_position.y, unit, team, cost, _new_id)

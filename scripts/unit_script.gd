@@ -31,7 +31,7 @@ var unit_id: int = -1
 const damage_matrix = {
 	"Sword": {
 		"Sword": 1,
-		"Archer": 2.5,
+		"Archer": 1.8,
 		"Spear": .6,
 		"Cannon": 2,
 		"Junker": .2,
@@ -40,13 +40,13 @@ const damage_matrix = {
 	"Archer": {
 		"Sword": .6,
 		"Archer": 1,
-		"Spear": 2.5,
+		"Spear": 1.8,
 		"Cannon": 1,
 		"Junker": .5,
 		"Raider": 0,
 	},
 	"Spear": {
-		"Sword": 2.5,
+		"Sword": 1.8,
 		"Archer": 1.5,
 		"Spear": 1,
 		"Cannon": 1.2,
@@ -149,9 +149,11 @@ func _on_input_event(_viewport, event, _shape_idx):
 	if main.is_action_mode():
 		return
 
+	if event.is_action_pressed("LMClick"):
+		print("Mark turns:" , " ", marked_turns)
+
 	if not main.raider_view_enabled:
 		if event.is_action_pressed("LMClick"):
-			print(marked_turns)
 			main.active_overlay.clear()
 			main.attack_range_overlay.clear()
 

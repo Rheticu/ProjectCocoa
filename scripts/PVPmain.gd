@@ -988,6 +988,7 @@ func _check_unit_visibility(unit: MapUnit):
 			unit.visible = false
 
 func update_fog_of_war():
+	# Limpiar todas las capas de niebla
 	for x in range(0, map_size.x + 1):
 		for y in range(0, map_size.y + 1):
 			var pos = Vector2i(x,y)
@@ -998,11 +999,10 @@ func update_fog_of_war():
 	raider_visible_tiles.clear()
 	mapunit_visible_tiles.clear()
 	
-	# Si no hay conexión (player_id == 0), mostrar todo para poder ver el juego
-	# Una vez conectado, solo mostrar visión del jugador local
+	# Determinar qué equipo está viendo
 	var viewing_team = player_id if player_id > 0 else 1
 	
-	# Solo visión del jugador local (player_id) o equipo 1 si no hay conexión
+	# PASO 1: Visibilidad por unidades propias
 	for unit in all_units:
 		if unit.team == viewing_team:
 			var center = unit.grid_position
@@ -1026,64 +1026,67 @@ func update_fog_of_war():
 							mapunit_visible_tiles.append(pos)
 	
 	all_visible_tiles = raider_visible_tiles + mapunit_visible_tiles
-
+	
+	# PASO 2: Visibilidad por edificios propios
 	for b in $MapLayer/Buildings.get_children():
 		if b.team == viewing_team:
 			fog_tilemap.set_cell(0, b.building_position, -1)
 		var _visible = b.building_position in all_visible_tiles
 		if b.has_node("CaptureLabel"):
 			b.get_node("CaptureLabel").visible = _visible
-
-	# Actualizar visibilidad de unidades enemigas
+	
+	# PASO 3: Determinar visibilidad de unidades enemigas
 	for unit in all_units:
 		if unit.team != viewing_team:
-			if unit.is_raider():
-				unit.visible = (unit.marked_turns > 0) or (unit.grid_position in raider_visible_tiles and raider_view_enabled)
-			else:
+			# Unidades normales
+			if not unit.is_raider():
 				unit.visible = (unit.marked_turns > 0) or (unit.grid_position in all_visible_tiles)
+			# Raiders
+			else:
+				# Raiders solo visibles cuando raider_view_enabled está activado
+				if raider_view_enabled:
+					unit.visible = (unit.marked_turns > 0) or (unit.grid_position in raider_visible_tiles)
+				else:
+					unit.visible = false
 		else:
-			# Las unidades propias siempre visibles
+			# Unidades propias siempre visibles
 			unit.visible = true
 	
-	# Manejar unidades marcadas
+# PASO 4: Unidades marcadas
 	for unit in all_units:
-		if unit.team != viewing_team and unit.marked_turns > 0:
-			var pos = unit.grid_position
-			fog_tilemap.set_cell(0, pos, -1)
-			raider_fog_tilemap.set_cell(0, pos, -1)
-			raider_map.set_cell(0, pos, -1)
-			unit.visible = true
+		if unit.team != viewing_team:
+			if unit.marked_turns > 0:
+				var pos = unit.grid_position
+				if unit.is_raider():
+					# Raiders marcados: z-index alto para verse encima del fog
+					unit.z_index = 20
+				else:
+					# Unidades normales marcadas revelan el tile
+					raider_fog_tilemap.set_cell(0, pos, -1)
+					fog_tilemap.set_cell(0, pos, -1)
+			else:
+				# Restaurar z-index normal cuando deja de estar marcado
+				if unit.is_raider():
+					unit.z_index = 0  # o el valor que tenían antes
 	
-	# Manejar unidades propias (modulación)
+	# PASO 5: Modulación de unidades propias en vista raider
 	for unit in $Units.get_children():
 		if unit.team == viewing_team:
 			if raider_view_enabled:
-				if unit.grid_position in raider_visible_tiles:
-					unit.modulate.a = 0.4
-				else:
-					unit.modulate.a = 1.0
+				# En vista raider, las unidades normales se ven tenues si no están en tiles visibles de raider
+				unit.modulate.a = 0.4 if unit.grid_position in raider_visible_tiles else 1.0
 			else:
 				unit.modulate.a = 1.0
 		else:
-			if raider_view_enabled:
-				if unit.grid_position in raider_visible_tiles:
-					unit.modulate.a = 0.4
-				else:
-					unit.modulate.a = 1.0
-			else:
-				unit.modulate.a = 1.0
-
-	# Manejar raiders
+			# Unidades enemigas normales no se modulan
+			unit.modulate.a = 1.0
+	
+	# PASO 6: Raiders enemigos - ya se manejó visibilidad en PASO 3
+	# Raiders propios - visibles solo en vista raider
 	for unit in $RaiderUnits.get_children():
 		if unit.team == viewing_team:
 			unit.visible = raider_view_enabled
-		else:
-			if unit.marked_turns > 0:
-				unit.visible = true
-			elif raider_view_enabled:
-				unit.visible = unit.grid_position in raider_visible_tiles
-			else:
-				unit.visible = false
+		# Enemigos ya se manejaron en PASO 3
 
 func get_hidden_enemy_at(pos: Vector2i, my_team: int, my_is_raider: bool) -> MapUnit:
 	for unit in all_units:
@@ -1108,6 +1111,15 @@ func show_ambush_effect(unit_pos: Vector2):
 ### ========================== TURN MANAGEMENT ========================== ###
 
 func start_turn(team: int):
+	for unit in all_units:
+		if unit.marked_turns > 0:
+			unit.marked_turns -= 1
+		if unit.shield_turns > 0:
+			unit.shield_turns -= 1
+		if unit.muddle_turns > 0:
+			unit.muddle_turns -= 1
+		if unit.boost_turns > 0:
+			unit.boost_turns -= 1
 	update_active_layers()
 	update_fog_of_war()
 	current_player_team = team
@@ -1162,15 +1174,6 @@ func end_turn():
 		advance_element()
 		sync_element_change.rpc(current_element)
 		hud.update_element_ui()
-	for unit in all_units:
-		if unit.marked_turns > 0:
-			unit.marked_turns -= 1
-		if unit.shield_turns > 0:
-			unit.shield_turns -= 1
-		if unit.muddle_turns > 0:
-			unit.muddle_turns -= 1
-		if unit.boost_turns > 0:
-			unit.boost_turns -= 1
 
 	current_player_team = 2 if current_player_team == 1 else 1
 
@@ -1323,7 +1326,6 @@ func _unhandled_input(event):
 							break
 
 	if event.is_action_pressed("RMClick"):
-		print(current_element)
 		if production_menu_open:
 			close_menu_production.emit()
 		if is_action_mode():
@@ -1494,6 +1496,13 @@ func toggle_raider_view():
 			unit.deselect()
 			hud.hide_unit_info()
 	active_overlay.clear()
+
+func count_raiders_for_team(team_number: int) -> int:
+	var count = 0
+	for unit in all_units:
+		if unit.team == team_number and unit.is_raider():
+			count += 1
+	return count
 
 ### ========================== ACTION MENU ========================== ###
 
@@ -2851,15 +2860,42 @@ func sync_building_capture(building_x: int, building_y: int, new_team: int, capt
 
 @rpc("any_peer", "reliable")
 func sync_unit_production(building_x: int, building_y: int, unit_type: String, team: int, cost: int, _new_id: int):
-	var unit_scene = load("res://scenes/units/" + unit_type + ".tscn")
+	var unit_scene
+	
+	# Si es un raider con elemento, usar la escena base
+	if unit_type.begins_with("Raider_"):
+		unit_scene = load("res://scenes/units/Raider.tscn")
+	else:
+		unit_scene = load("res://scenes/units/" + unit_type + ".tscn")
+	
 	var unit_instance = unit_scene.instantiate()
+	
+	# Configurar sprite según equipo
 	var color_suffix = "_Blue" if team == 1 else "_Red"
-	var sprite_path = "res://art/units/%s1%s.png" % [unit_type, color_suffix]
-	$Units.add_child(unit_instance)
-
-	if unit_instance.get_node("Sprite2D") and ResourceLoader.exists(sprite_path):
-		unit_instance.get_node("Sprite2D").texture = load(sprite_path)
-
+	
+	# Si es raider con elemento, configurar el elemento
+	if unit_type.begins_with("Raider_") and unit_instance is Raider_Unit:
+		var element_name = unit_type.trim_prefix("Raider_")
+		match element_name:
+			"FIRE": unit_instance.raider_element = Raider_Unit.Element.FIRE
+			"WATER": unit_instance.raider_element = Raider_Unit.Element.WATER
+			"EARTH": unit_instance.raider_element = Raider_Unit.Element.EARTH
+			"WOOD": unit_instance.raider_element = Raider_Unit.Element.WOOD
+			"METAL": unit_instance.raider_element = Raider_Unit.Element.METAL
+		
+		unit_instance._setup_element_stats()
+		unit_instance._update_element_visual()
+	else:
+		# Para unidades normales, cargar sprite normal
+		var sprite_path = "res://art/units/%s1%s.png" % [unit_type, color_suffix]
+		if unit_instance.get_node("Sprite2D") and ResourceLoader.exists(sprite_path):
+			unit_instance.get_node("Sprite2D").texture = load(sprite_path)
+	
+	if unit_type.begins_with("Raider_"):
+		$RaiderUnits.add_child(unit_instance)
+	else:
+		$Units.add_child(unit_instance)
+	
 	unit_instance.team = team
 	unit_instance.grid_position = Vector2i(building_x, building_y)
 	unit_instance.current_state = MapUnit.UnitState.MOVED

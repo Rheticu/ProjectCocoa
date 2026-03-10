@@ -6,9 +6,15 @@
 
 [node name="Raider" instance=ExtResource("1_yck7h")]
 script = ExtResource("2_2643g")
+raider_element = 4
 mark_range = 4
+scorch_range = 4
+spawn_range = 4
+shield_range = 4
+muddle_range = 4
+boost_range = 4
 movement_range = 3
-attack = 5
+attack = 30
 attack_range = 1
 defense = 10
 vision_range = 4

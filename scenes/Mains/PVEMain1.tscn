@@ -21,7 +21,7 @@
 [ext_resource type="PackedScene" uid="uid://cwuvcd8l431ts" path="res://scenes/units/Spear.tscn" id="17_oaenf"]
 [ext_resource type="PackedScene" uid="uid://cuf1c4vjray5e" path="res://scenes/units/Archer.tscn" id="18_fn3pt"]
 [ext_resource type="Texture2D" uid="uid://dtdwjl5542sfv" path="res://art/ui/Azul1.png" id="19_1twmd"]
-[ext_resource type="PackedScene" uid="uid://byh7snpnf3bsp" path="res://scenes/units/raider.tscn" id="19_oaenf"]
+[ext_resource type="PackedScene" uid="uid://byh7snpnf3bsp" path="res://scenes/units/Raider.tscn" id="19_oaenf"]
 [ext_resource type="PackedScene" uid="uid://bntl4xh52v78l" path="res://scenes/UI/HUD.tscn" id="20_lgdrr"]
 [ext_resource type="PackedScene" uid="uid://de8ekkjxtbtho" path="res://scenes/UI/PauseMenu.tscn" id="21_a6x3s"]
 [ext_resource type="Texture2D" uid="uid://cimgomiw77yli" path="res://art/ui/Grid.png" id="22_rnpm2"]

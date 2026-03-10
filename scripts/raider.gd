@@ -77,6 +77,7 @@ func is_raider() -> bool:
 	return true
 
 func _on_input_event(_viewport, event, _shape_idx):
+	
 	# Verificar is_ai_processing solo si existe (PvE), en PvP no existe
 	if "is_ai_processing" in main and main.is_ai_processing:
 		return 
@@ -84,7 +85,7 @@ func _on_input_event(_viewport, event, _shape_idx):
 	# Si estamos en mark_mode, no procesar eventos de unidades (el mark se maneja en _unhandled_input)
 	if main.is_action_mode():
 		return
-	
+
 	if main.raider_view_enabled:
 		if event.is_action_pressed("LMClick"):
 			# Si estamos en mark_mode, no hacer nada (el mark se maneja en _unhandled_input)
@@ -143,10 +144,10 @@ func can_mark(target: MapUnit) -> bool:
 func marking(target: MapUnit):
 	# Mark the target unit
 	if main.current_element == main.Element.WATER:
-		target.marked_turns = 4  # Mark for 6 turns
+		target.marked_turns = 8  # Mark for 6 turns
 		#target.water_marked = true
 	else:
-		target.marked_turns = 2
+		target.marked_turns = 4
 	current_state = UnitState.MOVED  # Can't move after marking
 	update_visual_state()
 
@@ -172,7 +173,7 @@ func scorching(target: MapUnit):
 	var damage_attacker
 	if main.current_element == main.Element.FIRE:
 		@warning_ignore("integer_division")
-		damage_attacker = max(0.0, (5*attack * health/100) - target.get_total_defense())  # Basic damage formula
+		damage_attacker = max(0.0, (2.5*attack * health/100) - target.get_total_defense())  # Basic damage formula
 	else:
 		@warning_ignore("integer_division")
 		damage_attacker = max(0.0, (attack * health/100) - target.get_total_defense())  # Basic damage formula
