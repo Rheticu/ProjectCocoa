@@ -16,6 +16,8 @@ extends CanvasLayer
 @onready var income_label = $FundsPanel/VBoxContainer/IncomeLabel
 #@onready var health_label = $UnitInfoPanel/HealthLabel
 #@onready var unit_sprite = $UnitInfoPanel/UnitSprite
+@onready var turn_label = $TurnLabel
+var turn_label_tween: Tween
 @onready var main = get_node("/root/Main")
 var original_position: Vector2
 
@@ -84,7 +86,7 @@ func show_unit_info(unit: MapUnit):
 		# Color según elemento
 		match element_name:
 			"FIRE": raider_element_label.modulate = Color(1, 0.5, 0.5)  # Rojo claro
-			"WATER": raider_element_label.modulate = Color(0.5, 0.5, 1)  # Azul claro
+			"WATER": raider_element_label.modulate = Color(0.502, 0.988, 1.0, 1.0)  # Azul claro
 			"EARTH": raider_element_label.modulate = Color(0.6, 0.4, 0.2)  # Café
 			"WOOD": raider_element_label.modulate = Color(0.4, 0.8, 0.4)  # Verde
 			"METAL": raider_element_label.modulate = Color(0.9, 0.9, 0.5)  # Amarillo claro
@@ -139,12 +141,24 @@ func update_element_ui():
 
 	match element_name:
 		"FIRE":
-			element_label.modulate = Color.RED
+			element_label.modulate = Color(1, 0.5, 0.5)
 		"WATER":
-			element_label.modulate = Color.BLUE
+			element_label.modulate = Color(0.502, 0.988, 1.0, 1.0)
 		"WOOD":
-			element_label.modulate = Color.GREEN # café madera
+			element_label.modulate = Color(0.4, 0.8, 0.4)
 		"EARTH":
-			element_label.modulate = Color.BROWN  # café tierra
+			element_label.modulate = Color(0.6, 0.4, 0.2)
 		"METAL":
-			element_label.modulate = Color.YELLOW
+			element_label.modulate = Color(0.9, 0.9, 0.5)
+
+func show_turn_message(message: String):
+	turn_label.visible = true
+	if turn_label_tween:
+		turn_label_tween.kill()
+	
+	turn_label.text = message
+	turn_label.modulate = Color(1, 1, 1, 1)
+	
+	turn_label_tween = create_tween()
+	turn_label_tween.tween_interval(1.5)
+	turn_label_tween.tween_property(turn_label, "modulate:a", 0.0, 0.8)

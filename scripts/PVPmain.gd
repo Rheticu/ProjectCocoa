@@ -1074,16 +1074,12 @@ func update_fog_of_war():
 	
 	# PASO 5: Modulación de unidades propias en vista raider
 	for unit in $Units.get_children():
-		if unit.team == viewing_team:
-			if raider_view_enabled:
-				# En vista raider, las unidades normales se ven tenues si no están en tiles visibles de raider
-				unit.modulate.a = 0.4 if unit.grid_position in raider_visible_tiles else 1.0
-			else:
-				unit.modulate.a = 1.0
+		if raider_view_enabled:
+			# En vista raider, las unidades normales se ven tenues si no están en tiles visibles de raider
+			unit.modulate.a = 0.4 if unit.grid_position in raider_visible_tiles else 1.0
 		else:
-			# Unidades enemigas normales no se modulan
 			unit.modulate.a = 1.0
-	
+
 	# PASO 6: Raiders enemigos - ya se manejó visibilidad en PASO 3
 	# Raiders propios - visibles solo en vista raider
 	for unit in $RaiderUnits.get_children():
@@ -1127,7 +1123,6 @@ func start_turn(team: int):
 	update_fog_of_war()
 	current_player_team = team
 
-
 	team1_income = 0
 	team2_income = 0
 
@@ -1164,6 +1159,12 @@ func start_turn(team: int):
 			if unit.has_meta("pending_move_path"):
 				unit.remove_meta("pending_move_path")
 				unit.remove_meta("pending_move_is_wrapped")
+
+# Mostrar mensaje según el turno
+	if team == player_id:
+		hud.show_turn_message("Your Turn!")
+	else:
+		hud.show_turn_message("Enemy Turn!")
 
 func _on_end_turn_pressed():
 	if current_player_team != player_id:
@@ -1367,7 +1368,13 @@ func _unhandled_input(event):
 				var grid_pos = Vector2i(mouse_pos / 32)
 				var clicked_unit: MapUnit = null
 				for unit in all_units:
-					if unit.grid_position == grid_pos and unit.visible and unit.current_state != unit.UnitState.SELECTED:
+					if unit.grid_position == grid_pos and unit.visible:
+							# En vista raider, solo considerar raiders
+						if raider_view_enabled and not unit.is_raider():
+							continue
+							# En vista normal, solo considerar no raiders
+						if not raider_view_enabled and unit.is_raider():
+							continue
 						clicked_unit = unit
 						break
 
@@ -1406,7 +1413,7 @@ func create_movement_arrow():
 	movement_arrow = Line2D.new()
 	movement_arrow.width = 4
 	movement_arrow.default_color = Color(1, 1, 1, 0.9)
-	movement_arrow.z_index = 10
+	movement_arrow.z_index = 20
 	add_child(movement_arrow)
 
 func update_movement_arrow(unit: MapUnit, cursor_pos: Vector2i):
@@ -1504,6 +1511,8 @@ func show_movement_range(center: Vector2i, mover: MapUnit):
 	var reachable = get_reachable_cells(center, mover.movement_range, mover, mover.is_raider())
 	for pos in reachable:
 		active_overlay.set_cell(0, pos, 1, Vector2i.ZERO)
+	if mover.is_raider():
+		active_overlay.z_index=12
 
 func toggle_raider_view():
 	raider_view_enabled = !raider_view_enabled
@@ -1514,15 +1523,20 @@ func toggle_raider_view():
 	if movement_arrow:
 		movement_arrow.clear_points()
 		is_tracing_path = false
-		cursor_path.clear()	
+		cursor_path.clear()
 	hud.hide_unit_info()
 	$MapLayer/FogOfWar.visible = not raider_view_enabled
 	$MapLayer/MoveRangeOverlay.visible = not raider_view_enabled
 	$RaiderLayer.visible = raider_view_enabled
 
-	for unit in active_units.get_children():
-		if unit.current_state == MapUnit.UnitState.SELECTED:
-			unit.deselect()
+	if selected_unit:
+		if (is_action_mode() == false) and (selected_unit.is_raider() == false):
+			for unit in active_units.get_children():
+				if unit.current_state == MapUnit.UnitState.SELECTED:
+					unit.deselect()
+	#elif (is_action_mode() == true) and (selected_unit.is_raider() == true):
+		
+
 	active_overlay.clear()
 	hud.hide_unit_info()
 
@@ -1543,6 +1557,7 @@ func show_action_menu(unit: MapUnit):
 	var half_map_width: float = (map_size.x * 32) / 2.0
 	var half_map_height: float = (map_size.y * 32) / 2.0
 	var building_underneath = get_building_at(unit.grid_position)
+	var can_capture = unit.unit_type in ["Sword", "Archer", "Spear"]
 	
 	action_menu_instance = action_menu.instantiate()
 	add_child(action_menu_instance)
@@ -1588,7 +1603,7 @@ func show_action_menu(unit: MapUnit):
 	shield_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.METAL
 	muddle_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.EARTH
 	boost_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.WOOD
-	capture_btn.visible = (unit.unit_type == "Sword" or "Archer" or "Spear") and (building_underneath != null) and (building_underneath.team != unit.team)
+	capture_btn.visible = can_capture and building_underneath != null and building_underneath.team != unit.team
 	bash_btn.visible = unit.unit_type == "Spear"
 	thrust_btn.visible = unit.unit_type == "Sword"
 	volley_btn.visible = unit.unit_type == "Archer"
@@ -2649,9 +2664,6 @@ func _on_mark_pressed():
 
 func try_mark(grid_pos: Vector2i):
 	update_active_layers()
-	# Limpiar overlay inmediatamente para prevenir que unidades enemigas muestren su rango
-	active_overlay.clear()
-	
 	for unit in all_units:
 		if unit.grid_position == grid_pos && selected_unit.can_mark(unit):
 			selected_unit.marking(unit)
@@ -2685,14 +2697,14 @@ func try_mark(grid_pos: Vector2i):
 					attacker_id.team, attacker_id.unit_type,
 					target_id.x, target_id.y, target_id.team, target_id.unit_type
 				)
-			
-			# Limpiar overlay nuevamente después del mark para asegurar
-			active_overlay.clear()
-			break
 
-	selected_unit.current_state = MapUnit.UnitState.MOVED
-	active_overlay.clear()
-	end_mark_mode()
+			# Limpiar selección visual sin cambiar el estado MOVED
+			selected_unit.update_visual_state()
+			hud.hide_unit_info()
+			selected_unit = null
+			end_mark_mode()
+			active_overlay.clear()
+			return
 
 @rpc("any_peer", "reliable")
 func sync_mark(
@@ -2965,9 +2977,14 @@ func show_attack_range(unit: MapUnit):
 	if not attack_range_overlay:
 		attack_range_overlay = TileMap.new()
 		attack_range_overlay.tile_set = standard_overlay.tile_set
-		attack_range_overlay.z_index = 5
 		add_child(attack_range_overlay)
 	
+	# 👇 ASIGNAR Z-INDEX SEGÚN LA UNIDAD (CADA VEZ)
+	if unit.is_raider():
+		attack_range_overlay.z_index = 12
+	else:
+		attack_range_overlay.z_index = 1
+
 	var attackable_tiles = get_attackable_tiles(unit)
 	for tile_pos in attackable_tiles:
 		attack_range_overlay.set_cell(0, tile_pos, 1, Vector2i.ZERO)

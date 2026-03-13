@@ -14,6 +14,7 @@ extends Area2D
 @export var vision_range : int
 @onready var main = get_node("/root/Main")
 @onready var hud = get_node("/root/Main/UI/HUD")
+@export var unit_type: String
 enum UnitState { UNSELECTED, SELECTED, MOVED, UNSELECTABLE }
 var current_state : UnitState = UnitState.UNSELECTED
 var grid_position : Vector2i:
@@ -27,7 +28,8 @@ var muddle_turns: int = 0
 var boost_turns: int = 0
 var is_in_overwatch: bool = false
 var unit_id: int = -1
-@export var unit_type: String  # Can be "Sword", "Spear", "Archer", etc.
+var is_potential_target := false
+var saved_modulate := Color(1, 1, 1)
 const damage_matrix = {
 	"Sword": {
 		"Sword": 1,
@@ -125,29 +127,26 @@ func create_id():
 	new_id = unit_id
 	sync_unit_id.rpc(new_id)
 
+func set_potential_target(value: bool):
+	is_potential_target = value
+	update_visual_state()
+
 @rpc("any_peer","reliable")
 func sync_unit_id(new_id):
 	unit_id = new_id
 
 func update_visual_state():
-	if $Sprite2D.material:
-		match current_state:
-			UnitState.MOVED:
-				$Sprite2D.material.set_shader_parameter("brightness_factor", 0.5)
-			UnitState.SELECTED:
-				$Sprite2D.material.set_shader_parameter("brightness_factor", 1.5)
-			_:
-				$Sprite2D.material.set_shader_parameter("brightness_factor", 1.0)
-	else:
-		match current_state:
-			UnitState.UNSELECTABLE:
-				$Sprite2D.modulate = Color(1, 1, 1)
-			UnitState.UNSELECTED:
-				$Sprite2D.modulate = Color(1, 1, 1)
-			UnitState.SELECTED:
-				$Sprite2D.modulate = Color(1.5, 1.5, 1.5)
-			UnitState.MOVED:
-				$Sprite2D.modulate = Color(0.5, 0.5, 0.5)
+	if is_potential_target:
+		$Sprite2D.modulate = Color(2, 0.5, 0.5)
+		return
+	
+	match current_state:
+		UnitState.SELECTED:
+			$Sprite2D.modulate = Color(1.5, 1.5, 1.5)
+		UnitState.MOVED:
+			$Sprite2D.modulate = Color(0.5, 0.5, 0.5)
+		_:
+			$Sprite2D.modulate = Color(1, 1, 1)
 
 func _on_input_event(_viewport, event, _shape_idx):
 	# Verificar is_ai_processing solo si existe (PvE), en PvP no existe

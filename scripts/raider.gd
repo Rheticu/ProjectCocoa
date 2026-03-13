@@ -8,7 +8,10 @@ enum Element { EARTH, METAL, WATER, WOOD, FIRE }
 @export var spawn_range: int 
 @export var shield_range: int 
 @export var muddle_range: int 
-@export var boost_range: int 
+@export var boost_range: int
+var outline_material: ShaderMaterial
+var outline_shader: Shader
+static var OUTLINE_SHADER = preload("res://shaders/outline.gdshader")
 # Array con los nombres en el MISMO ORDEN que el enum
 const ELEMENT_NAMES = ["EARTH", "METAL", "WATER", "WOOD", "FIRE" ]
 
@@ -16,7 +19,10 @@ func get_element_name() -> String:
 	return ELEMENT_NAMES[raider_element]
 
 func _ready():
-	# Configurar stats basados en elemento
+	outline_material = ShaderMaterial.new()
+	outline_material.shader = OUTLINE_SHADER
+	outline_material.set_shader_parameter("outline_width", 2.0)
+	
 	_setup_element_stats()
 	_update_element_visual()
 	set_team_outline(team)
@@ -78,6 +84,26 @@ func _setup_element_stats():
 			#max_ability_cooldown = 2
 			# Metal: ignora defensa de fortificaciones
 
+func set_potential_target(value: bool):
+	is_potential_target = value
+	update_visual_state()
+	# No llamar a set_team_outline aquí, ya se llama en update_visual_state
+
+func update_visual_state():
+	if is_potential_target:
+		$Sprite2D.modulate = Color(2, 0.5, 0.5)
+	else:
+		match current_state:
+			UnitState.SELECTED:
+				$Sprite2D.modulate = Color(1.5, 1.5, 1.5)
+			UnitState.MOVED:
+				$Sprite2D.modulate = Color(0.5, 0.5, 0.5)
+			_:
+				$Sprite2D.modulate = Color(1, 1, 1)
+
+func apply_outline():
+	set_team_outline(team)
+
 func _update_element_visual():
 	# Cargar textura basada en elemento y equipo
 	var element_suffix = ""
@@ -95,57 +121,14 @@ func _update_element_visual():
 		get_node("Sprite2D").texture = load(texture_path)
 
 func set_team_outline(team_number: int):
-	var outline_material = ShaderMaterial.new()
-	var shader = Shader.new()
-	shader.code = """
-	shader_type canvas_item;
-	
-	uniform float outline_width: hint_range(0, 10) = 3.0;
-	uniform vec4 outline_color: source_color;
-	uniform float brightness_factor: hint_range(0, 2) = 1.0;
-	
-	void fragment() {
-		vec4 color = texture(TEXTURE, UV);
-		float alpha = color.a;
-		
-		if (alpha < 0.1) {
-			float thickness = outline_width / float(textureSize(TEXTURE, 0).x);
-			float outline = 0.0;
-			
-			for (float x = -outline_width; x <= outline_width; x++) {
-				for (float y = -outline_width; y <= outline_width; y++) {
-					vec4 neighbor = texture(TEXTURE, UV + vec2(x, y) * thickness);
-					if (neighbor.a > 0.1) {
-						outline = 1.0;
-						break;
-					}
-				}
-				if (outline > 0.0) break;
-			}
-			
-			if (outline > 0.0) {
-				COLOR = outline_color;
-			} else {
-				COLOR = vec4(0.0);
-			}
-		} else {
-			// Modificar solo RGB, mantener alpha original
-			COLOR = vec4(color.rgb * brightness_factor, color.a);
-		}
-	}
-	"""
-	
-	outline_material.shader = shader
+	var mat = outline_material.duplicate()
 	
 	if team_number == 1:
-		outline_material.set_shader_parameter("outline_color", Color(0.2, 0.5, 1.0))
+		mat.set_shader_parameter("outline_color", Color(0.2, 0.5, 1.0))
 	else:
-		outline_material.set_shader_parameter("outline_color", Color(1.0, 0.3, 0.3))
+		mat.set_shader_parameter("outline_color", Color(1.0, 0.3, 0.3))
 	
-	outline_material.set_shader_parameter("outline_width", 3.0)
-	outline_material.set_shader_parameter("brightness_factor", 1.0)
-	
-	$Sprite2D.material = outline_material
+	$Sprite2D.material = mat
 
 func is_raider() -> bool:
 	return true

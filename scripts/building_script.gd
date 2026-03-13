@@ -438,6 +438,9 @@ func _on_unit_button_pressed(unit: String, cost: int):
 	unit_instance.grid_position = building_position
 	unit_instance.current_state = unit_instance.UnitState.MOVED
 	unit_instance.update_visual_state()
+	unit_instance.team = self.team
+	if unit_instance.is_raider():
+		unit_instance.set_team_outline(unit_instance.team)
 	close_production_menu()
 	
 	# Restar fondos según el equipo

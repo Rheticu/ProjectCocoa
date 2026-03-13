@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://bntl4xh52v78l"]
+[gd_scene load_steps=5 format=3 uid="uid://bntl4xh52v78l"]
 
 [ext_resource type="Script" uid="uid://dw4u2jt6wbcdj" path="res://scripts/HUD_script.gd" id="1_xc2ir"]
 
@@ -6,6 +6,8 @@
 border_color = Color(0.23921569, 0.10980392, 0.85882354, 1)
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5fyfn"]
+
+[sub_resource type="SystemFont" id="SystemFont_5fyfn"]
 
 [node name="HUD" type="CanvasLayer"]
 offset = Vector2(0, -16)
@@ -102,6 +104,20 @@ text = "Enter: Turn,"
 [node name="EscapeLabel" type="Label" parent="ButtonsPanel/HBoxContainer"]
 layout_mode = 2
 text = "ESC: Menu"
+
+[node name="TurnLabel" type="Label" parent="."]
+visible = false
+z_index = 100
+offset_left = 240.0
+offset_top = 160.0
+offset_right = 451.0
+offset_bottom = 209.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = SubResource("SystemFont_5fyfn")
+theme_override_font_sizes/font_size = 35
+text = "YOUR TURN!"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [connection signal="mouse_entered" from="UnitInfoPanel" to="." method="_on_unit_info_panel_mouse_entered"]
 [connection signal="mouse_entered" from="FundsPanel" to="." method="_on_funds_panel_mouse_entered"]
