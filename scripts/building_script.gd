@@ -130,7 +130,9 @@ func _on_input_event(_viewport, event, _shape_idx):
 		return
 
 	for unit in main.all_units:
-		if (unit.grid_position == building_position and not unit.is_raider()) or unit.current_state == unit.UnitState.SELECTED:
+		if ((unit.grid_position == building_position and not unit.is_raider()) 
+			or unit.current_state == unit.UnitState.SELECTED
+			or unit.grid_position == building_position and unit.is_raider() and building_type == "HQ"):
 			return
 
 	if (not main.raider_view_enabled

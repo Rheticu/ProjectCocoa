@@ -36,7 +36,6 @@ var bash_mode := false
 var thrust_mode := false
 var volley_mode := false
 var scorch_mode := false
-var spawn_mode := false
 var shield_mode := false
 var muddle_mode := false
 var boost_mode := false
@@ -1024,7 +1023,11 @@ func update_fog_of_war():
 						else:
 							fog_tilemap.set_cell(0, pos, -1)
 							mapunit_visible_tiles.append(pos)
-	
+		else:
+			if unit.marked_turns != 0:
+				var pos = unit.grid_position
+				mapunit_visible_tiles.append(pos)
+
 	all_visible_tiles = raider_visible_tiles + mapunit_visible_tiles
 	
 	# PASO 2: Visibilidad por edificios propios
@@ -1188,6 +1191,7 @@ func end_turn():
 
 	start_turn(current_player_team)
 	update_fog_of_war()
+	hud.hide_unit_info()
 
 func advance_element():
 	current_element = ((current_element + 1) % Element.size()) as Element
@@ -1339,14 +1343,26 @@ func _unhandled_input(event):
 			if is_menu_open:
 				_on_cancel_pressed()
 			else:
+				var something_was_cleared = false
+				
+				# Bloque de limpieza (movement range, etc.)
 				if active_overlay.get_used_cells(0).size() > 0 or attack_range_overlay.get_used_cells(0).size() > 0:
 					active_overlay.clear()
 					attack_range_overlay.clear()
 					for unit in active_units.get_children():
 						if unit.current_state != MapUnit.UnitState.MOVED:
 							unit.deselect()
+					if movement_arrow:
+						movement_arrow.clear_points()
+						is_tracing_path = false
+						cursor_path.clear()
+					something_was_cleared = true
+				
+				# Si acabamos de limpiar, salimos sin mostrar attack range
+				if something_was_cleared:
 					return
 
+				# Si no limpiamos nada, procedemos con la lógica de attack range
 				var mouse_pos = get_global_mouse_position()
 				var grid_pos = Vector2i(mouse_pos / 32)
 				var clicked_unit: MapUnit = null
@@ -1356,26 +1372,33 @@ func _unhandled_input(event):
 						break
 
 				if clicked_unit:
+					# Si es la misma unidad que ya teníamos inspeccionada
 					if inspected_unit == clicked_unit:
-						# Click derecho otra vez en la misma unidad → toggle OFF
-						hide_attack_range()
-						inspected_unit = null
+						# Si el attack range está visible, lo ocultamos
+						if attack_range_overlay.get_used_cells(0).size() > 0:
+							hide_attack_range()
+							inspected_unit = null
+						else:
+							# Si no está visible, lo mostramos
+							show_attack_range(clicked_unit)
+							inspected_unit = clicked_unit
 					else:
-						# Click derecho en una unidad distinta → switch
+						# Unidad diferente: cambiar
 						hide_attack_range()
 						show_attack_range(clicked_unit)
 						inspected_unit = clicked_unit
 				else:
-					# Click derecho en tile vacío → comportamiento original
+					# Click en tile vacío
 					inspected_unit = null
 					hide_attack_range()
 
+				# Deseleccionar unidades propias
 				for unit in active_units.get_children():
 					if unit.current_state != MapUnit.UnitState.MOVED:
 						unit.deselect()
-
-					active_overlay.clear()
-					close_action_menu()
+				hud.hide_unit_info()
+				active_overlay.clear()
+				close_action_menu()
 
 func create_movement_arrow():
 	if movement_arrow:
@@ -1487,6 +1510,12 @@ func toggle_raider_view():
 	update_active_layers()
 	update_fog_of_war()
 	active_overlay.clear()
+	hide_attack_range()
+	if movement_arrow:
+		movement_arrow.clear_points()
+		is_tracing_path = false
+		cursor_path.clear()	
+	hud.hide_unit_info()
 	$MapLayer/FogOfWar.visible = not raider_view_enabled
 	$MapLayer/MoveRangeOverlay.visible = not raider_view_enabled
 	$RaiderLayer.visible = raider_view_enabled
@@ -1494,8 +1523,8 @@ func toggle_raider_view():
 	for unit in active_units.get_children():
 		if unit.current_state == MapUnit.UnitState.SELECTED:
 			unit.deselect()
-			hud.hide_unit_info()
 	active_overlay.clear()
+	hud.hide_unit_info()
 
 func count_raiders_for_team(team_number: int) -> int:
 	var count = 0
@@ -1807,7 +1836,8 @@ func is_action_mode() -> bool:
 		volley_mode or 
 		scorch_mode or 
 		shield_mode or 
-		boost_mode
+		boost_mode or 
+		muddle_mode
 		)
 
 func abort_unit_movement(unit: MapUnit) -> void:
@@ -1873,7 +1903,7 @@ func _on_overwatch_pressed(unit: MapUnit):
 				overwatch_tiles.append(unit.grid_position + Vector2i(x, y))
 	overwatch_units_tiles[unit] = overwatch_tiles
 	# Confirmar movimiento (como _on_move_confirmed)
-
+	hud.hide_unit_info()
 	unit.update_visual_state()
 
 func _on_volley_pressed():
@@ -2116,6 +2146,7 @@ func _on_cancel_pressed():
 		is_tracing_path = false
 		cursor_path.clear()
 	close_action_menu()
+	hud.hide_unit_info()
 
 func _on_move_confirmed():
 	update_active_layers()
@@ -2152,7 +2183,7 @@ func _on_move_confirmed():
 			unit.current_state = MapUnit.UnitState.MOVED
 			unit.update_visual_state()
 			break
-
+	hud.hide_unit_info()
 	active_overlay.clear()
 	update_fog_of_war()
 

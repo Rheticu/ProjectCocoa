@@ -3,12 +3,12 @@ extends MapUnit
 
 enum Element { EARTH, METAL, WATER, WOOD, FIRE }
 @export var raider_element: Element = Element.FIRE
-@export var mark_range: int = 4
-@export var scorch_range: int = 4
-@export var spawn_range: int = 4
-@export var shield_range: int = 4
-@export var muddle_range: int = 4
-@export var boost_range: int = 4
+@export var mark_range: int 
+@export var scorch_range: int 
+@export var spawn_range: int 
+@export var shield_range: int 
+@export var muddle_range: int 
+@export var boost_range: int 
 # Array con los nombres en el MISMO ORDEN que el enum
 const ELEMENT_NAMES = ["EARTH", "METAL", "WATER", "WOOD", "FIRE" ]
 
@@ -19,13 +19,18 @@ func _ready():
 	# Configurar stats basados en elemento
 	_setup_element_stats()
 	_update_element_visual()
+	set_team_outline(team)
 
 func _setup_element_stats():
 	match raider_element:
 		Element.FIRE:
 			movement_range = 5
 			vision_range = 3
-			mark_range = 3
+			mark_range = 0
+			scorch_range = 3
+			muddle_range = 0
+			boost_range = 0
+			shield_range = 0
 			#max_ability_cooldown = 2
 			# Fuego: daño extra a unidades marcadas
 
@@ -33,27 +38,43 @@ func _setup_element_stats():
 			movement_range = 7  # Movimiento extra en ríos/océano
 			vision_range = 2
 			mark_range = 4
+			scorch_range = 0
+			muddle_range = 0
+			boost_range = 0
+			shield_range = 0
 			#max_ability_cooldown = 3
 			# Agua: puede moverse por agua sin costo
 
 		Element.EARTH:
 			movement_range = 4
 			vision_range = 3
-			mark_range = 5
+			mark_range = 0
+			scorch_range = 0
+			muddle_range = 4
+			boost_range = 0
+			shield_range = 0
 			#max_ability_cooldown = 4
 			# Tierra: defensa extra en montañas/colinas
 
 		Element.WOOD:
 			movement_range = 6
 			vision_range = 6  # Visión extra en bosques
-			mark_range = 3
+			mark_range = 0
+			scorch_range = 0
+			muddle_range = 0
+			boost_range = 4
+			shield_range = 0
 			#max_ability_cooldown = 3
 			# Madera: se camufla en bosques
 
 		Element.METAL:
 			movement_range = 5
 			vision_range = 4
-			mark_range = 4
+			mark_range = 0
+			scorch_range = 0
+			muddle_range = 0
+			boost_range = 0
+			shield_range = 4
 			#max_ability_cooldown = 2
 			# Metal: ignora defensa de fortificaciones
 
@@ -73,6 +94,59 @@ func _update_element_visual():
 	if ResourceLoader.exists(texture_path) and has_node("Sprite2D"):
 		get_node("Sprite2D").texture = load(texture_path)
 
+func set_team_outline(team_number: int):
+	var outline_material = ShaderMaterial.new()
+	var shader = Shader.new()
+	shader.code = """
+	shader_type canvas_item;
+	
+	uniform float outline_width: hint_range(0, 10) = 3.0;
+	uniform vec4 outline_color: source_color;
+	uniform float brightness_factor: hint_range(0, 2) = 1.0;
+	
+	void fragment() {
+		vec4 color = texture(TEXTURE, UV);
+		float alpha = color.a;
+		
+		if (alpha < 0.1) {
+			float thickness = outline_width / float(textureSize(TEXTURE, 0).x);
+			float outline = 0.0;
+			
+			for (float x = -outline_width; x <= outline_width; x++) {
+				for (float y = -outline_width; y <= outline_width; y++) {
+					vec4 neighbor = texture(TEXTURE, UV + vec2(x, y) * thickness);
+					if (neighbor.a > 0.1) {
+						outline = 1.0;
+						break;
+					}
+				}
+				if (outline > 0.0) break;
+			}
+			
+			if (outline > 0.0) {
+				COLOR = outline_color;
+			} else {
+				COLOR = vec4(0.0);
+			}
+		} else {
+			// Modificar solo RGB, mantener alpha original
+			COLOR = vec4(color.rgb * brightness_factor, color.a);
+		}
+	}
+	"""
+	
+	outline_material.shader = shader
+	
+	if team_number == 1:
+		outline_material.set_shader_parameter("outline_color", Color(0.2, 0.5, 1.0))
+	else:
+		outline_material.set_shader_parameter("outline_color", Color(1.0, 0.3, 0.3))
+	
+	outline_material.set_shader_parameter("outline_width", 3.0)
+	outline_material.set_shader_parameter("brightness_factor", 1.0)
+	
+	$Sprite2D.material = outline_material
+
 func is_raider() -> bool:
 	return true
 
@@ -88,9 +162,8 @@ func _on_input_event(_viewport, event, _shape_idx):
 
 	if main.raider_view_enabled:
 		if event.is_action_pressed("LMClick"):
-			# Si estamos en mark_mode, no hacer nada (el mark se maneja en _unhandled_input)
-			if main.is_action_mode():
-				return
+			main.active_overlay.clear()
+			main.attack_range_overlay.clear()
 
 			# Verificar si es PvP y si es mi turno
 			var can_select = false
@@ -101,19 +174,26 @@ func _on_input_event(_viewport, event, _shape_idx):
 				# PvE: solo team 1 puede seleccionar
 				can_select = (team == 1)
 
-			if (
-				current_state == UnitState.UNSELECTED
+			# Player unit selection
+			if (current_state == UnitState.UNSELECTED
 				and can_select
 				and not main.is_menu_open
 				and not main.is_action_mode()):
 				select()
-			elif (
-				team != main.current_player_team
-				and not main.is_menu_open
+
+			# Enemy unit inspection
+			elif (not main.is_menu_open
 				and not main.is_action_mode()
 				and current_state != UnitState.UNSELECTABLE):
+				# Deselect all player units first
+				for unit in main.active_units.get_children():
+					if unit.team == main.current_player_team and unit.current_state != MapUnit.UnitState.MOVED:
+						unit.deselect()
+
 				main.update_active_layers()
 				main.active_overlay.clear()
+				hud.show_unit_info(self)
+				# Show movement range of this enemy unit
 				var reachable = main.get_reachable_cells(self.grid_position, self.movement_range, self, self.is_raider())
 				for pos in reachable:
 					main.active_overlay.set_cell(0, pos, 1, Vector2i.ZERO)
@@ -150,7 +230,7 @@ func marking(target: MapUnit):
 		target.marked_turns = 4
 	current_state = UnitState.MOVED  # Can't move after marking
 	update_visual_state()
-
+	hud.hide_unit_info()
 	main.update_fog_of_war()  # Update fog to show marked unit
 
 func can_scorch(target: MapUnit)-> bool:
@@ -182,6 +262,7 @@ func scorching(target: MapUnit):
 	target.check_death()
 	current_state = UnitState.MOVED  # Can't move after attacking
 	update_visual_state()
+	hud.hide_unit_info()
 
 func can_shield(target: MapUnit)-> bool:
 	if not target:
@@ -207,6 +288,7 @@ func shielding(target: MapUnit):
 
 	current_state = UnitState.MOVED  # Can't move after shielding
 	update_visual_state()
+	hud.hide_unit_info()
 
 func can_muddle(target: MapUnit)-> bool:
 	if not target:
@@ -232,6 +314,7 @@ func muddling(target: MapUnit):
 
 	current_state = UnitState.MOVED  # Can't move after shielding
 	update_visual_state()
+	hud.hide_unit_info()
 
 func can_boost(target: MapUnit)-> bool:
 	if not target:
@@ -257,3 +340,4 @@ func boosting(target: MapUnit):
 
 	current_state = UnitState.MOVED  # Can't move after shielding
 	update_visual_state()
+	hud.hide_unit_info()

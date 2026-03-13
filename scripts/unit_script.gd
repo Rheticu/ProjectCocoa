@@ -130,15 +130,24 @@ func sync_unit_id(new_id):
 	unit_id = new_id
 
 func update_visual_state():
-	match current_state:
-		UnitState.UNSELECTABLE:
-			$Sprite2D.modulate = Color(1, 1, 1)
-		UnitState.UNSELECTED:
-			$Sprite2D.modulate = Color(1, 1, 1)
-		UnitState.SELECTED:
-			$Sprite2D.modulate = Color(1.5, 1.5, 1.5)
-		UnitState.MOVED:
-			$Sprite2D.modulate = Color(0.5, 0.5, 0.5)
+	if $Sprite2D.material:
+		match current_state:
+			UnitState.MOVED:
+				$Sprite2D.material.set_shader_parameter("brightness_factor", 0.5)
+			UnitState.SELECTED:
+				$Sprite2D.material.set_shader_parameter("brightness_factor", 1.5)
+			_:
+				$Sprite2D.material.set_shader_parameter("brightness_factor", 1.0)
+	else:
+		match current_state:
+			UnitState.UNSELECTABLE:
+				$Sprite2D.modulate = Color(1, 1, 1)
+			UnitState.UNSELECTED:
+				$Sprite2D.modulate = Color(1, 1, 1)
+			UnitState.SELECTED:
+				$Sprite2D.modulate = Color(1.5, 1.5, 1.5)
+			UnitState.MOVED:
+				$Sprite2D.modulate = Color(0.5, 0.5, 0.5)
 
 func _on_input_event(_viewport, event, _shape_idx):
 	# Verificar is_ai_processing solo si existe (PvE), en PvP no existe
@@ -148,9 +157,6 @@ func _on_input_event(_viewport, event, _shape_idx):
 	# Si estamos en mark_mode, no procesar eventos de unidades (el mark se maneja en _unhandled_input)
 	if main.is_action_mode():
 		return
-
-	if event.is_action_pressed("LMClick"):
-		print("Mark turns:" , " ", marked_turns)
 
 	if not main.raider_view_enabled:
 		if event.is_action_pressed("LMClick"):
@@ -327,6 +333,7 @@ func attacking(target: MapUnit):
 		check_death()
 		current_state = UnitState.MOVED
 		update_visual_state()
+	hud.hide_unit_info()
 
 func bash_attacking(target: MapUnit):
 	var multiplier_attacker = .6*damage_matrix[unit_type][target.unit_type]
@@ -337,6 +344,7 @@ func bash_attacking(target: MapUnit):
 	target.check_death()
 	current_state = UnitState.MOVED  # Can't move after attacking
 	update_visual_state()
+	hud.hide_unit_info()
 
 func thrust_attacking(target: MapUnit):
 	var multiplier_attacker = .7*damage_matrix[unit_type][target.unit_type]
@@ -347,6 +355,7 @@ func thrust_attacking(target: MapUnit):
 	target.check_death()
 	current_state = UnitState.MOVED  # Can't move after attacking
 	update_visual_state()
+	hud.hide_unit_info()
 
 func volley_attacking(target: MapUnit):
 	var multiplier_attacker = damage_matrix[unit_type][target.unit_type]
@@ -357,6 +366,7 @@ func volley_attacking(target: MapUnit):
 	target.check_death()
 	current_state = UnitState.MOVED  # Can't move after attacking
 	update_visual_state()
+	hud.hide_unit_info()
 
 func attack_overwatch(target: MapUnit):
 	attacking(target)  # Usa el mismo ataque normal
