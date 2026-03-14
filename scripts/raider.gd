@@ -235,13 +235,10 @@ func can_scorch(target: MapUnit)-> bool:
 func scorching(target: MapUnit):
 	var damage_attacker
 	if main.current_element == main.Element.FIRE:
-		@warning_ignore("integer_division")
-		damage_attacker = max(0.0, (2.5*attack * health/100) - target.get_total_defense())  # Basic damage formula
+		damage_attacker = max(0.0, (2.5*attack * health/100.0) - target.get_total_defense())  # Basic damage formula
 	else:
-		@warning_ignore("integer_division")
-		damage_attacker = max(0.0, (attack * health/100) - target.get_total_defense())  # Basic damage formula
+		damage_attacker = max(0.0, (attack * health/100.0) - target.get_total_defense())  # Basic damage formula
 	target.health -= damage_attacker
-	target.current_state = UnitState.UNSELECTABLE
 	target.check_death()
 	current_state = UnitState.MOVED  # Can't move after attacking
 	update_visual_state()

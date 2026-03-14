@@ -1333,7 +1333,10 @@ func _unhandled_input(event):
 	if event.is_action_pressed("RMClick"):
 		if production_menu_open:
 			close_menu_production.emit()
+
 		if is_action_mode():
+			if not raider_view_enabled:
+				toggle_raider_view()
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:
 					unit.grid_position = unit.original_position
@@ -1534,8 +1537,6 @@ func toggle_raider_view():
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:
 					unit.deselect()
-	#elif (is_action_mode() == true) and (selected_unit.is_raider() == true):
-		
 
 	active_overlay.clear()
 	hud.hide_unit_info()
@@ -1638,47 +1639,59 @@ func _on_muddle_pressed(unit: MapUnit):
 
 func try_muddle(grid_pos: Vector2i):
 	update_active_layers()
+	# Primero, encontrar la unidad correcta según la vista
+	var target_unit: MapUnit = null
 	for unit in all_units:
-		if unit.grid_position == grid_pos && selected_unit.can_muddle(unit):
-			selected_unit.muddling(unit)
+		if unit.grid_position == grid_pos and unit.visible:
+			# En vista raider, solo raiders
+			if raider_view_enabled and unit.is_raider():
+				target_unit = unit
+				break
+			# En vista normal, solo no raiders
+			if not raider_view_enabled and not unit.is_raider():
+				target_unit = unit
+				break
 
-			# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
-			if multiplayer.multiplayer_peer != null:
-				var attacker_id = get_unit_identifier(selected_unit)
-				var target_id = get_unit_identifier(unit)
+	if target_unit and selected_unit.can_muddle(target_unit):
+		selected_unit.muddling(target_unit)
 
-				# Si la unidad se movió, enviar path completo; si no, enviar path vacío
-				var path_x: Array = []
-				var path_y: Array = []
-				var is_wrapped = false
-				var attacker_old_x = selected_unit.original_position.x
-				var attacker_old_y = selected_unit.original_position.y
+		# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
+		if multiplayer.multiplayer_peer != null:
+			var attacker_id = get_unit_identifier(selected_unit)
+			var target_id = get_unit_identifier(target_unit)  # 👈 usa target_unit, no unit
 
-				if selected_unit.current_state == MapUnit.UnitState.MOVED:
-					# La unidad se movió este turno, enviar su path
-					if selected_unit.has_meta("pending_move_path"):
-						var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
-						for p in pending_path:
-							path_x.append(p.x)
-							path_y.append(p.y)
-						if selected_unit.has_meta("pending_move_is_wrapped"):
-							is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+			# Si la unidad se movió, enviar path completo; si no, enviar path vacío
+			var path_x: Array = []
+			var path_y: Array = []
+			var is_wrapped = false
+			var attacker_old_x = selected_unit.original_position.x
+			var attacker_old_y = selected_unit.original_position.y
 
-				# Enviar RPC con movimiento y ataque atomicamente
-				sync_unit_move_and_muddle.rpc(
-					attacker_old_x, attacker_old_y,
-					path_x, path_y, is_wrapped,
-					attacker_id.team, attacker_id.unit_type,
-					target_id.x, target_id.y, target_id.team, target_id.unit_type
-				)
+			if selected_unit.current_state == MapUnit.UnitState.MOVED:
+				# La unidad se movió este turno, enviar su path
+				if selected_unit.has_meta("pending_move_path"):
+					var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+					for p in pending_path:
+						path_x.append(p.x)
+						path_y.append(p.y)
+					if selected_unit.has_meta("pending_move_is_wrapped"):
+						is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
 
-			# Limpiar selección visual sin cambiar el estado MOVED
-			selected_unit.update_visual_state()
-			hud.hide_unit_info()
-			selected_unit = null
-			end_muddle_mode()
-			active_overlay.clear()
-			return
+			# Enviar RPC con movimiento y ataque atomicamente
+			sync_unit_move_and_muddle.rpc(
+				attacker_old_x, attacker_old_y,
+				path_x, path_y, is_wrapped,
+				attacker_id.team, attacker_id.unit_type,
+				target_id.x, target_id.y, target_id.team, target_id.unit_type
+			)
+		get_viewport().set_input_as_handled()
+		# Limpiar selección visual sin cambiar el estado MOVED
+		selected_unit.update_visual_state()
+		hud.hide_unit_info()
+		selected_unit = null
+		end_muddle_mode()
+		active_overlay.clear()
+		return
 
 func _on_boost_pressed(unit: MapUnit):
 	close_action_menu()
@@ -1692,47 +1705,59 @@ func _on_boost_pressed(unit: MapUnit):
 
 func try_boost(grid_pos: Vector2i):
 	update_active_layers()
+	# Primero, encontrar la unidad correcta según la vista
+	var target_unit: MapUnit = null
 	for unit in all_units:
-		if unit.grid_position == grid_pos && selected_unit.can_boost(unit):
-			selected_unit.boosting(unit)
+		if unit.grid_position == grid_pos and unit.visible:
+			# En vista raider, solo raiders
+			if raider_view_enabled and unit.is_raider():
+				target_unit = unit
+				break
+			# En vista normal, solo no raiders
+			if not raider_view_enabled and not unit.is_raider():
+				target_unit = unit
+				break
 
-			# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
-			if multiplayer.multiplayer_peer != null:
-				var attacker_id = get_unit_identifier(selected_unit)
-				var target_id = get_unit_identifier(unit)
+	if target_unit and selected_unit.can_boost(target_unit):
+		selected_unit.boosting(target_unit)
 
-				# Si la unidad se movió, enviar path completo; si no, enviar path vacío
-				var path_x: Array = []
-				var path_y: Array = []
-				var is_wrapped = false
-				var attacker_old_x = selected_unit.original_position.x
-				var attacker_old_y = selected_unit.original_position.y
+		# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
+		if multiplayer.multiplayer_peer != null:
+			var attacker_id = get_unit_identifier(selected_unit)
+			var target_id = get_unit_identifier(target_unit)  # 👈 usa target_unit, no unit
 
-				if selected_unit.current_state == MapUnit.UnitState.MOVED:
-					# La unidad se movió este turno, enviar su path
-					if selected_unit.has_meta("pending_move_path"):
-						var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
-						for p in pending_path:
-							path_x.append(p.x)
-							path_y.append(p.y)
-						if selected_unit.has_meta("pending_move_is_wrapped"):
-							is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+			# Si la unidad se movió, enviar path completo; si no, enviar path vacío
+			var path_x: Array = []
+			var path_y: Array = []
+			var is_wrapped = false
+			var attacker_old_x = selected_unit.original_position.x
+			var attacker_old_y = selected_unit.original_position.y
 
-				# Enviar RPC con movimiento y ataque atomicamente
-				sync_boost.rpc(
-					attacker_old_x, attacker_old_y,
-					path_x, path_y, is_wrapped,
-					attacker_id.team, attacker_id.unit_type,
-					target_id.x, target_id.y, target_id.team, target_id.unit_type
-				)
+			if selected_unit.current_state == MapUnit.UnitState.MOVED:
+				# La unidad se movió este turno, enviar su path
+				if selected_unit.has_meta("pending_move_path"):
+					var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+					for p in pending_path:
+						path_x.append(p.x)
+						path_y.append(p.y)
+					if selected_unit.has_meta("pending_move_is_wrapped"):
+						is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
 
-			# Limpiar selección visual sin cambiar el estado MOVED
-			selected_unit.update_visual_state()
-			hud.hide_unit_info()
-			selected_unit = null
-			end_boost_mode()
-			active_overlay.clear()
-			return
+			# Enviar RPC con movimiento y ataque atomicamente
+			sync_boost.rpc(
+				attacker_old_x, attacker_old_y,
+				path_x, path_y, is_wrapped,
+				attacker_id.team, attacker_id.unit_type,
+				target_id.x, target_id.y, target_id.team, target_id.unit_type
+			)
+		get_viewport().set_input_as_handled()
+		# Limpiar selección visual sin cambiar el estado MOVED
+		selected_unit.update_visual_state()
+		hud.hide_unit_info()
+		selected_unit = null
+		end_boost_mode()
+		active_overlay.clear()
+		return
 
 func _on_shield_pressed(unit: MapUnit):
 	close_action_menu()
@@ -1746,47 +1771,59 @@ func _on_shield_pressed(unit: MapUnit):
 
 func try_shield(grid_pos: Vector2i):
 	update_active_layers()
+	# Primero, encontrar la unidad correcta según la vista
+	var target_unit: MapUnit = null
 	for unit in all_units:
-		if unit.grid_position == grid_pos && selected_unit.can_shield(unit):
-			selected_unit.shielding(unit)
+		if unit.grid_position == grid_pos and unit.visible:
+			# En vista raider, solo raiders
+			if raider_view_enabled and unit.is_raider():
+				target_unit = unit
+				break
+			# En vista normal, solo no raiders
+			if not raider_view_enabled and not unit.is_raider():
+				target_unit = unit
+				break
 
-			# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
-			if multiplayer.multiplayer_peer != null:
-				var attacker_id = get_unit_identifier(selected_unit)
-				var target_id = get_unit_identifier(unit)
+	if target_unit and selected_unit.can_shield(target_unit):
+		selected_unit.shielding(target_unit)
 
-				# Si la unidad se movió, enviar path completo; si no, enviar path vacío
-				var path_x: Array = []
-				var path_y: Array = []
-				var is_wrapped = false
-				var attacker_old_x = selected_unit.original_position.x
-				var attacker_old_y = selected_unit.original_position.y
+		# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
+		if multiplayer.multiplayer_peer != null:
+			var attacker_id = get_unit_identifier(selected_unit)
+			var target_id = get_unit_identifier(target_unit)  # 👈 usa target_unit, no unit
 
-				if selected_unit.current_state == MapUnit.UnitState.MOVED:
-					# La unidad se movió este turno, enviar su path
-					if selected_unit.has_meta("pending_move_path"):
-						var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
-						for p in pending_path:
-							path_x.append(p.x)
-							path_y.append(p.y)
-						if selected_unit.has_meta("pending_move_is_wrapped"):
-							is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+			# Si la unidad se movió, enviar path completo; si no, enviar path vacío
+			var path_x: Array = []
+			var path_y: Array = []
+			var is_wrapped = false
+			var attacker_old_x = selected_unit.original_position.x
+			var attacker_old_y = selected_unit.original_position.y
 
-				# Enviar RPC con movimiento y ataque atomicamente
-				sync_shield.rpc(
-					attacker_old_x, attacker_old_y,
-					path_x, path_y, is_wrapped,
-					attacker_id.team, attacker_id.unit_type,
-					target_id.x, target_id.y, target_id.team, target_id.unit_type
-				)
+			if selected_unit.current_state == MapUnit.UnitState.MOVED:
+				# La unidad se movió este turno, enviar su path
+				if selected_unit.has_meta("pending_move_path"):
+					var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+					for p in pending_path:
+						path_x.append(p.x)
+						path_y.append(p.y)
+					if selected_unit.has_meta("pending_move_is_wrapped"):
+						is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
 
-			# Limpiar selección visual sin cambiar el estado MOVED
-			selected_unit.update_visual_state()
-			hud.hide_unit_info()
-			selected_unit = null
-			end_shield_mode()
-			active_overlay.clear()
-			return
+			# Enviar RPC con movimiento y ataque atomicamente
+			sync_shield.rpc(
+				attacker_old_x, attacker_old_y,
+				path_x, path_y, is_wrapped,
+				attacker_id.team, attacker_id.unit_type,
+				target_id.x, target_id.y, target_id.team, target_id.unit_type
+			)
+		get_viewport().set_input_as_handled()
+		# Limpiar selección visual sin cambiar el estado MOVED
+		selected_unit.update_visual_state()
+		hud.hide_unit_info()
+		selected_unit = null
+		end_shield_mode()
+		active_overlay.clear()
+		return
 
 func _on_scorch_pressed(unit: MapUnit):
 	close_action_menu()
@@ -1800,47 +1837,60 @@ func _on_scorch_pressed(unit: MapUnit):
 
 func try_scorch(grid_pos: Vector2i):
 	update_active_layers()
+	# Primero, encontrar la unidad correcta según la vista
+	var target_unit: MapUnit = null
 	for unit in all_units:
-		if unit.grid_position == grid_pos && selected_unit.can_scorch(unit):
-			selected_unit.scorching(unit)
+		if unit.grid_position == grid_pos and unit.visible:
+			# En vista raider, solo raiders
+			if raider_view_enabled and unit.is_raider():
+				target_unit = unit
+				break
+			# En vista normal, solo no raiders
+			if not raider_view_enabled and not unit.is_raider():
+				target_unit = unit
+				break
 
-			# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
-			if multiplayer.multiplayer_peer != null:
-				var attacker_id = get_unit_identifier(selected_unit)
-				var target_id = get_unit_identifier(unit)
+	if target_unit and selected_unit.can_scorch(target_unit):
+		selected_unit.scorching(target_unit)
+		#target_unit.current_state = target_unit.UnitState.UNSELECTED
 
-				# Si la unidad se movió, enviar path completo; si no, enviar path vacío
-				var path_x: Array = []
-				var path_y: Array = []
-				var is_wrapped = false
-				var attacker_old_x = selected_unit.original_position.x
-				var attacker_old_y = selected_unit.original_position.y
+		# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
+		if multiplayer.multiplayer_peer != null:
+			var attacker_id = get_unit_identifier(selected_unit)
+			var target_id = get_unit_identifier(target_unit)  # 👈 usa target_unit, no unit
 
-				if selected_unit.current_state == MapUnit.UnitState.MOVED:
-					# La unidad se movió este turno, enviar su path
-					if selected_unit.has_meta("pending_move_path"):
-						var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
-						for p in pending_path:
-							path_x.append(p.x)
-							path_y.append(p.y)
-						if selected_unit.has_meta("pending_move_is_wrapped"):
-							is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+			# Si la unidad se movió, enviar path completo; si no, enviar path vacío
+			var path_x: Array = []
+			var path_y: Array = []
+			var is_wrapped = false
+			var attacker_old_x = selected_unit.original_position.x
+			var attacker_old_y = selected_unit.original_position.y
 
-				# Enviar RPC con movimiento y ataque atomicamente
-				sync_unit_move_and_scorch.rpc(
-					attacker_old_x, attacker_old_y,
-					path_x, path_y, is_wrapped,
-					attacker_id.team, attacker_id.unit_type,
-					target_id.x, target_id.y, target_id.team, target_id.unit_type
-				)
+			if selected_unit.current_state == MapUnit.UnitState.MOVED:
+				# La unidad se movió este turno, enviar su path
+				if selected_unit.has_meta("pending_move_path"):
+					var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+					for p in pending_path:
+						path_x.append(p.x)
+						path_y.append(p.y)
+					if selected_unit.has_meta("pending_move_is_wrapped"):
+						is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
 
-			# Limpiar selección visual sin cambiar el estado MOVED
-			selected_unit.update_visual_state()
-			hud.hide_unit_info()
-			selected_unit = null
-			end_scorch_mode()
-			active_overlay.clear()
-			return
+			# Enviar RPC con movimiento y ataque atomicamente
+			sync_unit_move_and_scorch.rpc(
+				attacker_old_x, attacker_old_y,
+				path_x, path_y, is_wrapped,
+				attacker_id.team, attacker_id.unit_type,
+				target_id.x, target_id.y, target_id.team, target_id.unit_type
+			)
+		get_viewport().set_input_as_handled()
+		# Limpiar selección visual sin cambiar el estado MOVED
+		selected_unit.update_visual_state()
+		hud.hide_unit_info()
+		selected_unit = null
+		end_scorch_mode()
+		active_overlay.clear()
+		return
 
 func is_action_mode() -> bool:
 	return (
@@ -2020,7 +2070,7 @@ func try_volley(volley_pos: Array[Vector2i]):
 			attacker_id.team, attacker_id.unit_type,
 			volley_targets
 		)
-
+	get_viewport().set_input_as_handled()
 	selected_unit.current_state = MapUnit.UnitState.MOVED
 	active_overlay.clear()
 	end_volley_mode()
@@ -2058,7 +2108,7 @@ func try_thrust(thrust_pos):
 			attacker_id.team, attacker_id.unit_type,
 			thrust_targets
 		)
-
+	get_viewport().set_input_as_handled()
 	selected_unit.current_state = MapUnit.UnitState.MOVED
 	active_overlay.clear()
 	end_thrust_mode()
@@ -2096,7 +2146,7 @@ func try_bash(bash_pos: Array[Vector2i]):
 			attacker_id.team, attacker_id.unit_type,
 			bash_targets
 		)
-
+	get_viewport().set_input_as_handled()
 	selected_unit.current_state = MapUnit.UnitState.MOVED
 	active_overlay.clear()
 	end_bash_mode()
@@ -2334,7 +2384,7 @@ func try_attack(grid_pos: Vector2i):
 					attacker_id.team, attacker_id.unit_type,
 					target_id.x, target_id.y, target_id.team, target_id.unit_type
 				)
-
+			get_viewport().set_input_as_handled()
 			# Limpiar selección visual sin cambiar el estado MOVED
 			selected_unit.update_visual_state()
 			hud.hide_unit_info()
@@ -2664,47 +2714,59 @@ func _on_mark_pressed():
 
 func try_mark(grid_pos: Vector2i):
 	update_active_layers()
+	# Primero, encontrar la unidad correcta según la vista
+	var target_unit: MapUnit = null
 	for unit in all_units:
-		if unit.grid_position == grid_pos && selected_unit.can_mark(unit):
-			selected_unit.marking(unit)
+		if unit.grid_position == grid_pos and unit.visible:
+			# En vista raider, solo raiders
+			if raider_view_enabled and unit.is_raider():
+				target_unit = unit
+				break
+			# En vista normal, solo no raiders
+			if not raider_view_enabled and not unit.is_raider():
+				target_unit = unit
+				break
 
-			# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
-			if multiplayer.multiplayer_peer != null:
-				var attacker_id = get_unit_identifier(selected_unit)
-				var target_id = get_unit_identifier(unit)
+	if target_unit and selected_unit.can_mark(target_unit):
+		selected_unit.marking(target_unit)
 
-				# Si la unidad se movió, enviar path completo; si no, enviar path vacío
-				var path_x: Array = []
-				var path_y: Array = []
-				var is_wrapped = false
-				var attacker_old_x = selected_unit.original_position.x
-				var attacker_old_y = selected_unit.original_position.y
+		# SINCRONIZAR ATAQUE CON MOVIMIENTO (si se movió este turno)
+		if multiplayer.multiplayer_peer != null:
+			var attacker_id = get_unit_identifier(selected_unit)
+			var target_id = get_unit_identifier(target_unit)  # 👈 usa target_unit, no unit
 
-				if selected_unit.current_state == MapUnit.UnitState.MOVED:
-					# La unidad se movió este turno, enviar su path
-					if selected_unit.has_meta("pending_move_path"):
-						var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
-						for p in pending_path:
-							path_x.append(p.x)
-							path_y.append(p.y)
-						if selected_unit.has_meta("pending_move_is_wrapped"):
-							is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+			# Si la unidad se movió, enviar path completo; si no, enviar path vacío
+			var path_x: Array = []
+			var path_y: Array = []
+			var is_wrapped = false
+			var attacker_old_x = selected_unit.original_position.x
+			var attacker_old_y = selected_unit.original_position.y
 
-				# Enviar RPC con movimiento y ataque atomicamente
-				sync_mark.rpc(
-					attacker_old_x, attacker_old_y,
-					path_x, path_y, is_wrapped,
-					attacker_id.team, attacker_id.unit_type,
-					target_id.x, target_id.y, target_id.team, target_id.unit_type
-				)
+			if selected_unit.current_state == MapUnit.UnitState.MOVED:
+				# La unidad se movió este turno, enviar su path
+				if selected_unit.has_meta("pending_move_path"):
+					var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+					for p in pending_path:
+						path_x.append(p.x)
+						path_y.append(p.y)
+					if selected_unit.has_meta("pending_move_is_wrapped"):
+						is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
 
-			# Limpiar selección visual sin cambiar el estado MOVED
-			selected_unit.update_visual_state()
-			hud.hide_unit_info()
-			selected_unit = null
-			end_mark_mode()
-			active_overlay.clear()
-			return
+			# Enviar RPC con movimiento y ataque atomicamente
+			sync_mark.rpc(
+				attacker_old_x, attacker_old_y,
+				path_x, path_y, is_wrapped,
+				attacker_id.team, attacker_id.unit_type,
+				target_id.x, target_id.y, target_id.team, target_id.unit_type
+			)
+		get_viewport().set_input_as_handled()
+		# Limpiar selección visual sin cambiar el estado MOVED
+		selected_unit.update_visual_state()
+		hud.hide_unit_info()
+		selected_unit = null
+		end_mark_mode()
+		active_overlay.clear()
+		return
 
 @rpc("any_peer", "reliable")
 func sync_mark(
