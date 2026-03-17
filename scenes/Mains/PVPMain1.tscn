@@ -1,4 +1,4 @@
-[gd_scene load_steps=49 format=3 uid="uid://yhoimdm5imww"]
+[gd_scene load_steps=46 format=3 uid="uid://yhoimdm5imww"]
 
 [ext_resource type="Script" uid="uid://b6e3b3t2lgeaj" path="res://scripts/PVPmain.gd" id="1_l8vrk"]
 [ext_resource type="PackedScene" uid="uid://fh62f206lhjk" path="res://scenes/UI/MultiplayerMenu.tscn" id="1_multiplayer"]
@@ -20,11 +20,8 @@
 [ext_resource type="Texture2D" uid="uid://bq0tjjbhueml5" path="res://art/units/Sword1_Blue.png" id="17_t35fj"]
 [ext_resource type="Texture2D" uid="uid://cuuupeastpfwi" path="res://art/ui/Azul-2.png" id="17_ta15e"]
 [ext_resource type="Texture2D" uid="uid://sxitdcwrhrcj" path="res://art/units/Sword1_Red.png" id="18_6vq0k"]
-[ext_resource type="PackedScene" uid="uid://cuf1c4vjray5e" path="res://scenes/units/Archer.tscn" id="19_57kmi"]
 [ext_resource type="Texture2D" uid="uid://dtdwjl5542sfv" path="res://art/ui/Azul1.png" id="19_aamli"]
-[ext_resource type="PackedScene" uid="uid://cwuvcd8l431ts" path="res://scenes/units/Spear.tscn" id="20_l2b3n"]
 [ext_resource type="PackedScene" uid="uid://bntl4xh52v78l" path="res://scenes/UI/HUD.tscn" id="20_rd7is"]
-[ext_resource type="PackedScene" uid="uid://byh7snpnf3bsp" path="res://scenes/units/Raider.tscn" id="20_t35fj"]
 [ext_resource type="PackedScene" uid="uid://de8ekkjxtbtho" path="res://scenes/UI/PauseMenu.tscn" id="21_50gm2"]
 [ext_resource type="Texture2D" uid="uid://cimgomiw77yli" path="res://art/ui/Grid.png" id="22_6ip0j"]
 [ext_resource type="Script" uid="uid://besjo1x5nximl" path="res://scripts/camera_script.gd" id="24_fikkh"]
@@ -706,6 +703,7 @@ z_index = 1
 tile_set = SubResource("TileSet_t1nah")
 
 [node name="FogOfWar" type="TileMap" parent="MapLayer"]
+visible = false
 modulate = Color(1, 1, 1, 0.403922)
 z_index = 4
 tile_set = SubResource("TileSet_r675b")
@@ -784,6 +782,9 @@ position = Vector2(400, 240)
 [node name="City9" parent="MapLayer/Buildings" instance=ExtResource("13_vl358")]
 position = Vector2(272, 240)
 
+[node name="City23" parent="MapLayer/Buildings" instance=ExtResource("13_vl358")]
+position = Vector2(336, 176)
+
 [node name="City3" parent="MapLayer/Buildings" instance=ExtResource("13_vl358")]
 position = Vector2(80, 208)
 team = 1
@@ -822,32 +823,18 @@ team = 1
 [node name="Units" type="Node2D" parent="."]
 z_index = 5
 
-[node name="Sword3" parent="Units" instance=ExtResource("16_4nerc")]
-position = Vector2(272, 208)
-team = 2
-
-[node name="Sprite2D" parent="Units/Sword3" index="0"]
-texture = ExtResource("18_6vq0k")
-
-[node name="Sword6" parent="Units" instance=ExtResource("16_4nerc")]
-position = Vector2(304, 208)
-health = 5
-team = 2
-
-[node name="Sprite2D" parent="Units/Sword6" index="0"]
-texture = ExtResource("18_6vq0k")
-
 [node name="Sword4" parent="Units" instance=ExtResource("16_4nerc")]
-position = Vector2(208, 208)
+position = Vector2(304, 208)
 
 [node name="Sprite2D" parent="Units/Sword4" index="0"]
 texture = ExtResource("17_t35fj")
 
-[node name="Archer" parent="Units" instance=ExtResource("19_57kmi")]
+[node name="Sword8" parent="Units" instance=ExtResource("16_4nerc")]
 position = Vector2(368, 208)
+team = 2
 
-[node name="Spear" parent="Units" instance=ExtResource("20_l2b3n")]
-position = Vector2(240, 240)
+[node name="Sprite2D" parent="Units/Sword8" index="0"]
+texture = ExtResource("18_6vq0k")
 
 [node name="RaiderLayer" type="Node2D" parent="."]
 visible = false
@@ -869,45 +856,6 @@ layer_0/tile_data = PackedInt32Array(458765, 0, 0, 524301, 0, 0, 524302, 0, 0, 5
 
 [node name="RaiderUnits" type="Node2D" parent="."]
 z_index = 14
-
-[node name="Raider" parent="RaiderUnits" instance=ExtResource("20_t35fj")]
-position = Vector2(240, 144)
-raider_element = 2
-
-[node name="Raider3" parent="RaiderUnits" instance=ExtResource("20_t35fj")]
-position = Vector2(208, 176)
-
-[node name="Raider4" parent="RaiderUnits" instance=ExtResource("20_t35fj")]
-position = Vector2(240, 176)
-raider_element = 1
-
-[node name="Raider5" parent="RaiderUnits" instance=ExtResource("20_t35fj")]
-position = Vector2(208, 144)
-raider_element = 0
-
-[node name="Raider6" parent="RaiderUnits" instance=ExtResource("20_t35fj")]
-position = Vector2(336, 144)
-raider_element = 2
-team = 2
-
-[node name="Raider7" parent="RaiderUnits" instance=ExtResource("20_t35fj")]
-position = Vector2(272, 176)
-raider_element = 3
-team = 2
-
-[node name="Raider8" parent="RaiderUnits" instance=ExtResource("20_t35fj")]
-position = Vector2(272, 144)
-team = 2
-
-[node name="Raider9" parent="RaiderUnits" instance=ExtResource("20_t35fj")]
-position = Vector2(336, 176)
-raider_element = 1
-team = 2
-
-[node name="Raider10" parent="RaiderUnits" instance=ExtResource("20_t35fj")]
-position = Vector2(304, 144)
-raider_element = 0
-team = 2
 
 [node name="UI" type="Node2D" parent="."]
 
@@ -950,6 +898,5 @@ position = Vector2(320, 176)
 script = ExtResource("24_fikkh")
 metadata/_edit_lock_ = true
 
-[editable path="Units/Sword3"]
-[editable path="Units/Sword6"]
 [editable path="Units/Sword4"]
+[editable path="Units/Sword8"]

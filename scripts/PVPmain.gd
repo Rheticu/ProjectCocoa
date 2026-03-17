@@ -95,7 +95,7 @@ const UNIT_TERRAIN_COSTS = {
 		"RIVER": 2,     
 		"FOREST": 2,
 		"OCEAN": 99,      
-		"CITY": 1,
+		"BUILDING": 1,
 	},
 	"Archer": {
 		"PLAINS": 1,
@@ -105,7 +105,7 @@ const UNIT_TERRAIN_COSTS = {
 		"RIVER": 2,   
 		"FOREST": 2,
 		"OCEAN": 99,      
-		"CITY": 1,
+		"BUILDING": 1,
 	},
 	"Spear": {
 		"PLAINS": 1,
@@ -115,7 +115,7 @@ const UNIT_TERRAIN_COSTS = {
 		"RIVER": 2,     
 		"FOREST": 2,
 		"OCEAN": 99,      
-		"CITY": 1,
+		"BUILDING": 1,
 	},
 	"Raider": {
 		"PLAINS": 1,
@@ -125,7 +125,7 @@ const UNIT_TERRAIN_COSTS = {
 		"RIVER": 1,    
 		"WALL": 1,
 		"OCEAN": 1,     
-		"CITY": 1,
+		"BUILDING": 1,
 	},
 	"Junker": {
 		"PLAINS": 99,
@@ -134,16 +134,16 @@ const UNIT_TERRAIN_COSTS = {
 		"RIVER": 99,    
 		"ROAD": 99,      
 		"OCEAN": 1,
-		"CITY": 99,
+		"BUILDING": 99,
 	},
 	"Cannon": {
 		"PLAINS": 2,
-		"MOUNTAIN": 3, 
+		"MOUNTAIN": 99, 
 		"FOREST": 3,    
 		"RIVER": 99,    
 		"ROAD": 1,      
 		"OCEAN": 99,
-		"CITY": 1,
+		"BUILDING": 1,
 	},
 }
 const TILE_DEFENSE_BONUS = {
@@ -153,7 +153,8 @@ const TILE_DEFENSE_BONUS = {
 	"WALL": 99,      
 	"PLAINS": 4,      
 	"RIVER": -4,      
-	"OCEAN": 4
+	"OCEAN": 4,
+	"BUILDING":10
 }
 
 ### ========================== ACTIVE CONTEXT ========================== ###
@@ -189,7 +190,7 @@ func find_unit_by_id(id: int) -> MapUnit:
 func _ready():
 	# Configurar multiplayer
 	setup_multiplayer()
-
+	fog_tilemap.visible = true
 	# DETECTAR MAPA (con fallback)
 	var map_tilemap = $MapLayer/Map
 	var used_rect = map_tilemap.get_used_rect()
@@ -458,31 +459,31 @@ func move_unit_along_wrapped_path(unit: MapUnit, path: Array[Vector2i], from_rpc
 	if path.is_empty() or path.size() < 2:
 		input_locked = false
 		return
-	
+
 	input_locked = true
 	unit.original_position = unit.grid_position
 	var last_safe_tile = [unit.grid_position]
-	
+
 	var wrapped_path: Array[Vector2i] = []
 	for tile in path:
 		wrapped_path.append(Vector2i(posmod(tile.x, map_size.x), tile.y))
-	
+
 	# Guardar el wrapped_path en la unidad para sincronizar cuando se confirme (solo si no viene de un RPC)
 	if not from_rpc:
 		unit.set_meta("pending_move_path", wrapped_path)
 		unit.set_meta("pending_move_is_wrapped", true)
-	
+
 	# Si viene de RPC, asegurar que la unidad empiece desde su posición original visualmente
 	if from_rpc:
 		unit.grid_position = unit.original_position
 		unit.global_position = Vector2(unit.original_position * 32) + Vector2(16, 16)
 		update_fog_of_war()
-	
+
 	var tween := create_tween()
 	tween.set_parallel(false)
 	var move_time := 0.1
 	var pause_time := 0.04
-	
+
 	var wrap_index = -1
 	for i in range(1, wrapped_path.size()):
 		var prev_tile = wrapped_path[i-1]
@@ -490,7 +491,7 @@ func move_unit_along_wrapped_path(unit: MapUnit, path: Array[Vector2i], from_rpc
 		if abs(current_tile.x - prev_tile.x) > 1:
 			wrap_index = i - 1
 			break
-	
+
 	# Phase 1: move to edge
 	for i in range(1, wrap_index + 1):
 		var tile = wrapped_path[i]
@@ -498,10 +499,10 @@ func move_unit_along_wrapped_path(unit: MapUnit, path: Array[Vector2i], from_rpc
 		
 		# NO actualizar grid_position antes del tween cuando viene de RPC
 		# Se actualizará en el callback después del movimiento visual
-		
+
 		tween.tween_property(unit, "global_position", pos, move_time)
 		tween.tween_interval(pause_time)
-		
+
 		# Actualizar posición lógica DESPUÉS del movimiento visual (en el callback)
 		if from_rpc:
 			var rpc_step_tile = tile
@@ -510,7 +511,7 @@ func move_unit_along_wrapped_path(unit: MapUnit, path: Array[Vector2i], from_rpc
 				# Solo verificar visibilidad (el fog of war ya se actualizó al inicio)
 				_check_unit_visibility(unit)
 			)
-		
+
 		var step_tile = tile
 		tween.tween_callback(func() -> void:
 			var enemy := get_hidden_enemy_at(step_tile, unit.team, unit.is_raider())
@@ -518,7 +519,7 @@ func move_unit_along_wrapped_path(unit: MapUnit, path: Array[Vector2i], from_rpc
 				# Agregar la posición a las posiciones reveladas por ambush (persistente)
 				if enemy.grid_position not in ambush_revealed_positions:
 					ambush_revealed_positions.append(enemy.grid_position)
-				
+
 				# Marcar la unidad como visible
 				enemy.visible = true
 				enemy.update_visual_state()
@@ -617,6 +618,8 @@ func move_unit_along_wrapped_path(unit: MapUnit, path: Array[Vector2i], from_rpc
 				unit.grid_position = final_pos
 				unit.global_position = Vector2(final_pos * 32) + Vector2(16, 16)
 				show_ambush_effect(unit.global_position)
+				if multiplayer.multiplayer_peer != null:
+					rpc("sync_ambush_effect", unit.global_position)
 				unit.current_state = MapUnit.UnitState.MOVED
 				unit.update_visual_state()
 				
@@ -787,6 +790,8 @@ func move_unit_along_path(unit: MapUnit, path: Array[Vector2i], from_rpc: bool =
 					unit.grid_position = final_pos
 					unit.global_position = Vector2(final_pos * 32) + Vector2(16, 16)
 					show_ambush_effect(unit.global_position)
+					if multiplayer.multiplayer_peer != null:
+						rpc("sync_ambush_effect", unit.global_position)
 					unit.current_state = MapUnit.UnitState.MOVED
 					unit.update_visual_state()
 
@@ -945,6 +950,12 @@ func get_reachable_cells(start: Vector2i, movement_points: int, mover: MapUnit, 
 func get_terrain_at(pos: Vector2i) -> String:
 	if not _in_bounds(pos):
 		return "PLAINS"
+	
+	# 👇 NUEVO: Verificar si hay un building
+	for building in $MapLayer/Buildings.get_children():
+		if building.building_position == pos:
+			return "BUILDING"
+	
 	var feature_data = $MapLayer/TerrainFeatures.get_cell_tile_data(0, pos)
 	if feature_data:
 		var terrain = feature_data.get_custom_data("terrain_type")
@@ -1095,11 +1106,16 @@ func get_hidden_enemy_at(pos: Vector2i, my_team: int, my_is_raider: bool) -> Map
 					return unit
 	return null
 
+@rpc("any_peer", "reliable", "call_local")
+func sync_ambush_effect(_position: Vector2):
+	show_ambush_effect(_position)
+
 func show_ambush_effect(unit_pos: Vector2):
 	var exclaim = Sprite2D.new()
 	exclaim.texture = preload("res://art/ui/Exclamation.png")
 	exclaim.position = unit_pos + Vector2(0, -32)
 	exclaim.scale = Vector2(.06, .06)
+	exclaim.z_index = 20
 	add_child(exclaim)
 	
 	var tween = create_tween()
@@ -1335,7 +1351,7 @@ func _unhandled_input(event):
 			close_menu_production.emit()
 
 		if is_action_mode():
-			if not raider_view_enabled:
+			if selected_unit and selected_unit.is_raider() and not raider_view_enabled:
 				toggle_raider_view()
 			for unit in active_units.get_children():
 				if unit.current_state == MapUnit.UnitState.SELECTED:

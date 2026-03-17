@@ -117,11 +117,11 @@ func update_income_funds():
 	var team = main.player_id
 
 	if team == 1:
-		funds_label.text = "Funds: %d" % main.team1_funds
-		income_label.text = "Income: %d" % main.team1_income
+		funds_label.text = "$: %dk" % (main.team1_funds/1000)
+		income_label.text = "+$: %dk" % (main.team1_income/1000)
 	elif team == 2:
-		funds_label.text = "Funds: %d" % main.team2_funds
-		income_label.text = "Income: %d" % main.team2_income
+		funds_label.text = "$: %dk" % (main.team2_funds/1000)
+		income_label.text = "+$: %dk" % (main.team2_income/1000)
 
 func _on_unit_info_panel_mouse_entered() -> void:
 	if unit_info_panel.position.x < 100:
@@ -141,15 +141,15 @@ func update_element_ui():
 
 	match element_name:
 		"FIRE":
-			element_label.modulate = Color(1, 0.5, 0.5)
+			element_label.modulate = Color(0.905, 0.0, 0.213, 1.0)
 		"WATER":
 			element_label.modulate = Color(0.502, 0.988, 1.0, 1.0)
 		"WOOD":
-			element_label.modulate = Color(0.4, 0.8, 0.4)
+			element_label.modulate = Color(0.13, 0.827, 0.397, 1.0)
 		"EARTH":
-			element_label.modulate = Color(0.6, 0.4, 0.2)
+			element_label.modulate = Color(0.513, 0.338, 0.162, 1.0)
 		"METAL":
-			element_label.modulate = Color(0.9, 0.9, 0.5)
+			element_label.modulate = Color(0.968, 0.862, 0.106, 1.0)
 
 func show_turn_message(message: String):
 	turn_label.visible = true

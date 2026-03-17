@@ -249,10 +249,13 @@ func get_total_defense() -> int:
 	var base_defense = defense
 	var tile_bonus = 0
 
-	if main and main.has_method("get_terrain_at"):
-		var terrain = main.get_terrain_at(grid_position)
-		if terrain in main.TILE_DEFENSE_BONUS:
-			tile_bonus = main.TILE_DEFENSE_BONUS[terrain]
+	if not is_raider():
+		if main and main.has_method("get_terrain_at"):
+			var terrain = main.get_terrain_at(grid_position)
+			if terrain in main.TILE_DEFENSE_BONUS:
+				tile_bonus = main.TILE_DEFENSE_BONUS[terrain]
+	else:
+		tile_bonus = 0
 
 	if shield_turns == 0:
 		return base_defense + tile_bonus
