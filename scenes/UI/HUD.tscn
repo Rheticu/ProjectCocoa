@@ -8,6 +8,7 @@ border_color = Color(0.23921569, 0.10980392, 0.85882354, 1)
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5fyfn"]
 
 [sub_resource type="SystemFont" id="SystemFont_5fyfn"]
+subpixel_positioning = 0
 
 [node name="HUD" type="CanvasLayer"]
 offset = Vector2(0, -16)
@@ -48,6 +49,9 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="RaiderElementLabel" type="Label" parent="UnitInfoPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="ManaLabel" type="Label" parent="UnitInfoPanel/VBoxContainer"]
 layout_mode = 2
 
 [node name="StatusLabel" type="Label" parent="UnitInfoPanel/VBoxContainer"]

@@ -318,6 +318,8 @@ func create_host():
 	if multiplayer_menu:
 		multiplayer_menu.set_status("Esperando jugador...")
 		multiplayer_menu.hide()
+	team1_funds = 5000
+	team2_funds = 5000
 	start_turn(1)
 
 func join_host():
@@ -353,21 +355,22 @@ func _on_player_disconnected(_id: int):
 func _on_connected_to_server():
 	is_connecting = false
 	var _unique_id = multiplayer.get_unique_id()
-	# En ENet, el servidor siempre es 1, los clientes obtienen IDs únicos grandes
-	# Para simplificar, asignamos player_id = 2 al cliente
 	player_id = 2
 	current_player_team = player_id
 	hud.update_income_funds()
 	hud.update_element_ui()
-	# Cambiar título de ventana
 	get_window().title = "Player 2 - Client"
 
 	if multiplayer_menu:
 		multiplayer_menu.set_status("Conectado como jugador " + str(player_id))
 		multiplayer_menu.hide()
+	
 	# Solicitar estado inicial
 	request_game_state.rpc_id(1)
 	multiplayer_ready.emit()
+	
+	# El cliente NO ejecuta start_turn aquí
+	# El turno se iniciará cuando sea su turno
 
 ### ========================== GAME STATE SYNC ========================== ###
 
@@ -407,7 +410,11 @@ func send_game_state_to_client(client_id: int):
 			"unit_type": unit.unit_type,
 			"health": unit.health,
 			"state": unit.current_state,
-			"marked_turns": unit.marked_turns
+			"marked_turns": unit.marked_turns,
+			"shield_turns": unit.shield_turns,
+			"boost_turns": unit.boost_turns,
+			"muddle_turns": unit.muddle_turns,
+			"mana": unit.mana
 		})
 	
 	sync_game_state.rpc_id(client_id, state)
@@ -445,10 +452,15 @@ func sync_game_state(state: Dictionary):
 			unit.health = u_data.health
 			unit.current_state = u_data.state
 			unit.marked_turns = u_data.marked_turns
+			unit.shield_turns = u_data.get("shield_turns", 0)
+			unit.boost_turns = u_data.get("boost_turns", 0)
+			unit.muddle_turns = u_data.get("muddle_turns", 0)
+			unit.mana = u_data.get("mana", 0)
 			unit.update_visual_state()
 	
-	# Inicializar turno después de sincronizar
-	start_turn(current_player_team)
+	# ❌ ELIMINADO: start_turn(current_player_team)
+	
+	# Solo actualizar visuales
 	update_fog_of_war()
 	hud.update_income_funds()
 	hud.update_element_ui()
@@ -1153,7 +1165,11 @@ func start_turn(team: int):
 		turn += 1
 	elif current_player_team == 2:
 		team2_funds += team2_income
-	
+
+	for unit in all_units:
+		if unit.is_raider() and unit.team == current_player_team and unit.mana < 5:
+			unit.mana += 1
+
 	hud.update_income_funds()
 
 	# Solo permitir input si es mi turno
@@ -1615,11 +1631,11 @@ func show_action_menu(unit: MapUnit):
 			_has_mark_targets = true
 
 	attack_btn.visible = has_targets
-	mark_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.WATER
-	scorch_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.FIRE
-	shield_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.METAL
-	muddle_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.EARTH
-	boost_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.WOOD
+	mark_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.WATER and unit.mana >= 2 
+	scorch_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.FIRE and unit.mana >= 2
+	shield_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.METAL and unit.mana >= 2
+	muddle_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.EARTH and unit.mana >= 2
+	boost_btn.visible = unit is Raider_Unit and unit.raider_element == unit.Element.WOOD and unit.mana >= 2
 	capture_btn.visible = can_capture and building_underneath != null and building_underneath.team != unit.team
 	bash_btn.visible = unit.unit_type == "Spear"
 	thrust_btn.visible = unit.unit_type == "Sword"
@@ -2070,27 +2086,27 @@ func try_volley(volley_pos: Array[Vector2i]):
 				volley_targets.append(get_unit_identifier(unit))
 				unit.update_visual_state()
 
-	# Movimiento (igual que attack)
+	if selected_unit.has_meta("pending_move_path"):
+		var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+		for p in pending_path:
+			path_x.append(p.x)
+			path_y.append(p.y)
+		if selected_unit.has_meta("pending_move_is_wrapped"):
+			is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+
 	if multiplayer.multiplayer_peer != null:
-		if selected_unit.current_state == MapUnit.UnitState.MOVED:
-			if selected_unit.has_meta("pending_move_path"):
-				var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
-				for p in pending_path:
-					path_x.append(p.x)
-					path_y.append(p.y)
-				if selected_unit.has_meta("pending_move_is_wrapped"):
-					is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
-		sync_unit_move_and_volley.rpc(
+		sync_unit_move_and_thrust.rpc(
 			attacker_old_x, attacker_old_y,
 			path_x, path_y, is_wrapped,
 			attacker_id.team, attacker_id.unit_type,
 			volley_targets
 		)
+
 	get_viewport().set_input_as_handled()
 	selected_unit.current_state = MapUnit.UnitState.MOVED
+	selected_unit.update_visual_state()
 	active_overlay.clear()
 	end_volley_mode()
-	return
 
 func try_thrust(thrust_pos):
 	var attacker_id = get_unit_identifier(selected_unit)
@@ -2108,24 +2124,25 @@ func try_thrust(thrust_pos):
 				thrust_targets.append(get_unit_identifier(unit))
 				unit.update_visual_state()
 
-	# Movimiento (igual que attack)
+	if selected_unit.has_meta("pending_move_path"):
+		var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+		for p in pending_path:
+			path_x.append(p.x)
+			path_y.append(p.y)
+		if selected_unit.has_meta("pending_move_is_wrapped"):
+			is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+
 	if multiplayer.multiplayer_peer != null:
-		if selected_unit.current_state == MapUnit.UnitState.MOVED:
-			if selected_unit.has_meta("pending_move_path"):
-				var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
-				for p in pending_path:
-					path_x.append(p.x)
-					path_y.append(p.y)
-				if selected_unit.has_meta("pending_move_is_wrapped"):
-					is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
 		sync_unit_move_and_thrust.rpc(
 			attacker_old_x, attacker_old_y,
 			path_x, path_y, is_wrapped,
 			attacker_id.team, attacker_id.unit_type,
 			thrust_targets
 		)
+
 	get_viewport().set_input_as_handled()
 	selected_unit.current_state = MapUnit.UnitState.MOVED
+	selected_unit.update_visual_state()
 	active_overlay.clear()
 	end_thrust_mode()
 
@@ -2145,25 +2162,25 @@ func try_bash(bash_pos: Array[Vector2i]):
 				bash_targets.append(get_unit_identifier(unit))
 				unit.update_visual_state()
 
-	# Movimiento (igual que attack)
-	if multiplayer.multiplayer_peer != null:
-		if selected_unit.current_state == MapUnit.UnitState.MOVED:
-			if selected_unit.has_meta("pending_move_path"):
-				var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
-				for p in pending_path:
-					path_x.append(p.x)
-					path_y.append(p.y)
-				if selected_unit.has_meta("pending_move_is_wrapped"):
-					is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
+	if selected_unit.has_meta("pending_move_path"):
+		var pending_path: Array[Vector2i] = selected_unit.get_meta("pending_move_path")
+		for p in pending_path:
+			path_x.append(p.x)
+			path_y.append(p.y)
+		if selected_unit.has_meta("pending_move_is_wrapped"):
+			is_wrapped = selected_unit.get_meta("pending_move_is_wrapped")
 
+	if multiplayer.multiplayer_peer != null:
 		sync_unit_move_and_bash.rpc(
 			attacker_old_x, attacker_old_y,
 			path_x, path_y, is_wrapped,
 			attacker_id.team, attacker_id.unit_type,
 			bash_targets
 		)
+
 	get_viewport().set_input_as_handled()
 	selected_unit.current_state = MapUnit.UnitState.MOVED
+	selected_unit.update_visual_state()
 	active_overlay.clear()
 	end_bash_mode()
 
@@ -2415,7 +2432,6 @@ func sync_unit_move_and_volley(
 	path_x: Array, path_y: Array, is_wrapped: bool,
 	attacker_team: int, attacker_type: String,
 	volley_targets: Array):
-
 	var sender_id = multiplayer.get_remote_sender_id()
 	var sender_player_id = 1 if sender_id == 1 else 2
 
@@ -2433,24 +2449,24 @@ func sync_unit_move_and_volley(
 	if not attacker:
 		return
 
-	# Movimiento (idéntico a attack)
 	if not path_x.is_empty():
 		var path: Array[Vector2i] = []
 		for i in range(path_x.size()):
 			path.append(Vector2i(path_x[i], path_y[i]))
-
 		if is_wrapped:
 			move_unit_along_wrapped_path(attacker, path, true)
 		else:
 			move_unit_along_path(attacker, path, true)
-
 		await get_tree().create_timer(path.size() * 0.14).timeout
 
-	# VOLLEY REAL
-	for t in volley_targets:
-		var target = find_unit_by_identifier(t)
-		if target:
-			attacker.volley_attacking(target)
+	if volley_targets.is_empty():
+		attacker.current_state = MapUnit.UnitState.MOVED
+		attacker.update_visual_state()
+	else:
+		for t in volley_targets:
+			var target = find_unit_by_identifier(t)
+			if target:
+				attacker.volley_attacking(target)
 
 	update_fog_of_war()
 
@@ -2478,24 +2494,24 @@ func sync_unit_move_and_bash(
 	if not attacker:
 		return
 
-	# Movimiento (idéntico a attack)
 	if not path_x.is_empty():
 		var path: Array[Vector2i] = []
 		for i in range(path_x.size()):
 			path.append(Vector2i(path_x[i], path_y[i]))
-
 		if is_wrapped:
 			move_unit_along_wrapped_path(attacker, path, true)
 		else:
 			move_unit_along_path(attacker, path, true)
-
 		await get_tree().create_timer(path.size() * 0.14).timeout
 
-	# BASH REAL
-	for t in bash_targets:
-		var target = find_unit_by_identifier(t)
-		if target:
-			attacker.bash_attacking(target)
+	if bash_targets.is_empty():
+		attacker.current_state = MapUnit.UnitState.MOVED
+		attacker.update_visual_state()
+	else:
+		for t in bash_targets:
+			var target = find_unit_by_identifier(t)
+			if target:
+				attacker.bash_attacking(target)
 
 	update_fog_of_war()
 
@@ -2536,11 +2552,16 @@ func sync_unit_move_and_thrust(
 
 		await get_tree().create_timer(path.size() * 0.14).timeout
 
-	# BASH REAL
-	for t in thrust_targets:
-		var target = find_unit_by_identifier(t)
-		if target:
-			attacker.thrust_attacking(target)
+# dentro de sync_unit_move_and_thrust
+
+	if thrust_targets.is_empty():
+		attacker.current_state = MapUnit.UnitState.MOVED
+		attacker.update_visual_state()
+	else:
+		for t in thrust_targets:
+			var target = find_unit_by_identifier(t)
+			if target:
+				attacker.thrust_attacking(target)
 
 	update_fog_of_war()
 

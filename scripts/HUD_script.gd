@@ -10,6 +10,7 @@ extends CanvasLayer
 @onready var strong_label = $UnitInfoPanel/VBoxContainer/StrongLabel
 @onready var status_label = $UnitInfoPanel/VBoxContainer/StatusLabel
 @onready var raider_element_label = $UnitInfoPanel/VBoxContainer/RaiderElementLabel
+@onready var mana_label = $UnitInfoPanel/VBoxContainer/ManaLabel
 #@onready var weak_label = $UnitInfoPanel/VBoxContainer/WeakLabel
 @onready var element_label = $FundsPanel/VBoxContainer/ElementLabel
 @onready var funds_label = $FundsPanel/VBoxContainer/FundsLabel
@@ -82,6 +83,8 @@ func show_unit_info(unit: MapUnit):
 		var element_name = element_names[raider.raider_element]
 		raider_element_label.text = "Element: " + element_name
 		raider_element_label.visible = true
+		mana_label.visible = true
+		mana_label.text = "Mana: %d" % unit.mana
 		
 		# Color según elemento
 		match element_name:
@@ -92,7 +95,8 @@ func show_unit_info(unit: MapUnit):
 			"METAL": raider_element_label.modulate = Color(0.9, 0.9, 0.5)  # Amarillo claro
 	else:
 		raider_element_label.visible = false  # 👈 Ocultar si no es raider
-	
+		mana_label.visible = false
+
 	# Status - recolectar estados activos
 	var status_texts = []
 	if unit.marked_turns != 0:

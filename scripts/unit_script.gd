@@ -26,6 +26,7 @@ var marked_turns: int = 0
 var shield_turns: int = 0
 var muddle_turns: int = 0
 var boost_turns: int = 0
+var mana: int
 var is_in_overwatch: bool = false
 var unit_id: int = -1
 var is_potential_target := false

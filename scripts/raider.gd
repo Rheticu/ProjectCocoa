@@ -22,7 +22,7 @@ func _ready():
 	outline_material = ShaderMaterial.new()
 	outline_material.shader = OUTLINE_SHADER
 	outline_material.set_shader_parameter("outline_width", 2.0)
-	
+	mana = 0
 	_setup_element_stats()
 	_update_element_visual()
 	set_team_outline(team)
@@ -205,6 +205,7 @@ func can_mark(target: MapUnit) -> bool:
 	return manhattan_distance <= mark_range
 
 func marking(target: MapUnit):
+	mana -= 2
 	# Mark the target unit
 	if main.current_element == main.Element.WATER:
 		target.marked_turns = 8  # Mark for 6 turns
@@ -233,6 +234,7 @@ func can_scorch(target: MapUnit)-> bool:
 	return manhattan_distance <= scorch_range
 
 func scorching(target: MapUnit):
+	mana -= 2
 	var damage_attacker
 	if main.current_element == main.Element.FIRE:
 		damage_attacker = max(0.0, (2.5*attack * health/100.0) - target.get_total_defense())  # Basic damage formula
@@ -261,6 +263,7 @@ func can_shield(target: MapUnit)-> bool:
 	return manhattan_distance <= shield_range
 
 func shielding(target: MapUnit):
+	mana -= 2
 	if main.current_element == main.Element.METAL:
 		target.shield_turns = 8
 	else:
@@ -287,6 +290,7 @@ func can_muddle(target: MapUnit)-> bool:
 	return manhattan_distance <= muddle_range
 
 func muddling(target: MapUnit):
+	mana -= 2
 	if main.current_element == main.Element.EARTH:
 		target.muddle_turns = 8
 	else:
@@ -313,6 +317,7 @@ func can_boost(target: MapUnit)-> bool:
 	return manhattan_distance <= boost_range
 
 func boosting(target: MapUnit):
+	mana -= 2
 	if main.current_element == main.Element.WOOD:
 		target.boost_turns = 8
 	else:
