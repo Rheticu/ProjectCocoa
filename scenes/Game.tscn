@@ -1,0 +1,102 @@
+[gd_scene load_steps=22 format=3 uid="uid://mscq8xb55cqc"]
+
+[ext_resource type="Script" uid="uid://mcejuc7m0x7b" path="res://game_root.gd" id="1_400sg"]
+[ext_resource type="Script" uid="uid://cqmmsgbf0knl8" path="res://core/input_controller.gd" id="1_ibkli"]
+[ext_resource type="Script" uid="uid://b27pc62rjm1f7" path="res://core/game_manager.gd" id="3_78awf"]
+[ext_resource type="Script" uid="uid://b7u8jqsdvkpbj" path="res://core/grid_system.gd" id="3_cpr0p"]
+[ext_resource type="Script" uid="uid://b8dstusmxm57i" path="res://core/turn_manager.gd" id="3_s0nni"]
+[ext_resource type="Script" uid="uid://bfx1xmu7iv7h1" path="res://core/combat_system.gd" id="4_78awf"]
+[ext_resource type="Script" uid="uid://bpvgdp3hjdcm7" path="res://core/selection_system.gd" id="4_aug50"]
+[ext_resource type="Script" uid="uid://d000jrtpo0yga" path="res://core/action_system.gd" id="5_qy1jj"]
+[ext_resource type="Script" uid="uid://n4gedcdeuy8j" path="res://core/fog_system.gd" id="5_s0nni"]
+[ext_resource type="Script" uid="uid://bkdtf21vedk7j" path="res://core/movement_system.gd" id="7_3xj3m"]
+[ext_resource type="Script" uid="uid://c0xmwpft5d1fa" path="res://ui/ui_layer.gd" id="11_3xj3m"]
+[ext_resource type="Texture2D" uid="uid://b75htgxqc1en" path="res://art/ui/MovementOverlay.png" id="12_7ua8r"]
+[ext_resource type="Texture2D" uid="uid://ckahndn04mcs5" path="res://art/ui/AttackRangeOverlay.png" id="13_7ua8r"]
+[ext_resource type="Texture2D" uid="uid://dtdwjl5542sfv" path="res://art/ui/Azul1.png" id="14_y5y3l"]
+[ext_resource type="PackedScene" uid="uid://d0fmf4xihfurr" path="res://scenes/ui/ActionMenu.tscn" id="15_r7sob"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_vjgi4"]
+texture = ExtResource("12_7ua8r")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_kyk2p"]
+tile_size = Vector2i(32, 32)
+sources/0 = SubResource("TileSetAtlasSource_vjgi4")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_r7sob"]
+texture = ExtResource("13_7ua8r")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_sv1m6"]
+tile_size = Vector2i(32, 32)
+sources/0 = SubResource("TileSetAtlasSource_r7sob")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_a8wo8"]
+texture = ExtResource("14_y5y3l")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_attvq"]
+tile_size = Vector2i(32, 32)
+sources/0 = SubResource("TileSetAtlasSource_a8wo8")
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_400sg")
+
+[node name="GridSystem" type="Node" parent="."]
+script = ExtResource("3_cpr0p")
+
+[node name="GameManager" type="Node" parent="."]
+script = ExtResource("3_78awf")
+
+[node name="TurnManager" type="Node" parent="."]
+script = ExtResource("3_s0nni")
+
+[node name="ActionSystem" type="Node" parent="."]
+script = ExtResource("5_qy1jj")
+
+[node name="SelectionSystem" type="Node" parent="."]
+script = ExtResource("4_aug50")
+
+[node name="MovementSystem" type="Node" parent="."]
+script = ExtResource("7_3xj3m")
+
+[node name="CombatSystem" type="Node" parent="."]
+script = ExtResource("4_78awf")
+
+[node name="FogSystem" type="Node" parent="."]
+script = ExtResource("5_s0nni")
+
+[node name="InputController" type="Node" parent="."]
+script = ExtResource("1_ibkli")
+
+[node name="MultiplayerManager" type="Node" parent="."]
+
+[node name="CurrentMap" type="Node2D" parent="."]
+
+[node name="MoveRangeOverlay" type="TileMapLayer" parent="."]
+modulate = Color(1, 1, 1, 0.6)
+z_index = 2
+tile_set = SubResource("TileSet_kyk2p")
+
+[node name="AttackRangeOverlay" type="TileMapLayer" parent="."]
+modulate = Color(1, 1, 1, 0.6)
+z_index = 2
+tile_set = SubResource("TileSet_sv1m6")
+
+[node name="CursorHighlight" type="TileMapLayer" parent="."]
+z_index = 2
+tile_set = SubResource("TileSet_attvq")
+
+[node name="MovementArrow" type="Line2D" parent="."]
+z_index = 5
+width = 5.0
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+script = ExtResource("11_3xj3m")
+
+[node name="ActionMenu" parent="UILayer" instance=ExtResource("15_r7sob")]
+visible = false

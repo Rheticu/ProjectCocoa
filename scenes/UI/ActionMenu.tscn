@@ -1,0 +1,119 @@
+[gd_scene load_steps=4 format=3 uid="uid://d0fmf4xihfurr"]
+
+[ext_resource type="Script" uid="uid://bwwptnqop6jpb" path="res://ui/action_menu.gd" id="1_8b786"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_br2v5"]
+bg_color = Color(0, 0, 0, 0.88235295)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.8, 0.8, 0.39215687, 0.95686275)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4eb4q"]
+bg_color = Color(0, 0, 0, 1)
+
+[node name="ActionMenu" type="VBoxContainer"]
+z_index = 17
+offset_right = 70.0
+offset_bottom = 276.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_constants/separation = 0
+script = ExtResource("1_8b786")
+
+[node name="Move" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Move"
+
+[node name="Attack" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Attack"
+
+[node name="Mark" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Mark"
+
+[node name="Capture" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Capture"
+
+[node name="Thrust" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Thrust"
+
+[node name="Bash" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Bash"
+
+[node name="Volley" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Volley"
+
+[node name="Overwatch" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Overwatch
+"
+
+[node name="Scorch" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Scorch
+"
+
+[node name="Shield" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Shield
+"
+
+[node name="Muddle" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Muddle
+"
+
+[node name="Boost" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Boost
+"
+
+[node name="Cancel" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Cancel"
