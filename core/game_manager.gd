@@ -8,13 +8,12 @@ var team2_income: int = 0
 
 enum Element { EARTH, METAL, WATER, WOOD, FIRE }
 var current_element: Element = Element.EARTH
-
 var shade_view_enabled: bool = false
 var local_player_id: int = 0
-
 var current_map: Node2D
 var all_units: Array[Unit] = []
 var all_buildings: Array[Building] = []
+var overwatch_units: Array[Unit] = []
 
 signal funds_changed(team: int, amount: int)
 signal element_changed(element: Element)

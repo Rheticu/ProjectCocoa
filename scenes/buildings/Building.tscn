@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3 uid="uid://p812134ba3to"]
+
+[ext_resource type="Script" uid="uid://csixcdhh50lkd" path="res://entities/building.gd" id="1_qrrx1"]
+
+[node name="Building" type="Node2D"]
+script = ExtResource("1_qrrx1")
+metadata/_edit_group_ = true
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.08, 0.08)
+
+[node name="CaptureLabel" type="Label" parent="."]
+z_index = 6
+offset_left = 9.0
+offset_top = -19.0
+offset_right = 49.0
+offset_bottom = 4.0
+theme_override_font_sizes/font_size = 10

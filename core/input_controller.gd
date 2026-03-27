@@ -28,12 +28,16 @@ func unlock() -> void: _locked = false
 func _unhandled_input(event: InputEvent) -> void:
 	if _locked:
 		return
+	if ui_layer.production_menu.visible:
+		if event.is_action_pressed("RMClick") or event.is_action_pressed("LMClick"):
+			ui_layer.hide_production_menu()
+		return
 	if game_manager.local_player_id == 0:
 		return
 
 	# Si el action menu está abierto, solo permitir cancelar con RMClick
 	if ui_layer.action_menu.visible:
-		if event.is_action_pressed("RMClick"):
+		if event.is_action_pressed("RMClick") or event.is_action_pressed("LMClick"):
 			on_cancel_from_menu()
 			ui_layer.hide_action_menu()
 		return
@@ -67,14 +71,18 @@ func _handle_left_click() -> void:
 		Mode.IDLE:
 			var unit = game_manager.get_unit_at(grid_pos)
 			if unit and unit.visible:
-				# Es mi unidad, mi turno, sin acción → selección interactiva
 				if unit.team == game_manager.local_player_id and turn_manager.is_my_turn(unit.team) and unit.state != Unit.State.MOVED:
 					selection_system.select_unit(unit)
 					mode = Mode.UNIT_SELECTED
 				else:
-					# Cualquier otro caso → inspección
 					selection_system.inspect_unit_move(unit)
 					mode = Mode.INSPECTING_A
+			elif turn_manager.is_my_turn(game_manager.local_player_id):
+				var building = game_manager.get_building_at(grid_pos)
+				if building and building.team == game_manager.local_player_id and building.can_produce:
+					ui_layer.show_production_menu(building)
+				else:
+					ui_layer.show_empty_tile_menu(grid_pos)
 
 		Mode.UNIT_SELECTED:
 			var unit = selection_system.selected_unit
@@ -98,6 +106,61 @@ func _handle_left_click() -> void:
 			_cancel()
 
 		Mode.TARGETING:
+			if _pending_ability == "VOLLEY":
+				var unit = selection_system.selected_unit
+				var range_tiles = grid_system.get_tiles_in_range(unit.grid_position, unit.attack_range, false)
+				if grid_pos in range_tiles:
+					var volley_tiles = ui_layer.get_volley_tiles(grid_pos)
+					var targets: Array[Unit] = []
+					for pos in volley_tiles:
+						var t = game_manager.get_unit_at(pos)
+						if t and t.team != unit.team and t.visible:
+							targets.append(t)
+					if not targets.is_empty():
+						var path = _pending_move_path.duplicate()
+						_pending_move_path.clear()
+						_pending_ability = ""
+						action_system.queue_action(SpecialAction.new(unit, "VOLLEY", targets, Vector2i.ZERO, path))
+						mode = Mode.IDLE
+						selection_system.deselect()
+				return
+			if _pending_ability == "THRUST":
+				var dir = ui_layer.get_thrust_direction_at(grid_pos)
+				if dir != Vector2i.ZERO:
+					var unit = selection_system.selected_unit
+					var targets: Array[Unit] = []
+					for i in range(1, 3):
+						var t = game_manager.get_unit_at(unit.grid_position + dir * i)
+						if t and t.team != unit.team and t.visible:
+							targets.append(t)
+					var path = _pending_move_path.duplicate()
+					_pending_move_path.clear()
+					_pending_ability = ""
+					action_system.queue_action(SpecialAction.new(unit, "THRUST", targets, dir, path))
+					mode = Mode.IDLE
+					selection_system.deselect()
+				return
+			if _pending_ability == "BASH":
+				var dir = ui_layer.get_bash_direction_at(grid_pos)
+				if dir != Vector2i.ZERO:
+					var unit = selection_system.selected_unit
+					var targets: Array[Unit] = []
+					for d in [-1, 0, 1]:
+						var pos: Vector2i
+						if dir == Vector2i.UP or dir == Vector2i.DOWN:
+							pos = unit.grid_position + dir + Vector2i(d, 0)
+						else:
+							pos = unit.grid_position + dir + Vector2i(0, d)
+						var t = game_manager.get_unit_at(pos)
+						if t and t.team != unit.team and t.visible:
+							targets.append(t)
+					var path = _pending_move_path.duplicate()
+					_pending_move_path.clear()
+					_pending_ability = ""
+					action_system.queue_action(SpecialAction.new(unit, "BASH", targets, dir, path))
+					mode = Mode.IDLE
+					selection_system.deselect()
+				return
 			var target = game_manager.get_unit_at(grid_pos)
 			if target and target in selection_system.attack_targets:
 				var unit = selection_system.selected_unit
@@ -161,11 +224,19 @@ func on_attack_pressed() -> void:
 		mode = Mode.TARGETING
 
 func on_ability_pressed(ability: String) -> void:
-	var shade = selection_system.selected_unit as Shade
-	if shade:
-		selection_system.show_ability_options(shade, ability)
-		_pending_ability = ability
-		mode = Mode.TARGETING
+	match ability:
+		"THRUST":
+			ui_layer.show_thrust_options(selection_system.selected_unit)
+		"BASH":
+			ui_layer.show_bash_options(selection_system.selected_unit)
+		"VOLLEY":
+			ui_layer.show_volley_options(selection_system.selected_unit)
+		_:
+			var shade = selection_system.selected_unit as Shade
+			if shade:
+				selection_system.show_ability_options(shade, ability)
+	_pending_ability = ability
+	mode = Mode.TARGETING
 
 func on_move_confirmed() -> void:
 	var unit = selection_system.selected_unit
@@ -181,10 +252,6 @@ func on_capture_pressed(building: Building) -> void:
 	if selection_system.selected_unit:
 		action_system.queue_action(CaptureAction.new(selection_system.selected_unit, building))
 		mode = Mode.IDLE
-
-func on_produce_requested(building: Building, unit_type: String) -> void:
-	var cost = building.production_costs.get(unit_type, 0) if building.has_method("get") else 0
-	action_system.queue_action(ProduceAction.new(building, unit_type, cost, game_manager.local_player_id))
 
 func on_cancel_from_menu() -> void:
 	var unit = selection_system.selected_unit

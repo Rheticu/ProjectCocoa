@@ -3,6 +3,10 @@
 [ext_resource type="Script" uid="uid://bwwptnqop6jpb" path="res://ui/action_menu.gd" id="1_8b786"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_br2v5"]
+content_margin_left = 4.0
+content_margin_top = 2.0
+content_margin_right = 4.0
+content_margin_bottom = 2.0
 bg_color = Color(0, 0, 0, 0.88235295)
 border_width_left = 1
 border_width_top = 1
@@ -25,6 +29,7 @@ script = ExtResource("1_8b786")
 [node name="Move" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
 text = "Move"
@@ -32,6 +37,7 @@ text = "Move"
 [node name="Attack" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
 text = "Attack"
@@ -39,6 +45,7 @@ text = "Attack"
 [node name="Mark" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
 text = "Mark"
@@ -46,6 +53,7 @@ text = "Mark"
 [node name="Capture" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
 text = "Capture"
@@ -53,6 +61,7 @@ text = "Capture"
 [node name="Thrust" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
 text = "Thrust"
@@ -60,6 +69,7 @@ text = "Thrust"
 [node name="Bash" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
 text = "Bash"
@@ -67,6 +77,7 @@ text = "Bash"
 [node name="Volley" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
 text = "Volley"
@@ -74,46 +85,63 @@ text = "Volley"
 [node name="Overwatch" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
-text = "Overwatch
-"
+text = "Overwatch"
 
 [node name="Scorch" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
-text = "Scorch
-"
+text = "Scorch"
 
 [node name="Shield" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
-text = "Shield
-"
+text = "Shield"
 
 [node name="Muddle" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
-text = "Muddle
-"
+text = "Muddle"
 
 [node name="Boost" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
-text = "Boost
-"
+text = "Boost"
+
+[node name="Options" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Options"
 
 [node name="Cancel" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
 text = "Cancel"
+
+[node name="EndTurn" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "End Turn"

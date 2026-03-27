@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=6 format=3 uid="uid://dd8eq6muameue"]
+
+[ext_resource type="Script" uid="uid://vguawhqk205m" path="res://entities/unit_data.gd" id="1_w2rs6"]
+[ext_resource type="Script" uid="uid://g13hdvb5mhph" path="res://entities/building_data.gd" id="2_27l56"]
+[ext_resource type="Texture2D" uid="uid://cboe2r0nip8vm" path="res://art/buildings/Port/Port_Neutral.png" id="3_27l56"]
+[ext_resource type="Texture2D" uid="uid://bleb5y882d588" path="res://art/buildings/Port/Port_Blue.png" id="4_hcvdx"]
+[ext_resource type="Texture2D" uid="uid://cxygrnko6nnub" path="res://art/buildings/Port/Port_Red.png" id="5_6enrl"]
+
+[resource]
+script = ExtResource("2_27l56")
+building_type = "Port"
+income_per_turn = 1000
+can_produce_units = true
+sprite_neutral = ExtResource("3_27l56")
+sprite_team1 = ExtResource("4_hcvdx")
+sprite_team2 = ExtResource("5_6enrl")

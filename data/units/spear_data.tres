@@ -7,7 +7,8 @@
 [resource]
 script = ExtResource("1_oldkr")
 unit_type = "Spear"
-attack = 70
+attack = 40
+cost = 5000
 sprite_team1 = ExtResource("2_oldkr")
 sprite_team2 = ExtResource("3_3oq2o")
 metadata/_custom_type_script = "uid://vguawhqk205m"

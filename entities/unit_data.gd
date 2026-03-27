@@ -10,5 +10,6 @@ extends Resource
 @export var ability_range: int = 0
 @export var is_shade: bool = false
 @export var shade_element: String = ""
+@export var cost: int = 0
 @export var sprite_team1: Texture2D
 @export var sprite_team2: Texture2D

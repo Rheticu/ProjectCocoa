@@ -32,6 +32,7 @@ func _validate(action: BaseAction) -> bool:
 		BaseAction.Type.ABILITY:  return _validate_ability(action as AbilityAction)
 		BaseAction.Type.CAPTURE:  return _validate_capture(action as CaptureAction)
 		BaseAction.Type.PRODUCE:  return _validate_produce(action as ProduceAction)
+		BaseAction.Type.SPECIAL: return _validate_special(action as SpecialAction)
 		BaseAction.Type.END_TURN: return true
 	return false
 
@@ -93,10 +94,11 @@ func _execute(action: BaseAction) -> void:
 		BaseAction.Type.CAPTURE:  _execute_capture(action as CaptureAction)
 		BaseAction.Type.PRODUCE:  _execute_produce(action as ProduceAction)
 		BaseAction.Type.END_TURN: _execute_end_turn(action as EndTurnAction)
+		BaseAction.Type.SPECIAL: await _execute_special(action as SpecialAction)
 	_is_executing = false
 	action_executed.emit(action)
-	var viewing_team = game_manager.local_player_id if game_manager.local_player_id > 0 else 1
-	fog_system.recalculate(viewing_team)
+	var _viewing_team = game_manager.local_player_id if game_manager.local_player_id > 0 else 1
+	#fog_system.recalculate(_viewing_team)
 
 func _execute_move(action: MoveAction) -> void:
 	if action.path.is_empty():
@@ -119,12 +121,38 @@ func _execute_ability(action: AbilityAction) -> void:
 	combat_system.execute_ability(shade, action.ability, action.target, game_manager.current_element)
 
 func _execute_capture(action: CaptureAction) -> void:
-	action.building.capture(int(action.actor.health / 10.0), action.team)
+	action.building.capture(int(action.actor.health / 10.0), action.team, action.actor)
 	action.actor.state = Unit.State.MOVED
 	action.actor.update_visual()
 
 func _execute_produce(action: ProduceAction) -> void:
 	game_manager.deduct_funds(action.team, action.cost)
+	var unit_scene = load("res://scenes/units/Unit.tscn")
+	var unit = unit_scene.instantiate()
+	unit.data = action.unit_data
+	unit.team = action.team
+	unit.grid_position = action.building.building_position
+	unit.state = Unit.State.MOVED
+	game_manager.current_map.get_node("Units").add_child(unit)
+	game_manager.register_unit(unit)
 
 func _execute_end_turn(action: EndTurnAction) -> void:
 	turn_manager.end_turn(action.team)
+
+func _validate_special(action: SpecialAction) -> bool:
+	if action.actor.state == Unit.State.MOVED:
+		action_rejected.emit("Unidad ya actuó")
+		return false
+	if action.targets.is_empty():
+		action_rejected.emit("Sin targets")
+		return false
+	return true
+
+func _execute_special(action: SpecialAction) -> void:
+	if not action.move_path.is_empty():
+		var move = MoveAction.new(action.actor, action.move_path)
+		await _execute_move(move)
+	match action.ability_type:
+		"THRUST": combat_system.execute_thrust(action.actor, action.targets)
+		"BASH": combat_system.execute_bash(action.actor, action.targets)
+		"VOLLEY": combat_system.execute_volley(action.actor, action.targets)

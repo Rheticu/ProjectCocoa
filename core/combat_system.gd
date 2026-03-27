@@ -12,7 +12,7 @@ func execute_attack(attacker: Unit, target: Unit) -> void:
 	target.health -= damage
 
 	var counter = 0
-	if target.health > 0 and _can_counterattack(attacker, target):
+	if target.health > 0 and _can_counterattack(target, attacker):
 		counter = calculate_damage(target, attacker)
 		attacker.health -= counter
 
@@ -49,6 +49,42 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 	shade.update_visual()
 	target.update_visual()
 
+func execute_thrust(attacker: Unit, targets: Array[Unit]) -> void:
+	for target in targets:
+		if not target.visible:
+			continue
+		var damage = int(calculate_damage(attacker, target) * 0.8)
+		target.health -= damage
+		target.update_visual()
+		if target.check_death():
+			_handle_death(target)
+	attacker.state = Unit.State.MOVED
+	attacker.update_visual()
+
+func execute_bash(attacker: Unit, targets: Array[Unit]) -> void:
+	for target in targets:
+		if not target.visible:
+			continue
+		var damage = int(calculate_damage(attacker, target) * 0.7)
+		target.health -= damage
+		target.update_visual()
+		if target.check_death():
+			_handle_death(target)
+	attacker.state = Unit.State.MOVED
+	attacker.update_visual()
+
+func execute_volley(attacker: Unit, targets: Array[Unit]) -> void:
+	for target in targets:
+		if not target.visible:
+			continue
+		var damage = int(calculate_damage(attacker, target) * 0.6)
+		target.health -= damage
+		target.update_visual()
+		if target.check_death():
+			_handle_death(target)
+	attacker.state = Unit.State.MOVED
+	attacker.update_visual()
+
 func calculate_damage(attacker: Unit, target: Unit) -> int:
 	var multiplier = _get_type_multiplier(attacker.get_effective_type(), target.get_effective_type())
 	var attack_mod = 1.0
@@ -81,15 +117,9 @@ func can_use_ability(shade: Shade, target: Unit) -> bool:
 	var dist = grid_system.manhattan_distance(shade.grid_position, target.grid_position, true)
 	return dist <= shade.ability_range
 
-func _can_counterattack(attacker: Unit, target: Unit) -> bool:
-	var dist = grid_system.manhattan_distance(attacker.grid_position, target.grid_position, attacker.is_shade())
-	if dist > target.attack_range:
-		return false
-	match attacker.get_effective_type():
-		"Archer": return target.get_effective_type() == "Archer"
-		"Cannon": return false
-		"Junker": return target.get_effective_type() == "Junker"
-	return true
+func _can_counterattack(counterattacker: Unit, original_attacker: Unit) -> bool:
+	var dist = grid_system.manhattan_distance(counterattacker.grid_position, original_attacker.grid_position, counterattacker.is_shade())
+	return dist <= counterattacker.attack_range
 
 func _handle_death(unit: Unit) -> void:
 	unit_died.emit(unit)
@@ -113,6 +143,6 @@ func _get_type_multiplier(attacker_type: String, defender_type: String) -> float
 
 func _get_defense_bonus(terrain: String) -> int:
 	var bonuses = {
-		"PLAINS":4,"FOREST":8,"MOUNTAIN":12,"WALL":99,"ROAD":0,"RIVER":-4,"OCEAN":4,"BUILDING":10
+		"PLAINS":4,"FOREST":6,"MOUNTAIN":8,"WALL":99,"ROAD":0,"RIVER":-4,"OCEAN":4,"BUILDING":10
 	}
 	return bonuses.get(terrain, 0)

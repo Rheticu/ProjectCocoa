@@ -7,6 +7,11 @@ extends CanvasLayer
 @onready var attack_range_overlay: TileMapLayer = $"../AttackRangeOverlay"
 @onready var cursor_highlight: TileMapLayer    = $"../CursorHighlight"
 @onready var movement_arrow: Line2D            = $"../MovementArrow"
+var _thrust_overlays: Dictionary = {}
+var _current_thrust_direction: Vector2i = Vector2i.ZERO
+var _bash_overlays: Dictionary = {}
+var _current_bash_direction: Vector2i = Vector2i.ZERO
+var _volley_center: Vector2i = Vector2i(-1,-1)
 
 # Sistemas — sin cambios
 @onready var game_manager      = $"../GameManager"
@@ -15,9 +20,14 @@ extends CanvasLayer
 @onready var grid_system       = $"../GridSystem"
 @onready var turn_manager      = $"../TurnManager"
 @onready var input_controller  = $"../InputController"
+@onready var hud = $"../HUD"
 
-# ActionMenu sigue siendo hijo del CanvasLayer
+var _current_building: Building = null
+
+#Hijos del CanvasLayer
 @onready var action_menu = $ActionMenu
+@onready var production_menu = $ProductionMenu
+
 
 func _ready() -> void:
 	selection_system.unit_selected.connect(_on_unit_selected)
@@ -30,13 +40,26 @@ func _ready() -> void:
 	action_menu.cancel_pressed.connect(_on_action_menu_cancel)
 	action_menu.capture_pressed.connect(_on_action_menu_capture)
 	action_menu.ability_pressed.connect(_on_action_menu_ability)
+	action_menu.end_turn_pressed.connect(_on_action_menu_end_turn)
+	production_menu.unit_selected.connect(_on_unit_produced)
+	production_menu.closed.connect(hide_production_menu)
 
 # ── Action Menu ───────────────────────────────────────────────────────────────
 
 func show_action_menu(unit: Unit) -> void:
 	var building = game_manager.get_building_at(unit.grid_position)
 	var has_targets = selection_system.has_attack_targets(unit)
-	action_menu.show_for_unit(unit, building, has_targets)
+	var has_thrust_targets = selection_system.has_thrust_targets(unit)
+	var has_bash_targets = selection_system.has_bash_targets(unit)
+	var has_volley_targets = selection_system.has_volley_targets(unit)
+	action_menu.show_for_unit(
+		unit, 
+		building, 
+		has_targets, 
+		has_thrust_targets, 
+		has_bash_targets, 
+		has_volley_targets
+		)
 	var screen_pos = get_viewport().get_canvas_transform() * unit.global_position
 	action_menu.position = screen_pos + Vector2(20, -20)
 	action_menu.visible = true
@@ -58,25 +81,28 @@ func _on_action_menu_cancel() -> void:
 
 func _on_action_menu_capture() -> void:
 	hide_action_menu()
-	# TODO
+	var building = game_manager.get_building_at(selection_system.selected_unit.grid_position)
+	input_controller.on_capture_pressed(building)
 
 func _on_action_menu_ability(ability: String) -> void:
 	hide_action_menu()
 	input_controller.on_ability_pressed(ability)
 
-# ── Overlays de rango ─────────────────────────────────────────────────────────
+# ── Overlays ─────────────────────────────────────────────────────────
 
 func _on_unit_selected(unit: Unit, reachable: Array[Vector2i]) -> void:
 	move_range_overlay.clear()
 	for pos in reachable:
 		if pos != unit.grid_position:
 			move_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
+	hud.show_unit_info(unit)
 
 func _on_unit_deselected() -> void:
 	move_range_overlay.clear()
 	attack_range_overlay.clear()
 	movement_arrow.clear_points()
 	_clear_target_highlights()
+	hud.hide_unit_info()
 
 func _draw_attack_range(unit: Unit) -> void:
 	attack_range_overlay.clear()
@@ -88,6 +114,72 @@ func _draw_attack_range(unit: Unit) -> void:
 func _clear_target_highlights() -> void:
 	for unit in game_manager.all_units:
 		unit.update_visual()
+
+func show_thrust_options(unit: Unit) -> void:
+	attack_range_overlay.clear()
+	_thrust_overlays.clear()
+
+	for dir in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+		var tiles: Array[Vector2i] = []
+		for i in range(1, 3):
+			tiles.append(unit.grid_position + dir * i)
+		_thrust_overlays[dir] = tiles
+		for pos in tiles:
+			attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
+
+func hide_thrust_options() -> void:
+	attack_range_overlay.clear()
+	_thrust_overlays.clear()
+
+	_current_thrust_direction = Vector2i.ZERO
+
+func get_thrust_direction_at(grid_pos: Vector2i) -> Vector2i:
+	for dir in _thrust_overlays:
+		if grid_pos in _thrust_overlays[dir]:
+			return dir
+	return Vector2i.ZERO
+
+func show_bash_options(unit: Unit) -> void:
+	attack_range_overlay.clear()
+	_bash_overlays.clear()
+	for dir in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+		var tiles: Array[Vector2i] = []
+		for d in [-1, 0, 1]:
+			if dir == Vector2i.UP or dir == Vector2i.DOWN:
+				tiles.append(unit.grid_position + dir + Vector2i(d, 0))
+			else:
+				tiles.append(unit.grid_position + dir + Vector2i(0, d))
+		_bash_overlays[dir] = tiles
+		for pos in tiles:
+			attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
+
+func hide_bash_options() -> void:
+	attack_range_overlay.clear()
+	_bash_overlays.clear()
+	_current_bash_direction = Vector2i.ZERO
+
+func get_bash_direction_at(grid_pos: Vector2i) -> Vector2i:
+	for dir in _bash_overlays:
+		if grid_pos in _bash_overlays[dir]:
+			return dir
+	return Vector2i.ZERO
+
+func show_volley_options(unit: Unit) -> void:
+	attack_range_overlay.clear()
+	var tiles = grid_system.get_tiles_in_range(unit.grid_position, unit.attack_range, false)
+	for pos in tiles:
+		if pos != unit.grid_position:
+			attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
+
+func hide_volley_options() -> void:
+	attack_range_overlay.clear()
+	_volley_center = Vector2i(-1, -1)
+
+func get_volley_tiles(center: Vector2i) -> Array[Vector2i]:
+	var tiles: Array[Vector2i] = []
+	for dir in [Vector2i.ZERO, Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+		tiles.append(center + dir)
+	return tiles
 
 # ── Animación de movimiento ───────────────────────────────────────────────────
 
@@ -145,6 +237,77 @@ func _process(_delta: float) -> void:
 				else:
 					target.update_visual()
 
+	if input_controller.mode == InputController.Mode.TARGETING and input_controller._pending_ability == "THRUST":
+		var dir = get_thrust_direction_at(grid_pos)
+		if dir != _current_thrust_direction:
+			_current_thrust_direction = dir
+			for unit in game_manager.all_units:
+				unit.update_visual()
+			# Restaurar todos los tiles a rojo
+			for d in _thrust_overlays:
+				for pos in _thrust_overlays[d]:
+					attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
+			# Pintar dirección hover en amarillo
+			if dir != Vector2i.ZERO:
+				for pos in _thrust_overlays[dir]:
+					attack_range_overlay.set_cell(pos, 1, Vector2i(0, 0))
+				var actor = selection_system.selected_unit
+				if actor:
+					for i in range(1, 3):
+						var t = game_manager.get_unit_at(actor.grid_position + dir * i)
+						if t and t.team != actor.team:
+							t.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+
+	if input_controller.mode == InputController.Mode.TARGETING and input_controller._pending_ability == "BASH":
+		var dir = get_bash_direction_at(grid_pos)
+		if dir != _current_bash_direction:
+			_current_bash_direction = dir
+			for unit in game_manager.all_units:
+				unit.update_visual()
+			# Restaurar todos los tiles a rojo
+			for d in _bash_overlays:
+				for pos in _bash_overlays[d]:
+					attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
+			# Pintar dirección hover en amarillo
+			if dir != Vector2i.ZERO:
+				for pos in _bash_overlays[dir]:
+					attack_range_overlay.set_cell(pos, 1, Vector2i(0, 0))
+				var actor = selection_system.selected_unit
+				if actor:
+					for d in [-1, 0, 1]:
+						var pos: Vector2i
+						if dir == Vector2i.UP or dir == Vector2i.DOWN:
+							pos = actor.grid_position + dir + Vector2i(d, 0)
+						else:
+							pos = actor.grid_position + dir + Vector2i(0, d)
+						var t = game_manager.get_unit_at(pos)
+						if t and t.team != actor.team:
+							t.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+
+	if input_controller.mode == InputController.Mode.TARGETING and input_controller._pending_ability == "VOLLEY":
+		if grid_pos != _volley_center:
+			_volley_center = grid_pos
+			# Restaurar overlay base
+			var unit = selection_system.selected_unit
+			if unit:
+				attack_range_overlay.clear()
+				var range_tiles = grid_system.get_tiles_in_range(unit.grid_position, unit.attack_range, false)
+				for pos in range_tiles:
+					if pos != unit.grid_position:
+						attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
+				# Pintar hover tiles en amarillo si el cursor está en rango
+				if grid_pos in range_tiles:
+					for pos in get_volley_tiles(grid_pos):
+						attack_range_overlay.set_cell(pos, 1, Vector2i(0, 0))
+				# Colorear unidades enemigas en hover tiles
+			for unit2 in game_manager.all_units:
+				unit2.update_visual()
+			if grid_pos in grid_system.get_tiles_in_range(selection_system.selected_unit.grid_position, selection_system.selected_unit.attack_range, false):
+				for pos in get_volley_tiles(grid_pos):
+					var t = game_manager.get_unit_at(pos)
+					if t and t.team != selection_system.selected_unit.team and t.visible:
+						t.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+
 func _update_movement_arrow(cursor_pos: Vector2i) -> void:
 	if action_menu.visible:
 		movement_arrow.clear_points()
@@ -163,3 +326,30 @@ func _update_movement_arrow(cursor_pos: Vector2i) -> void:
 	movement_arrow.clear_points()
 	for tile in path:
 		movement_arrow.add_point(grid_system.grid_to_world_center(tile))
+
+func _on_action_menu_end_turn() -> void:
+	hide_action_menu()
+	action_system.queue_action(EndTurnAction.new(game_manager.local_player_id))
+
+func show_empty_tile_menu(grid_pos: Vector2i) -> void:
+	action_menu.show_for_empty_tile()
+	var world_pos = grid_system.grid_to_world_center(grid_pos)
+	var screen_pos = get_viewport().get_canvas_transform() * world_pos
+	action_menu.position = screen_pos + Vector2(20, -20)
+	action_menu.visible = true
+
+# ── Production Menu ─────────────────────────────────────────────
+
+func show_production_menu(building: Building) -> void:
+	var funds = game_manager.get_funds(building.team)
+	_current_building = building
+	production_menu.setup(building, funds)
+	production_menu.position = Vector2(get_viewport().get_visible_rect().size / 2) - Vector2(160, 170)
+	production_menu.visible = true
+
+func hide_production_menu() -> void:
+	production_menu.visible = false
+
+func _on_unit_produced(unit_data: UnitData, cost: int) -> void:
+	hide_production_menu()
+	action_system.queue_action(ProduceAction.new(_current_building, unit_data, cost, _current_building.team))

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=6 format=3 uid="uid://8dwvombq2dls"]
+
+[ext_resource type="Script" uid="uid://vguawhqk205m" path="res://entities/unit_data.gd" id="1_om3rr"]
+[ext_resource type="Script" uid="uid://g13hdvb5mhph" path="res://entities/building_data.gd" id="2_4u2dw"]
+[ext_resource type="Texture2D" uid="uid://dvc6oxqd66i62" path="res://art/buildings/City/City_Neutral.png" id="3_wpemk"]
+[ext_resource type="Texture2D" uid="uid://cpun5jg4ytt1n" path="res://art/buildings/City/City_Blue.png" id="4_om2or"]
+[ext_resource type="Texture2D" uid="uid://cvvfjdeomufqh" path="res://art/buildings/City/City_Red.png" id="5_10bvu"]
+
+[resource]
+script = ExtResource("2_4u2dw")
+building_type = "City"
+income_per_turn = 1000
+sprite_neutral = ExtResource("3_wpemk")
+sprite_team1 = ExtResource("4_om2or")
+sprite_team2 = ExtResource("5_10bvu")

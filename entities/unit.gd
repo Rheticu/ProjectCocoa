@@ -1,24 +1,24 @@
 class_name Unit
 extends Node2D
 
-
-@export var unit_id: int = -1
 @export var team: int = 1
-@export var movement_range: int = 3
-@export var attack_range: int = 1
-@export var vision_range: int = 2
-@export var attack: int = 100
-@export var defense: int = 10
-@export var unit_type: String = ""
-@export var ability_range: int 
 @export var data: UnitData
 
-var grid_position: Vector2i:
-	get: return Vector2i(position / 32)
-	set(value): position = Vector2(value) * 32 + Vector2(16, 16)
-
+var unit_id: int = -1
+var movement_range: int
+var attack_range: int
+var vision_range: int
+var attack: int
+var defense: int
+var unit_type: String
+var ability_range: int 
 var health: int = 100
 var original_position: Vector2i
+var grid_position: Vector2i:
+	get: return Vector2i(position / 32)
+	set(value):
+		position = Vector2(value) * 32 + Vector2(16, 16)
+		moved.emit(value)
 
 enum State {
 	IDLE,
@@ -28,12 +28,13 @@ enum State {
 }
 
 var state: State = State.IDLE
-
 var marked_turns: int = 0
 var shield_turns: int = 0
 var muddle_turns: int = 0
 var boost_turns: int = 0
 var is_in_overwatch: bool = false
+
+signal moved(new_position: Vector2i)
 
 func _ready() -> void:
 	z_index = 4 if is_shade() else 3

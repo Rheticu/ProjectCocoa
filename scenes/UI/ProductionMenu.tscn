@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://3ep8bkob147y"]
+
+[ext_resource type="Script" uid="uid://ddnp6el2hbkls" path="res://ui/production_menu.gd" id="1_32upk"]
+
+[node name="ProductionMenu" type="PanelContainer"]
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_32upk")

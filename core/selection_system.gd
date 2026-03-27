@@ -70,6 +70,38 @@ func has_attack_targets(unit: Unit) -> bool:
 			return true
 	return false
 
+func has_thrust_targets(unit: Unit) -> bool:
+	for i in range(1, 3):
+		for dir in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var pos = unit.grid_position + dir * i
+			for target in game_manager.all_units:
+				if target.visible and target.team != unit.team and target.grid_position == pos:
+					return true
+	return false
+
+func has_bash_targets(unit: Unit) -> bool:
+	for dir in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+		for offset in [-1, 0, 1]:
+			var pos: Vector2i
+			if dir == Vector2i.UP or dir == Vector2i.DOWN:
+				pos = unit.grid_position + dir + Vector2i(offset, 0)
+			else:
+				pos = unit.grid_position + dir + Vector2i(0, offset)
+			for target in game_manager.all_units:
+				if target.visible and target.team != unit.team and target.grid_position == pos:
+					return true
+	return false
+
+func has_volley_targets(unit: Unit) -> bool:
+	var reachable = movement_system.get_reachable_cells(unit)
+	for center in reachable:
+		for dir in [Vector2i.ZERO, Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+			var pos = center + dir
+			for target in game_manager.all_units:
+				if target.visible and target.team != unit.team and target.grid_position == pos:
+					return true
+	return false
+
 func show_ability_options(shade: Shade, ability: String) -> void:
 	var targets: Array[Unit] = []
 	for unit in game_manager.all_units:
