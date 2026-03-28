@@ -8,7 +8,8 @@ enum Type {
 	CAPTURE,
 	PRODUCE,
 	END_TURN,
-	SPECIAL
+	SPECIAL,
+	OVERWATCH
 }
 
 var type: Type

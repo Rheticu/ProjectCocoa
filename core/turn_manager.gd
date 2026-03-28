@@ -19,6 +19,8 @@ func _begin_turn(team: int) -> void:
 
 	for unit in game_manager.all_units:
 		unit.tick_buffs()
+		if unit.team == team and unit.is_in_overwatch:
+			game_manager.clear_overwatch(unit)
 
 	game_manager.recalculate_income()
 	var income = game_manager.team1_income if team == 1 else game_manager.team2_income

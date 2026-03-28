@@ -47,7 +47,8 @@ func show_for_unit(
 	has_targets: bool = false,
 	has_thrust_targets: bool = false,
 	has_bash_targets: bool = false,
-	has_volley_targets: bool = false
+	has_volley_targets: bool = false,
+	has_overwatch: bool = false
 ) -> void:
 	# Por defecto ocultar todo
 	attack_btn.visible = has_targets
@@ -55,7 +56,7 @@ func show_for_unit(
 	thrust_btn.visible = false
 	bash_btn.visible = false
 	volley_btn.visible = false
-	overwatch_btn.visible = false
+	overwatch_btn.visible = has_overwatch
 	mark_btn.visible = false
 	scorch_btn.visible = false
 	shield_btn.visible = false
@@ -74,7 +75,7 @@ func show_for_unit(
 			"Sword":   thrust_btn.visible = has_thrust_targets
 			"Spear":   bash_btn.visible = has_bash_targets
 			"Archer":  volley_btn.visible = has_volley_targets
-			"Cannon":  overwatch_btn.visible = true
+			"Cannon":  overwatch_btn.visible = has_overwatch
 
 	# Shade habilidades
 	if unit.is_shade():

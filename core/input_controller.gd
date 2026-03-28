@@ -89,6 +89,9 @@ func _handle_left_click() -> void:
 			if not unit:
 				mode = Mode.IDLE
 				return
+			if grid_pos == unit.grid_position:
+				ui_layer.show_action_menu(unit)
+				return
 			if grid_pos in selection_system.reachable_cells:
 				_pending_move_path = selection_system.get_movement_path_to(grid_pos)
 				if not _pending_move_path.is_empty():
@@ -231,6 +234,11 @@ func on_ability_pressed(ability: String) -> void:
 			ui_layer.show_bash_options(selection_system.selected_unit)
 		"VOLLEY":
 			ui_layer.show_volley_options(selection_system.selected_unit)
+		"OVERWATCH":
+			action_system.queue_action(OverwatchAction.new(selection_system.selected_unit))
+			mode = Mode.IDLE
+			selection_system.deselect()
+			return
 		_:
 			var shade = selection_system.selected_unit as Shade
 			if shade:

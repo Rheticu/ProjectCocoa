@@ -23,11 +23,11 @@ var _volley_center: Vector2i = Vector2i(-1,-1)
 @onready var hud = $"../HUD"
 
 var _current_building: Building = null
+var _overwatch_activated: bool = false
 
 #Hijos del CanvasLayer
 @onready var action_menu = $ActionMenu
 @onready var production_menu = $ProductionMenu
-
 
 func _ready() -> void:
 	selection_system.unit_selected.connect(_on_unit_selected)
@@ -43,22 +43,27 @@ func _ready() -> void:
 	action_menu.end_turn_pressed.connect(_on_action_menu_end_turn)
 	production_menu.unit_selected.connect(_on_unit_produced)
 	production_menu.closed.connect(hide_production_menu)
+	action_system.overwatch_triggered.connect(_on_overwatch_triggered)
 
 # ── Action Menu ───────────────────────────────────────────────────────────────
 
 func show_action_menu(unit: Unit) -> void:
 	var building = game_manager.get_building_at(unit.grid_position)
 	var has_targets = selection_system.has_attack_targets(unit)
+	if unit.unit_type == "Cannon":
+		has_targets = has_targets and unit.grid_position == unit.original_position
 	var has_thrust_targets = selection_system.has_thrust_targets(unit)
 	var has_bash_targets = selection_system.has_bash_targets(unit)
 	var has_volley_targets = selection_system.has_volley_targets(unit)
+	var has_overwatch = unit.unit_type == "Cannon" and unit.grid_position == unit.original_position
 	action_menu.show_for_unit(
 		unit, 
 		building, 
 		has_targets, 
 		has_thrust_targets, 
 		has_bash_targets, 
-		has_volley_targets
+		has_volley_targets,
+		has_overwatch
 		)
 	var screen_pos = get_viewport().get_canvas_transform() * unit.global_position
 	action_menu.position = screen_pos + Vector2(20, -20)
@@ -183,23 +188,38 @@ func get_volley_tiles(center: Vector2i) -> Array[Vector2i]:
 
 # ── Animación de movimiento ───────────────────────────────────────────────────
 
+var _movement_tween: Tween = null
+
 func _on_move_started(unit: Unit, path: Array[Vector2i]) -> void:
 	input_controller.lock()
 	move_range_overlay.clear()
 	await _animate_movement(unit, path)
+	if not is_instance_valid(unit):
+		input_controller.unlock()
+		return
+	if _overwatch_activated and unit.state == Unit.State.MOVED:
+		# Murió o quedó en MOVED por overwatch — no mostrar menú
+		input_controller.clear_pending_path()
+		input_controller.unlock()
+		return
 	action_system.move_confirmed.emit(unit)
 	input_controller.clear_pending_path()
 	input_controller.unlock()
 	show_action_menu(unit)
 
 func _animate_movement(unit: Unit, path: Array[Vector2i]) -> void:
-	var tween = create_tween()
-	tween.set_parallel(false)
+	_overwatch_activated = false
+	_movement_tween = create_tween()
+	_movement_tween.set_parallel(false)
+	var previous_tile = unit.grid_position
 	for tile in path:
 		var world_pos = grid_system.grid_to_world_center(tile)
-		tween.tween_property(unit, "position", world_pos, 0.1)
-		tween.tween_interval(0.04)
-	await tween.finished
+		_movement_tween.tween_property(unit, "position", world_pos, 0.1)
+		_movement_tween.tween_interval(0.04)
+		var current_previous = previous_tile
+		_movement_tween.tween_callback(func(): action_system.check_overwatch_at(unit, tile, current_previous))
+		previous_tile = tile
+	await _movement_tween.finished
 
 func _on_action_executed(action: BaseAction) -> void:
 	hide_action_menu()
@@ -214,6 +234,29 @@ func _on_action_executed(action: BaseAction) -> void:
 			attack_range_overlay.clear()
 			movement_arrow.clear_points()
 			_clear_target_highlights()
+
+func _on_overwatch_triggered(_attacker: Unit, target: Unit, _tile: Vector2i, _previous_tile: Vector2i) -> void:
+	_overwatch_activated = true
+	if not is_instance_valid(target):
+		return
+	if _movement_tween:
+		_movement_tween.pause()
+	target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+	movement_arrow.clear_points()
+	await get_tree().create_timer(0.5).timeout
+	if not is_instance_valid(target):
+		# La unidad murió — limpiar todo manualmente
+		if _movement_tween:
+			_movement_tween.kill()
+		input_controller.unlock()
+		hud.hide_unit_info()
+		selection_system.deselect()
+		action_system.move_confirmed.emit(null)
+		input_controller.mode = InputController.Mode.IDLE
+		return
+	target.update_visual()
+	if _movement_tween and _movement_tween.is_valid():
+		_movement_tween.play()
 
 # ── Cursor y flecha de movimiento ─────────────────────────────────────────────
 

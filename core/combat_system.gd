@@ -131,7 +131,7 @@ func _get_type_multiplier(attacker_type: String, defender_type: String) -> float
 		"Sword:Sword":1.0,"Sword:Archer":1.8,"Sword:Spear":0.6,"Sword:Cannon":2.0,"Sword:Junker":0.2,
 		"Archer:Sword":0.6,"Archer:Archer":1.0,"Archer:Spear":1.8,"Archer:Cannon":1.0,"Archer:Junker":0.5,
 		"Spear:Sword":1.8,"Spear:Archer":1.5,"Spear:Spear":1.0,"Spear:Cannon":1.2,"Spear:Junker":0.5,
-		"Cannon:Sword":3.0,"Cannon:Archer":3.0,"Cannon:Spear":3.0,"Cannon:Cannon":1.0,"Cannon:Junker":2.0,
+		"Cannon:Sword":1,"Cannon:Archer":1,"Cannon:Spear":1,"Cannon:Cannon":1,"Cannon:Junker":1,
 		"Junker:Sword":1.0,"Junker:Archer":1.0,"Junker:Spear":1.0,"Junker:Cannon":1.0,"Junker:Junker":1.0,
 		"Shade_FIRE:Shade_FIRE":1.0,"Shade_FIRE:Shade_WATER":0.66,"Shade_FIRE:Shade_EARTH":1.0,"Shade_FIRE:Shade_WOOD":1.0,"Shade_FIRE:Shade_METAL":1.5,
 		"Shade_WATER:Shade_FIRE":1.5,"Shade_WATER:Shade_WATER":1.0,"Shade_WATER:Shade_EARTH":0.66,"Shade_WATER:Shade_WOOD":1.0,"Shade_WATER:Shade_METAL":1.0,
@@ -146,3 +146,12 @@ func _get_defense_bonus(terrain: String) -> int:
 		"PLAINS":4,"FOREST":6,"MOUNTAIN":8,"WALL":99,"ROAD":0,"RIVER":-4,"OCEAN":4,"BUILDING":10
 	}
 	return bonuses.get(terrain, 0)
+
+func execute_overwatch_attack(attacker: Unit, target: Unit) -> void:
+	var damage = calculate_damage(attacker, target)
+	target.health -= damage
+	target.update_visual()
+	if target.check_death():
+		_handle_death(target)
+	attacker.state = Unit.State.MOVED
+	attacker.update_visual()

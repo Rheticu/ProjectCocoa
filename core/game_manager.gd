@@ -81,3 +81,11 @@ func advance_element() -> void:
 func toggle_shade_view() -> void:
 	shade_view_enabled = !shade_view_enabled
 	shade_view_toggled.emit(shade_view_enabled)
+
+func register_overwatch(unit: Unit) -> void:
+	if unit not in overwatch_units:
+		overwatch_units.append(unit)
+
+func clear_overwatch(unit: Unit) -> void:
+	overwatch_units.erase(unit)
+	unit.is_in_overwatch = false

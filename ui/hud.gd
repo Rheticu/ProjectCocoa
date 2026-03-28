@@ -26,7 +26,7 @@ func _ready() -> void:
 func _build_funds_panel() -> void:
 	funds_panel = PanelContainer.new()
 	var style = _make_panel_style()
-	funds_panel.visible = false
+	funds_panel.visible = true
 	funds_panel.add_theme_stylebox_override("panel", style)
 	add_child(funds_panel)
 	
@@ -116,7 +116,7 @@ func update_funds() -> void:
 	var income = game_manager.team1_income if team == 1 else game_manager.team2_income
 	funds_label.text = "$: %dk" % (funds / 1000)
 	income_label.text = "+$: %dk" % (income / 1000)
-	turn_label.text = "Turn %d" % turn_manager.turn_number
+	turn_label.text = "Team %d" % team
 
 func show_unit_info(unit: Unit) -> void:
 	unit_type_label.text = unit.unit_type

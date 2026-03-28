@@ -8,7 +8,7 @@
 script = ExtResource("1_h3g2m")
 unit_type = "Cannon"
 attack_range = 3
-attack = 60
+attack = 150
 defense = 2
 cost = 7500
 sprite_team1 = ExtResource("2_h3g2m")

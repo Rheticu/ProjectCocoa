@@ -6,11 +6,13 @@ extends Node
 @onready var movement_system = $"../MovementSystem"
 @onready var combat_system = $"../CombatSystem"
 @onready var fog_system = $"../FogSystem"
+@onready var grid_system = $"../GridSystem"
 
 signal action_executed(action: BaseAction)
 signal action_rejected(reason: String)
 signal move_animation_requested(unit: Unit, path: Array[Vector2i])
 signal move_confirmed(unit: Unit)
+signal overwatch_triggered(attacker: Unit, target: Unit, tile: Vector2i, previous_tile: Vector2i)
 
 var _is_executing: bool = false
 
@@ -34,6 +36,7 @@ func _validate(action: BaseAction) -> bool:
 		BaseAction.Type.PRODUCE:  return _validate_produce(action as ProduceAction)
 		BaseAction.Type.SPECIAL: return _validate_special(action as SpecialAction)
 		BaseAction.Type.END_TURN: return true
+		BaseAction.Type.OVERWATCH: return _validate_overwatch(action as OverwatchAction)
 	return false
 
 func _validate_move(action: MoveAction) -> bool:
@@ -95,6 +98,7 @@ func _execute(action: BaseAction) -> void:
 		BaseAction.Type.PRODUCE:  _execute_produce(action as ProduceAction)
 		BaseAction.Type.END_TURN: _execute_end_turn(action as EndTurnAction)
 		BaseAction.Type.SPECIAL: await _execute_special(action as SpecialAction)
+		BaseAction.Type.OVERWATCH: _execute_overwatch(action as OverwatchAction)
 	_is_executing = false
 	action_executed.emit(action)
 	var _viewing_team = game_manager.local_player_id if game_manager.local_player_id > 0 else 1
@@ -105,7 +109,8 @@ func _execute_move(action: MoveAction) -> void:
 		return
 	move_animation_requested.emit(action.actor, action.path)
 	await move_confirmed
-	action.actor.grid_position = action.path.back()
+	if is_instance_valid(action.actor) and action.actor.state != Unit.State.MOVED:
+		action.actor.grid_position = action.path.back()
 
 func _execute_attack(action: AttackAction) -> void:
 	if not action.move_path.is_empty():
@@ -121,6 +126,9 @@ func _execute_ability(action: AbilityAction) -> void:
 	combat_system.execute_ability(shade, action.ability, action.target, game_manager.current_element)
 
 func _execute_capture(action: CaptureAction) -> void:
+	if not action.move_path.is_empty():
+		var move = MoveAction.new(action.actor, action.move_path)
+		await _execute_move(move)
 	action.building.capture(int(action.actor.health / 10.0), action.team, action.actor)
 	action.actor.state = Unit.State.MOVED
 	action.actor.update_visual()
@@ -156,3 +164,37 @@ func _execute_special(action: SpecialAction) -> void:
 		"THRUST": combat_system.execute_thrust(action.actor, action.targets)
 		"BASH": combat_system.execute_bash(action.actor, action.targets)
 		"VOLLEY": combat_system.execute_volley(action.actor, action.targets)
+
+func _validate_overwatch(action: OverwatchAction) -> bool:
+	if action.actor.state == Unit.State.MOVED:
+		action_rejected.emit("Unidad ya actuó")
+		return false
+	if action.actor.grid_position != action.actor.original_position:
+		action_rejected.emit("No puedes moverte antes de activar overwatch")
+		return false
+	return true
+
+func _execute_overwatch(action: OverwatchAction) -> void:
+	action.actor.is_in_overwatch = true
+	action.actor.state = Unit.State.MOVED
+	action.actor.update_visual()
+	game_manager.register_overwatch(action.actor)
+
+func check_overwatch_at(unit: Unit, tile: Vector2i, previous_tile: Vector2i) -> void:
+	_check_overwatch(unit, tile, previous_tile)
+
+func _check_overwatch(moving_unit: Unit, tile: Vector2i, previous_tile: Vector2i) -> bool:
+	for cannon in game_manager.overwatch_units:
+		if not is_instance_valid(cannon) or not cannon.is_in_overwatch:
+			continue
+		if cannon.team == moving_unit.team:
+			continue
+		if not moving_unit.visible:
+			continue
+		var dist = grid_system.manhattan_distance(cannon.grid_position, tile, false)
+		if dist <= cannon.attack_range:
+			combat_system.execute_overwatch_attack(cannon, moving_unit)
+			overwatch_triggered.emit(cannon, moving_unit, tile, previous_tile)
+			game_manager.clear_overwatch(cannon)
+			return true
+	return false
