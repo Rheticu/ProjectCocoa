@@ -22,7 +22,7 @@ func _ready() -> void:
 
 	# Inicializar FogSystem
 	var fog_layer = map.get_node("Fog")
-	#fog_layer.visible = true
+	fog_layer.visible = true
 	fog_system.initialize(fog_layer)
 
 	# Registrar unidades del mapa

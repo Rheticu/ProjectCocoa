@@ -6,7 +6,7 @@ extends Node
 
 var _fog_layer: TileMapLayer
 var _visible_tiles: Dictionary = {}
-var enabled: bool = false:
+var enabled: bool = true:
 	set(value):
 		enabled = value
 		if _fog_layer:
