@@ -7,6 +7,7 @@ extends Node
 @onready var turn_manager = $"../TurnManager"
 @onready var grid_system = $"../GridSystem"
 @onready var ui_layer = $"../UILayer"
+@onready var fog_system = $"../FogSystem"
 
 enum Mode { 
 	IDLE,
@@ -66,7 +67,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _handle_left_click() -> void:
 	var mouse_pos = get_viewport().get_mouse_position()
 	var grid_pos = grid_system.world_to_grid(mouse_pos)
-
+	print(turn_manager.current_team)
 	match mode:
 		Mode.IDLE:
 			var unit = game_manager.get_unit_at(grid_pos)
@@ -252,6 +253,7 @@ func on_move_confirmed() -> void:
 		unit.original_position = unit.grid_position
 		unit.state = Unit.State.MOVED
 		unit.update_visual()
+	fog_system.recalculate(game_manager.local_player_id)
 	selection_system.deselect()
 	_pending_move_path.clear()
 	mode = Mode.IDLE
@@ -259,6 +261,7 @@ func on_move_confirmed() -> void:
 func on_capture_pressed(building: Building) -> void:
 	if selection_system.selected_unit:
 		action_system.queue_action(CaptureAction.new(selection_system.selected_unit, building))
+		selection_system.deselect()
 		mode = Mode.IDLE
 
 func on_cancel_from_menu() -> void:

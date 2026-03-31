@@ -22,6 +22,7 @@ func _ready() -> void:
 
 	# Inicializar FogSystem
 	var fog_layer = map.get_node("Fog")
+	#fog_layer.visible = true
 	fog_system.initialize(fog_layer)
 
 	# Registrar unidades del mapa
@@ -41,7 +42,7 @@ func _ready() -> void:
 	# Para probar: jugador local es equipo 1
 	game_manager.local_player_id = 1
 	turn_manager.start_game()
-	#fog_system.recalculate(1)
+	fog_system.recalculate(1)
 
 	hud.update_funds()
 	game_manager.funds_changed.connect(func(_team, _amount): hud.update_funds())

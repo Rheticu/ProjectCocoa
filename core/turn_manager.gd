@@ -37,8 +37,8 @@ func _begin_turn(team: int) -> void:
 			unit.state = Unit.State.IDLE
 			unit.update_visual()
 
-	turn_started.emit(team)
 	game_manager.local_player_id = team
+	turn_started.emit(team)
 
 func end_turn(team: int) -> void:
 	if team != current_team:

@@ -128,8 +128,8 @@ func _handle_death(unit: Unit) -> void:
 
 func _get_type_multiplier(attacker_type: String, defender_type: String) -> float:
 	var matrix = {
-		"Sword:Sword":1.0,"Sword:Archer":1.8,"Sword:Spear":0.6,"Sword:Cannon":2.0,"Sword:Junker":0.2,
-		"Archer:Sword":0.6,"Archer:Archer":1.0,"Archer:Spear":1.8,"Archer:Cannon":1.0,"Archer:Junker":0.5,
+		"Sword:Sword":1.0,"Sword:Archer":1,"Sword:Spear":0.6,"Sword:Cannon":2.0,"Sword:Junker":0.2,
+		"Archer:Sword":1,"Archer:Archer":1.0,"Archer:Spear":1.8,"Archer:Cannon":1.0,"Archer:Junker":0.5,
 		"Spear:Sword":1.8,"Spear:Archer":1.5,"Spear:Spear":1.0,"Spear:Cannon":1.2,"Spear:Junker":0.5,
 		"Cannon:Sword":1,"Cannon:Archer":1,"Cannon:Spear":1,"Cannon:Cannon":1,"Cannon:Junker":1,
 		"Junker:Sword":1.0,"Junker:Archer":1.0,"Junker:Spear":1.0,"Junker:Cannon":1.0,"Junker:Junker":1.0,

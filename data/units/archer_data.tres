@@ -7,10 +7,10 @@
 [resource]
 script = ExtResource("1_hejsf")
 unit_type = "Archer"
-attack_range = 7
+attack_range = 3
 vision_range = 1
-attack = 150
-defense = 8
+attack = 50
+defense = 0
 cost = 1000
 sprite_team1 = ExtResource("2_hejsf")
 sprite_team2 = ExtResource("3_yuhdk")

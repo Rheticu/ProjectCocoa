@@ -13,6 +13,7 @@ signal action_rejected(reason: String)
 signal move_animation_requested(unit: Unit, path: Array[Vector2i])
 signal move_confirmed(unit: Unit)
 signal overwatch_triggered(attacker: Unit, target: Unit, tile: Vector2i, previous_tile: Vector2i)
+signal ambush_triggered(moving_unit: Unit, hidden_unit: Unit, tile: Vector2i)
 
 var _is_executing: bool = false
 
@@ -94,22 +95,23 @@ func _execute(action: BaseAction) -> void:
 		BaseAction.Type.MOVE:     await _execute_move(action as MoveAction)
 		BaseAction.Type.ATTACK:   await _execute_attack(action as AttackAction)
 		BaseAction.Type.ABILITY:  await _execute_ability(action as AbilityAction)
-		BaseAction.Type.CAPTURE:  _execute_capture(action as CaptureAction)
+		BaseAction.Type.CAPTURE: await _execute_capture(action as CaptureAction)
 		BaseAction.Type.PRODUCE:  _execute_produce(action as ProduceAction)
 		BaseAction.Type.END_TURN: _execute_end_turn(action as EndTurnAction)
 		BaseAction.Type.SPECIAL: await _execute_special(action as SpecialAction)
 		BaseAction.Type.OVERWATCH: _execute_overwatch(action as OverwatchAction)
 	_is_executing = false
 	action_executed.emit(action)
-	var _viewing_team = game_manager.local_player_id if game_manager.local_player_id > 0 else 1
-	#fog_system.recalculate(_viewing_team)
+	if action.type != BaseAction.Type.MOVE:
+		var _viewing_team = game_manager.local_player_id if game_manager.local_player_id > 0 else 1
+		fog_system.recalculate(_viewing_team)
 
 func _execute_move(action: MoveAction) -> void:
 	if action.path.is_empty():
 		return
 	move_animation_requested.emit(action.actor, action.path)
 	await move_confirmed
-	if is_instance_valid(action.actor) and action.actor.state != Unit.State.MOVED:
+	if is_instance_valid(action.actor) and action.actor.state != Unit.State.MOVED and not action.path.is_empty():
 		action.actor.grid_position = action.path.back()
 
 func _execute_attack(action: AttackAction) -> void:
@@ -189,7 +191,7 @@ func _check_overwatch(moving_unit: Unit, tile: Vector2i, previous_tile: Vector2i
 			continue
 		if cannon.team == moving_unit.team:
 			continue
-		if not moving_unit.visible:
+		if not fog_system.is_visible(tile, cannon.team):
 			continue
 		var dist = grid_system.manhattan_distance(cannon.grid_position, tile, false)
 		if dist <= cannon.attack_range:
@@ -197,4 +199,21 @@ func _check_overwatch(moving_unit: Unit, tile: Vector2i, previous_tile: Vector2i
 			overwatch_triggered.emit(cannon, moving_unit, tile, previous_tile)
 			game_manager.clear_overwatch(cannon)
 			return true
+	return false
+
+func check_ambush_at(moving_unit: Unit, tile: Vector2i, previous_tile: Vector2i) -> bool:
+	for unit in game_manager.all_units:
+		if unit.team == moving_unit.team:
+			continue
+		if unit.grid_position != tile:
+			continue
+		if unit.visible:
+			continue
+		unit.visible = true
+		unit.update_visual()
+		moving_unit.state = Unit.State.MOVED
+		moving_unit.grid_position = previous_tile
+		moving_unit.update_visual()
+		ambush_triggered.emit(moving_unit, unit, tile)
+		return true
 	return false

@@ -20,10 +20,12 @@ var _volley_center: Vector2i = Vector2i(-1,-1)
 @onready var grid_system       = $"../GridSystem"
 @onready var turn_manager      = $"../TurnManager"
 @onready var input_controller  = $"../InputController"
+@onready var fog_system = $"../FogSystem"
 @onready var hud = $"../HUD"
 
 var _current_building: Building = null
 var _overwatch_activated: bool = false
+var _ambush_activated: bool = false
 
 #Hijos del CanvasLayer
 @onready var action_menu = $ActionMenu
@@ -44,6 +46,7 @@ func _ready() -> void:
 	production_menu.unit_selected.connect(_on_unit_produced)
 	production_menu.closed.connect(hide_production_menu)
 	action_system.overwatch_triggered.connect(_on_overwatch_triggered)
+	action_system.ambush_triggered.connect(_on_ambush_triggered)
 
 # ── Action Menu ───────────────────────────────────────────────────────────────
 
@@ -197,10 +200,17 @@ func _on_move_started(unit: Unit, path: Array[Vector2i]) -> void:
 	if not is_instance_valid(unit):
 		input_controller.unlock()
 		return
-	if _overwatch_activated and unit.state == Unit.State.MOVED:
-		# Murió o quedó en MOVED por overwatch — no mostrar menú
+	if _overwatch_activated or _ambush_activated:
 		input_controller.clear_pending_path()
 		input_controller.unlock()
+		action_system.move_confirmed.emit(null)
+		if _ambush_activated:
+			if is_instance_valid(unit):
+				unit.state = Unit.State.MOVED
+				unit.update_visual()
+			return
+		if _overwatch_activated and is_instance_valid(unit):
+			show_action_menu(unit)
 		return
 	action_system.move_confirmed.emit(unit)
 	input_controller.clear_pending_path()
@@ -209,6 +219,7 @@ func _on_move_started(unit: Unit, path: Array[Vector2i]) -> void:
 
 func _animate_movement(unit: Unit, path: Array[Vector2i]) -> void:
 	_overwatch_activated = false
+	_ambush_activated = false
 	_movement_tween = create_tween()
 	_movement_tween.set_parallel(false)
 	var previous_tile = unit.grid_position
@@ -217,9 +228,14 @@ func _animate_movement(unit: Unit, path: Array[Vector2i]) -> void:
 		_movement_tween.tween_property(unit, "position", world_pos, 0.1)
 		_movement_tween.tween_interval(0.04)
 		var current_previous = previous_tile
-		_movement_tween.tween_callback(func(): action_system.check_overwatch_at(unit, tile, current_previous))
+		_movement_tween.tween_callback(func():
+			if action_system.check_ambush_at(unit, tile, current_previous):
+				return
+			action_system.check_overwatch_at(unit, tile, current_previous)
+		)
 		previous_tile = tile
-	await _movement_tween.finished
+	if _movement_tween and _movement_tween.is_valid():
+		await _movement_tween.finished
 
 func _on_action_executed(action: BaseAction) -> void:
 	hide_action_menu()
@@ -257,6 +273,29 @@ func _on_overwatch_triggered(_attacker: Unit, target: Unit, _tile: Vector2i, _pr
 	target.update_visual()
 	if _movement_tween and _movement_tween.is_valid():
 		_movement_tween.play()
+
+func _on_ambush_triggered(moving_unit: Unit, _hidden_unit: Unit, _tile: Vector2i) -> void:
+	_ambush_activated = true
+	if _movement_tween:
+		_movement_tween.kill()
+	moving_unit.state = Unit.State.MOVED
+	moving_unit.update_visual()
+	_show_ambush_effect(moving_unit.position)
+	input_controller.unlock()
+	selection_system.deselect()
+	fog_system.recalculate(game_manager.local_player_id)
+
+func _show_ambush_effect(world_pos: Vector2) -> void:
+	var exclaim = Sprite2D.new()
+	exclaim.texture = preload("res://art/ui/Exclamation.png")
+	exclaim.position = world_pos + Vector2(0, -16)
+	exclaim.scale = Vector2(0.03125, 0.03125)
+	exclaim.z_index = 20
+	get_tree().current_scene.add_child(exclaim)
+	var tween = create_tween()
+	tween.tween_interval(1.0)
+	tween.tween_property(exclaim, "modulate:a", 0.0, 0.4)
+	tween.tween_callback(func(): exclaim.queue_free())
 
 # ── Cursor y flecha de movimiento ─────────────────────────────────────────────
 
@@ -352,6 +391,9 @@ func _process(_delta: float) -> void:
 						t.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
 
 func _update_movement_arrow(cursor_pos: Vector2i) -> void:
+	if input_controller._locked:
+		movement_arrow.clear_points()
+		return
 	if action_menu.visible:
 		movement_arrow.clear_points()
 		return
