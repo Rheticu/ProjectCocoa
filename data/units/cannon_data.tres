@@ -7,7 +7,7 @@
 [resource]
 script = ExtResource("1_h3g2m")
 unit_type = "Cannon"
-attack_range = 4
+attack_range = 3
 vision_range = 1
 attack = 50
 defense = 0

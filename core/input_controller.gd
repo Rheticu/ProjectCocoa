@@ -67,7 +67,6 @@ func _unhandled_input(event: InputEvent) -> void:
 func _handle_left_click() -> void:
 	var mouse_pos = get_viewport().get_mouse_position()
 	var grid_pos = grid_system.world_to_grid(mouse_pos)
-	print(turn_manager.current_team)
 	match mode:
 		Mode.IDLE:
 			var unit = game_manager.get_unit_at(grid_pos)

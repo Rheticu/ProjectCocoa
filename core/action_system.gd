@@ -182,8 +182,8 @@ func _execute_overwatch(action: OverwatchAction) -> void:
 	action.actor.update_visual()
 	game_manager.register_overwatch(action.actor)
 
-func check_overwatch_at(unit: Unit, tile: Vector2i, previous_tile: Vector2i) -> void:
-	_check_overwatch(unit, tile, previous_tile)
+func check_overwatch_at(unit: Unit, tile: Vector2i, previous_tile: Vector2i) -> bool:
+	return _check_overwatch(unit, tile, previous_tile)
 
 func _check_overwatch(moving_unit: Unit, tile: Vector2i, previous_tile: Vector2i) -> bool:
 	for cannon in game_manager.overwatch_units:
