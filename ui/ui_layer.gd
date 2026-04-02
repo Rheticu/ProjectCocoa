@@ -49,6 +49,7 @@ func _ready() -> void:
 	production_menu.closed.connect(hide_production_menu)
 	action_system.overwatch_triggered.connect(_on_overwatch_triggered)
 	action_system.ambush_triggered.connect(_on_ambush_triggered)
+	game_manager.shade_view_toggled.connect(_on_shade_view_toggled)
 
 # ── Action Menu ───────────────────────────────────────────────────────────────
 
@@ -190,6 +191,17 @@ func get_volley_tiles(center: Vector2i) -> Array[Vector2i]:
 	for dir in [Vector2i.ZERO, Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
 		tiles.append(center + dir)
 	return tiles
+
+func _on_shade_view_toggled(enabled: bool) -> void:
+	if enabled:
+		move_range_overlay.z_index = 6
+		attack_range_overlay.z_index = 6
+		cursor_highlight.z_index = 6
+	else:
+		move_range_overlay.z_index = 2
+		attack_range_overlay.z_index = 2
+		cursor_highlight.z_index = 2
+	fog_system.update_shade_view(enabled, game_manager.local_player_id)
 
 # ── Animación de movimiento ───────────────────────────────────────────────────
 

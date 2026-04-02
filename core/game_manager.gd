@@ -40,9 +40,9 @@ func get_unit_by_id(id: int) -> Unit:
 			return u
 	return null
 
-func get_unit_at(pos: Vector2i) -> Unit:
+func get_unit_at(pos: Vector2i, shade_view: bool = false) -> Unit:
 	for u in all_units:
-		if u.grid_position == pos:
+		if u.grid_position == pos and u.is_shade() == shade_view:
 			return u
 	return null
 

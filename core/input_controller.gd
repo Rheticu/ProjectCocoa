@@ -69,7 +69,7 @@ func _handle_left_click() -> void:
 	var grid_pos = grid_system.world_to_grid(mouse_pos)
 	match mode:
 		Mode.IDLE:
-			var unit = game_manager.get_unit_at(grid_pos)
+			var unit = game_manager.get_unit_at(grid_pos, game_manager.shade_view_enabled)
 			if unit and unit.visible:
 				if unit.team == game_manager.local_player_id and turn_manager.is_my_turn(unit.team) and unit.state != Unit.State.MOVED:
 					selection_system.select_unit(unit)
@@ -164,7 +164,7 @@ func _handle_left_click() -> void:
 					mode = Mode.IDLE
 					selection_system.deselect()
 				return
-			var target = game_manager.get_unit_at(grid_pos)
+			var target = game_manager.get_unit_at(grid_pos, game_manager.shade_view_enabled)
 			if target and target in selection_system.attack_targets:
 				var unit = selection_system.selected_unit
 				var path = _pending_move_path.duplicate()
@@ -188,7 +188,7 @@ func _handle_right_click() -> void:
 
 	match mode:
 		Mode.IDLE:
-			var unit = game_manager.get_unit_at(grid_pos)
+			var unit = game_manager.get_unit_at(grid_pos, game_manager.shade_view_enabled)
 			if unit and unit.visible:
 				selection_system.inspect_unit_attack(unit)
 				mode = Mode.INSPECTING_B

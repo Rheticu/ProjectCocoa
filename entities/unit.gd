@@ -37,7 +37,7 @@ var is_in_overwatch: bool = false
 signal moved(new_position: Vector2i)
 
 func _ready() -> void:
-	z_index = 4 if is_shade() else 3
+	z_index = 5 if is_shade() else 3
 	if data:
 		unit_type = data.unit_type
 		movement_range = data.movement_range

@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=4 uid="uid://bpb111flh0snl"]
+[gd_scene load_steps=45 format=4 uid="uid://bpb111flh0snl"]
 
 [ext_resource type="Texture2D" uid="uid://00f5seoj7dpb" path="res://art/maps/PlainsSheet1.png" id="1_pd3xk"]
 [ext_resource type="PackedScene" uid="uid://cbst1oom7mdbi" path="res://scenes/units/Unit.tscn" id="2_fp56n"]
@@ -7,7 +7,9 @@
 [ext_resource type="Texture2D" uid="uid://eadp1jqv7s8f" path="res://art/units/Spear1_Blue.png" id="4_1lhmh"]
 [ext_resource type="Texture2D" uid="uid://dfmqq3i5c2k6k" path="res://art/units/Archer1_Red.png" id="4_80220"]
 [ext_resource type="Texture2D" uid="uid://b450pnrme861d" path="res://art/maps/Fog_Tile.png" id="4_djjkr"]
+[ext_resource type="Texture2D" uid="uid://cimgomiw77yli" path="res://art/ui/Grid.png" id="4_qxabq"]
 [ext_resource type="Resource" uid="uid://ck7ajhuvf0wl6" path="res://data/units/sword_data.tres" id="4_wcqb1"]
+[ext_resource type="Texture2D" uid="uid://cuuupeastpfwi" path="res://art/maps/ShadeOverlay.png" id="5_md4sb"]
 [ext_resource type="Texture2D" uid="uid://sxitdcwrhrcj" path="res://art/units/Sword1_Red.png" id="6_2e1b8"]
 [ext_resource type="Resource" uid="uid://c8k1tlm0j5ocp" path="res://data/units/spear_data.tres" id="7_tg0gx"]
 [ext_resource type="Texture2D" uid="uid://bq0tjjbhueml5" path="res://art/units/Sword1_Blue.png" id="9_7dh4r"]
@@ -21,9 +23,13 @@
 [ext_resource type="Texture2D" uid="uid://kle50tw0otdb" path="res://art/units/Junker1_Blue.png" id="18_ew753"]
 [ext_resource type="PackedScene" uid="uid://p812134ba3to" path="res://scenes/buildings/Building.tscn" id="19_ew753"]
 [ext_resource type="Resource" uid="uid://8dwvombq2dls" path="res://data/buildings/city_data.tres" id="20_v6s0w"]
+[ext_resource type="PackedScene" uid="uid://cph1iqfjco8q" path="res://scenes/units/Shade.tscn" id="21_7fc2k"]
 [ext_resource type="Texture2D" uid="uid://dvc6oxqd66i62" path="res://art/buildings/City/City_Neutral.png" id="21_v6s0w"]
+[ext_resource type="Resource" uid="uid://pu4shykaiycb" path="res://data/units/shade_fire_data.tres" id="22_4qhu6"]
 [ext_resource type="Resource" uid="uid://cjqu3u4b2iwnt" path="res://data/buildings/barracks_data.tres" id="22_qkj4u"]
+[ext_resource type="Texture2D" uid="uid://dun1iw15lb43m" path="res://art/units/raider_fire.png" id="23_4qhu6"]
 [ext_resource type="Texture2D" uid="uid://ddipgcrb6qt7k" path="res://art/buildings/Barracks/Barracks_Blue.png" id="23_djjkr"]
+[ext_resource type="Texture2D" uid="uid://va6kdmmptkux" path="res://art/units/Raider.png" id="23_iivji"]
 [ext_resource type="Texture2D" uid="uid://cvvfjdeomufqh" path="res://art/buildings/City/City_Red.png" id="24_md4sb"]
 [ext_resource type="Texture2D" uid="uid://cpun5jg4ytt1n" path="res://art/buildings/City/City_Blue.png" id="25_mg4i6"]
 
@@ -115,6 +121,16 @@ sources/7 = SubResource("TileSetAtlasSource_hyr6f")
 sources/8 = SubResource("TileSetAtlasSource_8ln8j")
 sources/9 = SubResource("TileSetAtlasSource_2e1b8")
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k24gi"]
+texture = ExtResource("4_qxabq")
+0:0/0 = 0
+1:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_d8fes"]
+sources/0 = SubResource("TileSetAtlasSource_k24gi")
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_g7utu"]
 texture = ExtResource("4_djjkr")
 texture_region_size = Vector2i(32, 32)
@@ -124,21 +140,58 @@ texture_region_size = Vector2i(32, 32)
 tile_size = Vector2i(32, 32)
 sources/0 = SubResource("TileSetAtlasSource_g7utu")
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mg4i6"]
+texture = ExtResource("5_md4sb")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_7fc2k"]
+tile_size = Vector2i(32, 32)
+sources/0 = SubResource("TileSetAtlasSource_mg4i6")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_md4sb"]
+texture = ExtResource("4_djjkr")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_mg4i6"]
+tile_size = Vector2i(32, 32)
+sources/0 = SubResource("TileSetAtlasSource_md4sb")
+
 [node name="Map1" type="Node2D"]
+metadata/_edit_lock_ = true
 
 [node name="Terrain" type="TileMapLayer" parent="."]
 tile_map_data = PackedByteArray("AAAAAAAABwAAAAAAAAABAAEABwAAAAAAAAACAAIABwAAAAAAAAADAAMABwAAAAAAAAAEAAMABwAAAAAAAAAEAAQABwAAAAAAAAAFAAQABwAAAAAAAAAFAAUACQACAAEAAAAGAAUACQACAAEAAAAAAAEABwAAAAAAAAAAAAIABwAAAAAAAAAAAAMABwAAAAAAAAAAAAQABwAAAAAAAAAAAAUABwAAAAAAAAAAAAYABwAAAAAAAAABAAAABwAAAAAAAAABAAIABwAAAAAAAAABAAMABwAAAAAAAAABAAQABwAAAAAAAAABAAUACQACAAEAAAABAAYACQACAAEAAAACAAAABwAAAAAAAAACAAEABwAAAAAAAAACAAMABwAAAAAAAAACAAQABwAAAAAAAAACAAUACQACAAEAAAACAAYACQACAAEAAAADAAAABwABAAEAAAADAAEABwACAAAAAAADAAIABwACAAAAAAADAAQABwAAAAAAAAADAAUACQACAAEAAAADAAYACQACAAEAAAAEAAAABwAAAAAAAAAEAAEABwAAAAAAAAAEAAIABwAAAAAAAAAEAAUACQACAAEAAAAEAAYACQACAAEAAAAFAAAABwABAAEAAAAFAAEABwAAAAAAAAAFAAIABwAAAAAAAAAFAAMABwAAAAAAAAAFAAYACQACAAEAAAAGAAEABwACAAAAAAAGAAIABwACAAAAAAAGAAMABwAAAAAAAAAGAAQABwAAAAAAAAAGAAYACQACAAEAAAAHAAAABwABAAEAAAAHAAEABwAAAAAAAAAHAAIABwAAAAAAAAAHAAMABwAAAAAAAAAHAAQABwAAAAAAAAAHAAUACQACAAEAAAAHAAYACQACAAEAAAAIAAAABwAAAAAAAAAIAAEABwAAAAAAAAAIAAIABwAAAAAAAAAIAAMABwAAAAAAAAAIAAQABwAAAAAAAAAIAAUABwAAAAAAAAAIAAYABwAAAAAAAAAGAAAABwABAAEAAAA=")
 tile_set = SubResource("TileSet_4oiqb")
 metadata/_edit_lock_ = true
 
+[node name="Grid" type="TileMapLayer" parent="."]
+visible = false
+tile_set = SubResource("TileSet_d8fes")
+metadata/_edit_lock_ = true
+
 [node name="Fog" type="TileMapLayer" parent="."]
 visible = false
-z_index = 5
-tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAAYAAAAAAAAAAAABAAAAAAAAAAAAAAABAAEAAAAAAAAAAAABAAIAAAAAAAAAAAABAAMAAAAAAAAAAAABAAQAAAAAAAAAAAABAAUAAAAAAAAAAAABAAYAAAAAAAAAAAACAAAAAAAAAAAAAAACAAEAAAAAAAAAAAACAAIAAAAAAAAAAAACAAMAAAAAAAAAAAACAAQAAAAAAAAAAAACAAUAAAAAAAAAAAACAAYAAAAAAAAAAAADAAAAAAAAAAAAAAADAAEAAAAAAAAAAAADAAIAAAAAAAAAAAADAAMAAAAAAAAAAAADAAQAAAAAAAAAAAADAAUAAAAAAAAAAAADAAYAAAAAAAAAAAAEAAAAAAAAAAAAAAAEAAEAAAAAAAAAAAAEAAIAAAAAAAAAAAAEAAMAAAAAAAAAAAAEAAQAAAAAAAAAAAAEAAUAAAAAAAAAAAAEAAYAAAAAAAAAAAAFAAAAAAAAAAAAAAAFAAEAAAAAAAAAAAAFAAIAAAAAAAAAAAAFAAMAAAAAAAAAAAAFAAQAAAAAAAAAAAAFAAUAAAAAAAAAAAAFAAYAAAAAAAAAAAAGAAAAAAAAAAAAAAAGAAEAAAAAAAAAAAAGAAIAAAAAAAAAAAAGAAMAAAAAAAAAAAAGAAQAAAAAAAAAAAAGAAUAAAAAAAAAAAAGAAYAAAAAAAAAAAAHAAAAAAAAAAAAAAAHAAEAAAAAAAAAAAAHAAIAAAAAAAAAAAAHAAMAAAAAAAAAAAAHAAQAAAAAAAAAAAAHAAUAAAAAAAAAAAAHAAYAAAAAAAAAAAAIAAAAAAAAAAAAAAAIAAEAAAAAAAAAAAAIAAIAAAAAAAAAAAAIAAMAAAAAAAAAAAAIAAQAAAAAAAAAAAAIAAUAAAAAAAAAAAAIAAYAAAAAAAAAAAA=")
+z_index = 8
 tile_set = SubResource("TileSet_qkj4u")
 metadata/_edit_lock_ = true
 
+[node name="ShadeOverlay" type="TileMapLayer" parent="."]
+visible = false
+modulate = Color(1, 1, 1, 0.8)
+z_index = 4
+tile_set = SubResource("TileSet_7fc2k")
+metadata/_edit_lock_ = true
+
+[node name="ShadeFog" type="TileMapLayer" parent="."]
+visible = false
+z_index = 7
+tile_set = SubResource("TileSet_mg4i6")
+metadata/_edit_lock_ = true
+
 [node name="Units" type="Node2D" parent="."]
+metadata/_edit_lock_ = true
 
 [node name="Unit5" parent="Units" instance=ExtResource("2_fp56n")]
 position = Vector2(176, 112)
@@ -212,7 +265,23 @@ data = ExtResource("16_iw16c")
 [node name="Sprite2D" parent="Units/Unit10" index="0"]
 texture = ExtResource("18_ew753")
 
+[node name="Shade" parent="Units" instance=ExtResource("21_7fc2k")]
+position = Vector2(112, 144)
+data = ExtResource("22_4qhu6")
+
+[node name="Sprite2D" parent="Units/Shade" index="0"]
+texture = ExtResource("23_iivji")
+
+[node name="Shade2" parent="Units" instance=ExtResource("21_7fc2k")]
+position = Vector2(48, 144)
+team = 2
+data = ExtResource("22_4qhu6")
+
+[node name="Sprite2D" parent="Units/Shade2" index="0"]
+texture = ExtResource("23_4qhu6")
+
 [node name="Buildings" type="Node2D" parent="."]
+metadata/_edit_lock_ = true
 
 [node name="Building" parent="Buildings" instance=ExtResource("19_ew753")]
 position = Vector2(80, 48)
@@ -254,6 +323,8 @@ texture = ExtResource("23_djjkr")
 [editable path="Units/Unit12"]
 [editable path="Units/Unit9"]
 [editable path="Units/Unit10"]
+[editable path="Units/Shade"]
+[editable path="Units/Shade2"]
 [editable path="Buildings/Building"]
 [editable path="Buildings/Building3"]
 [editable path="Buildings/Building4"]

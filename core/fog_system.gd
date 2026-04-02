@@ -5,15 +5,26 @@ extends Node
 @onready var grid_system = $"../GridSystem"
 
 var _fog_layer: TileMapLayer
+var _shade_fog_layer: TileMapLayer
+var _shade_overlay: TileMapLayer
 var _visible_tiles: Dictionary = {}
+var _shade_visible_tiles: Dictionary = {}
+
 var enabled: bool = true:
 	set(value):
 		enabled = value
 		if _fog_layer:
 			_fog_layer.visible = value
 
-func initialize(fog_layer: TileMapLayer) -> void:
+func initialize(fog_layer: TileMapLayer, shade_fog_layer: TileMapLayer, shade_overlay: TileMapLayer) -> void:
 	_fog_layer = fog_layer
+	_shade_fog_layer = shade_fog_layer
+	_shade_overlay = shade_overlay
+	_fog_layer.collision_enabled = false
+	_shade_fog_layer.collision_enabled = false
+	_shade_overlay.collision_enabled = false
+	_shade_fog_layer.visible = false
+	_shade_overlay.visible = false
 
 func recalculate(viewing_team: int) -> void:
 	if not enabled:
@@ -21,25 +32,33 @@ func recalculate(viewing_team: int) -> void:
 	if not _fog_layer:
 		return
 
+	# Fog normal — solo unidades normales revelan
 	var tiles: Dictionary = {}
-
 	for unit in game_manager.all_units:
 		if unit.team != viewing_team:
 			continue
-		if unit.is_shade():
-			continue
 		for tile in grid_system.get_tiles_in_range(unit.grid_position, unit.vision_range, false):
 			tiles[tile] = true
-
 	for building in game_manager.all_buildings:
 		if building.team == viewing_team:
 			tiles[building.building_position] = true
-
 	for unit in game_manager.all_units:
 		if unit.team != viewing_team and unit.marked_turns > 0:
 			tiles[unit.grid_position] = true
-
 	_visible_tiles[viewing_team] = tiles
+
+	# Fog shade — solo shades revelan
+	var shade_tiles: Dictionary = {}
+	for unit in game_manager.all_units:
+		if unit.team != viewing_team:
+			continue
+		if not unit.is_shade():
+			continue
+		for tile in grid_system.get_tiles_in_range(unit.grid_position, unit.vision_range, false):
+			shade_tiles[tile] = true
+			tiles[tile] = true  # shades también revelan fog normal
+	_shade_visible_tiles[viewing_team] = shade_tiles
+
 	_apply_fog(viewing_team)
 	_update_unit_visibility(viewing_team)
 
@@ -47,22 +66,42 @@ func _apply_fog(viewing_team: int) -> void:
 	for x in range(grid_system.map_size.x):
 		for y in range(grid_system.map_size.y):
 			var pos = Vector2i(x, y)
+			# Fog normal
 			if _visible_tiles.get(viewing_team, {}).has(pos):
 				_fog_layer.erase_cell(pos)
 			else:
 				_fog_layer.set_cell(pos, 0, Vector2i(0, 0))
+			# Shade fog
+			if _shade_fog_layer:
+				if _shade_visible_tiles.get(viewing_team, {}).has(pos):
+					_shade_fog_layer.erase_cell(pos)
+				else:
+					_shade_fog_layer.set_cell(pos, 0, Vector2i(0, 0))
 
 func _update_unit_visibility(viewing_team: int) -> void:
+	var shade_view = game_manager.shade_view_enabled
 	for unit in game_manager.all_units:
 		if unit.team == viewing_team:
-			unit.visible = true
+			if unit.is_shade():
+				unit.visible = shade_view
+			else:
+				unit.visible = true
 			continue
 		if unit.marked_turns > 0:
 			unit.visible = true
 			continue
-		unit.visible = _visible_tiles.get(viewing_team, {}).has(unit.grid_position)
+		if unit.is_shade():
+			unit.visible = shade_view and _shade_visible_tiles.get(viewing_team, {}).has(unit.grid_position)
+		else:
+			unit.visible = _visible_tiles.get(viewing_team, {}).has(unit.grid_position)
 
 func is_visible(pos: Vector2i, team: int) -> bool:
 	if not enabled:
 		return true
 	return _visible_tiles.get(team, {}).has(pos)
+
+func update_shade_view(shade_enabled: bool, viewing_team: int) -> void:
+	_shade_overlay.visible = shade_enabled
+	_shade_fog_layer.visible = shade_enabled
+	_fog_layer.visible = not shade_enabled
+	_update_unit_visibility(viewing_team)

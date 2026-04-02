@@ -191,6 +191,8 @@ func _check_overwatch(moving_unit: Unit, tile: Vector2i, previous_tile: Vector2i
 			continue
 		if cannon.team == moving_unit.team:
 			continue
+		if moving_unit.is_shade():
+			continue
 		if not fog_system.is_visible(tile, cannon.team):
 			continue
 		var dist = grid_system.manhattan_distance(cannon.grid_position, tile, false)

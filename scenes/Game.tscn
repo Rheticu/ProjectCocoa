@@ -99,7 +99,7 @@ z_index = 2
 tile_set = SubResource("TileSet_attvq")
 
 [node name="MovementArrow" type="Line2D" parent="."]
-z_index = 5
+z_index = 7
 width = 5.0
 
 [node name="HUD" parent="." instance=ExtResource("14_vjgi4")]

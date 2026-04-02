@@ -5,7 +5,7 @@ extends Node
 @onready var game_manager = $"../GameManager"
 
 func get_reachable_cells(unit: Unit) -> Array[Vector2i]:
-	var use_wrap = unit.is_shade()
+	var use_wrap = false
 	var reachable: Array[Vector2i] = []
 	var visited: Dictionary = {}
 	var queue: Array = [{ "pos": unit.grid_position, "cost": 0 }]
@@ -37,7 +37,7 @@ func get_reachable_cells(unit: Unit) -> Array[Vector2i]:
 	return reachable
 
 func get_movement_path(from: Vector2i, to: Vector2i, unit: Unit) -> Array[Vector2i]:
-	var use_wrap = unit.is_shade()
+	var use_wrap = false
 	var open: Array = [{ "pos": from, "g": 0, "f": 0, "parent": null }]
 	var closed: Dictionary = {}
 

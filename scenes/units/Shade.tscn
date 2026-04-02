@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://cph1iqfjco8q"]
+
+[ext_resource type="PackedScene" uid="uid://cbst1oom7mdbi" path="res://scenes/units/Unit.tscn" id="1_nxnbm"]
+[ext_resource type="Script" uid="uid://dt6f2nh48kjut" path="res://entities/shade.gd" id="2_j1vlp"]
+
+[node name="Shade" instance=ExtResource("1_nxnbm")]
+script = ExtResource("2_j1vlp")
+
+[node name="Sprite2D" parent="." index="0"]
+scale = Vector2(0.03, 0.03)

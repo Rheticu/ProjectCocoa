@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://cbst1oom7mdbi"]
+[gd_scene load_steps=2 format=3 uid="uid://cbst1oom7mdbi"]
 
 [ext_resource type="Script" uid="uid://b5y5u52nwbqpa" path="res://entities/unit.gd" id="1_e3b5r"]
-[ext_resource type="Texture2D" uid="uid://b1t4x00jny1uc" path="res://art/units/Spear1_Red.png" id="2_gocqw"]
 
 [node name="Unit" type="Node2D"]
 z_index = 3
@@ -10,7 +9,6 @@ metadata/_edit_group_ = true
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(0.04, 0.04)
-texture = ExtResource("2_gocqw")
 
 [node name="HealthLabel" type="Label" parent="."]
 z_index = 6

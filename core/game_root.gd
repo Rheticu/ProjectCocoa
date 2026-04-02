@@ -18,12 +18,18 @@ func _ready() -> void:
 
 	# Inicializar GridSystem
 	var terrain = map.get_node("Terrain")
+	var grid_layer = map.get_node("Grid")
+	_fill_layer(grid_layer)
 	grid_system.initialize(terrain)
+	
 
 	# Inicializar FogSystem
 	var fog_layer = map.get_node("Fog")
+	var shade_fog_layer = map.get_node("ShadeFog")
+	var shade_overlay = map.get_node("ShadeOverlay")
 	fog_layer.visible = true
-	fog_system.initialize(fog_layer)
+	_fill_layer(shade_overlay)
+	fog_system.initialize(fog_layer, shade_fog_layer, shade_overlay)
 
 	# Registrar unidades del mapa
 	for unit in map.get_node("Units").get_children():
@@ -47,3 +53,8 @@ func _ready() -> void:
 	hud.update_funds()
 	game_manager.funds_changed.connect(func(_team, _amount): hud.update_funds())
 	turn_manager.turn_started.connect(func(_team): hud.update_funds())
+
+func _fill_layer(layer: TileMapLayer) -> void:
+	for x in range(grid_system.map_size.x):
+		for y in range(grid_system.map_size.y):
+			layer.set_cell(Vector2i(x, y), 0, Vector2i(0, 0))
