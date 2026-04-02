@@ -209,6 +209,8 @@ func check_ambush_at(moving_unit: Unit, tile: Vector2i, previous_tile: Vector2i)
 			continue
 		if unit.grid_position != tile:
 			continue
+		if unit.is_shade() != moving_unit.is_shade():
+			continue
 		if unit.visible:
 			continue
 		unit.visible = true

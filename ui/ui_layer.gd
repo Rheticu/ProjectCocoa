@@ -197,10 +197,17 @@ func _on_shade_view_toggled(enabled: bool) -> void:
 		move_range_overlay.z_index = 6
 		attack_range_overlay.z_index = 6
 		cursor_highlight.z_index = 6
+		game_manager.grid_layer.z_index = 5
+
 	else:
 		move_range_overlay.z_index = 2
 		attack_range_overlay.z_index = 2
 		cursor_highlight.z_index = 2
+
+	for unit in game_manager.all_units:
+		if not unit.is_shade():
+			unit.get_node("HealthLabel").modulate.a = 0.2 if enabled else 1.0
+
 	fog_system.update_shade_view(enabled, game_manager.local_player_id)
 
 # ── Animación de movimiento ───────────────────────────────────────────────────

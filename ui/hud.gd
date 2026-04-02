@@ -11,6 +11,7 @@ var unit_info_panel: PanelContainer
 var funds_label: Label
 var income_label: Label
 var turn_label: Label
+var element_label: Label
 
 # Labels de unidad
 var unit_hp_label: Label
@@ -18,6 +19,7 @@ var unit_attack_label: Label
 var unit_defense_label: Label
 var unit_movement_label: Label
 var unit_type_label: Label
+
 
 func _ready() -> void:
 	_build_funds_panel()
@@ -29,27 +31,30 @@ func _build_funds_panel() -> void:
 	funds_panel.visible = true
 	funds_panel.add_theme_stylebox_override("panel", style)
 	add_child(funds_panel)
-	
+
 	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 10)
 	margin.add_theme_constant_override("margin_right", 10)
 	margin.add_theme_constant_override("margin_top", 8)
 	margin.add_theme_constant_override("margin_bottom", 8)
 	funds_panel.add_child(margin)
-	
+
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
 	margin.add_child(vbox)
-	
+
 	turn_label = _make_label("Turn 1", 14, Color(0.9, 0.8, 0.3))
 	vbox.add_child(turn_label)
-	
+
 	funds_label = _make_label("$: 0k", 13, Color(0.961, 0.961, 1.0))
 	vbox.add_child(funds_label)
-	
+
 	income_label = _make_label("+$: 0k", 13, Color(0.961, 0.961, 1.0))
 	vbox.add_child(income_label)
-	
+
+	element_label = _make_label("EARTH", 13, Color(0.513, 0.338, 0.162))
+	vbox.add_child(element_label)
+
 	funds_panel.position = Vector2(16, 16)
 	funds_panel.mouse_entered.connect(_on_funds_panel_mouse_entered)
 
@@ -140,3 +145,16 @@ func _on_unit_info_panel_mouse_entered() -> void:
 		unit_info_panel.position.x = 560
 	else:
 		unit_info_panel.position.x = 16
+
+func update_element() -> void:
+	var element_names = ["EARTH", "METAL", "WATER", "WOOD", "FIRE"]
+	var element_colors = [
+		Color(0.513, 0.338, 0.162),
+		Color(0.968, 0.862, 0.106),
+		Color(0.502, 0.988, 1.0),
+		Color(0.13, 0.827, 0.397),
+		Color(0.905, 0.0, 0.213)
+	]
+	var idx = game_manager.current_element
+	element_label.text = element_names[idx]
+	element_label.add_theme_color_override("font_color", element_colors[idx])

@@ -8,6 +8,7 @@ script = ExtResource("1_e3b5r")
 metadata/_edit_group_ = true
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, -2.5)
 scale = Vector2(0.04, 0.04)
 
 [node name="HealthLabel" type="Label" parent="."]

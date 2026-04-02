@@ -7,19 +7,23 @@ var team1_income: int = 0
 var team2_income: int = 0
 
 enum Element { EARTH, METAL, WATER, WOOD, FIRE }
-var current_element: Element = Element.EARTH
+var current_element: Element
 var shade_view_enabled: bool = false
 var local_player_id: int = 0
 var current_map: Node2D
 var all_units: Array[Unit] = []
 var all_buildings: Array[Building] = []
 var overwatch_units: Array[Unit] = []
+var grid_layer: TileMapLayer
 
 signal funds_changed(team: int, amount: int)
 signal element_changed(element: Element)
 signal shade_view_toggled(enabled: bool)
 signal unit_registered(unit: Unit)
 signal unit_removed(unit: Unit)
+
+func _ready() -> void:
+	current_element = randi_range(0, Element.size() - 1) as Element
 
 func register_unit(unit: Unit) -> void:
 	if unit not in all_units:

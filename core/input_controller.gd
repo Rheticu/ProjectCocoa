@@ -65,7 +65,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		action_system.queue_action(EndTurnAction.new(game_manager.local_player_id))
 
 func _handle_left_click() -> void:
-	var mouse_pos = get_viewport().get_mouse_position()
+	var mouse_pos = get_viewport().get_canvas_transform().affine_inverse() * get_viewport().get_mouse_position()
 	var grid_pos = grid_system.world_to_grid(mouse_pos)
 	match mode:
 		Mode.IDLE:
@@ -179,11 +179,8 @@ func _handle_left_click() -> void:
 				mode = Mode.IDLE
 				selection_system.deselect()
 
-func clear_pending_path() -> void:
-	_pending_move_path.clear()
-
 func _handle_right_click() -> void:
-	var mouse_pos = get_viewport().get_mouse_position()
+	var mouse_pos = get_viewport().get_canvas_transform().affine_inverse() * get_viewport().get_mouse_position()
 	var grid_pos = grid_system.world_to_grid(mouse_pos)
 
 	match mode:
@@ -219,6 +216,9 @@ func _cancel() -> void:
 	_pending_move_path.clear()
 	ui_layer.attack_range_overlay.clear()
 	mode = Mode.IDLE
+
+func clear_pending_path() -> void:
+	_pending_move_path.clear()
 
 # Llamados desde el ActionMenu
 func on_attack_pressed() -> void:

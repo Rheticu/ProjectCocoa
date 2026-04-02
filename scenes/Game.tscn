@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3 uid="uid://mscq8xb55cqc"]
+[gd_scene load_steps=26 format=3 uid="uid://mscq8xb55cqc"]
 
 [ext_resource type="Script" uid="uid://mcejuc7m0x7b" path="res://core/game_root.gd" id="1_fx2fv"]
 [ext_resource type="Script" uid="uid://b7u8jqsdvkpbj" path="res://core/grid_system.gd" id="2_dg17b"]
@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://bxkwsol24iq8d" path="res://scenes/ui/HUD.tscn" id="14_vjgi4"]
 [ext_resource type="PackedScene" uid="uid://d0fmf4xihfurr" path="res://scenes/ui/ActionMenu.tscn" id="15_05vox"]
 [ext_resource type="PackedScene" uid="uid://3ep8bkob147y" path="res://scenes/ui/ProductionMenu.tscn" id="16_y5y3l"]
+[ext_resource type="Script" uid="uid://bqwaqtx6tluj4" path="res://core/camera.gd" id="18_kyk2p"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_vjgi4"]
 texture = ExtResource("11_1hd46")
@@ -84,23 +85,28 @@ script = ExtResource("10_i83up")
 [node name="MultiplayerManager" type="Node" parent="."]
 
 [node name="CurrentMap" type="Node2D" parent="."]
+metadata/_edit_lock_ = true
 
 [node name="MoveRangeOverlay" type="TileMapLayer" parent="."]
 modulate = Color(1, 1, 1, 0.6)
 z_index = 2
 tile_set = SubResource("TileSet_kyk2p")
+metadata/_edit_lock_ = true
 
 [node name="AttackRangeOverlay" type="TileMapLayer" parent="."]
 z_index = 2
 tile_set = SubResource("TileSet_sv1m6")
+metadata/_edit_lock_ = true
 
 [node name="CursorHighlight" type="TileMapLayer" parent="."]
 z_index = 2
 tile_set = SubResource("TileSet_attvq")
+metadata/_edit_lock_ = true
 
 [node name="MovementArrow" type="Line2D" parent="."]
 z_index = 7
 width = 5.0
+metadata/_edit_lock_ = true
 
 [node name="HUD" parent="." instance=ExtResource("14_vjgi4")]
 
@@ -112,3 +118,7 @@ visible = false
 
 [node name="ProductionMenu" parent="UILayer" instance=ExtResource("16_y5y3l")]
 visible = false
+
+[node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("18_kyk2p")
+metadata/_edit_lock_ = true

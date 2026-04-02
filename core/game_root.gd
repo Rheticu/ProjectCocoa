@@ -19,9 +19,9 @@ func _ready() -> void:
 	# Inicializar GridSystem
 	var terrain = map.get_node("Terrain")
 	var grid_layer = map.get_node("Grid")
-	_fill_layer(grid_layer)
 	grid_system.initialize(terrain)
-	
+	_fill_layer(grid_layer)
+	game_manager.grid_layer = grid_layer
 
 	# Inicializar FogSystem
 	var fog_layer = map.get_node("Fog")
@@ -44,13 +44,14 @@ func _ready() -> void:
 			building.ownership_changed.connect(func(_b): game_manager.recalculate_income())
 
 	game_manager.recalculate_income()
-
+	game_manager.element_changed.connect(func(_e): hud.update_element())
 	# Para probar: jugador local es equipo 1
 	game_manager.local_player_id = 1
 	turn_manager.start_game()
 	fog_system.recalculate(1)
 
 	hud.update_funds()
+	hud.update_element()
 	game_manager.funds_changed.connect(func(_team, _amount): hud.update_funds())
 	turn_manager.turn_started.connect(func(_team): hud.update_funds())
 
