@@ -19,6 +19,8 @@ var unit_attack_label: Label
 var unit_defense_label: Label
 var unit_movement_label: Label
 var unit_type_label: Label
+var unit_mana_label: Label
+var unit_status_label: Label
 
 
 func _ready() -> void:
@@ -64,33 +66,39 @@ func _build_unit_info_panel() -> void:
 	unit_info_panel.add_theme_stylebox_override("panel", style)
 	unit_info_panel.visible = false
 	add_child(unit_info_panel)
-	
+
 	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 10)
 	margin.add_theme_constant_override("margin_right", 10)
 	margin.add_theme_constant_override("margin_top", 8)
 	margin.add_theme_constant_override("margin_bottom", 8)
 	unit_info_panel.add_child(margin)
-	
+
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
 	margin.add_child(vbox)
-	
+
 	unit_type_label = _make_label("", 14, Color(0.9, 0.8, 0.3))
 	vbox.add_child(unit_type_label)
-	
+
 	unit_hp_label = _make_label("HP: -", 13, Color(0.961, 0.961, 1.0))
 	vbox.add_child(unit_hp_label)
-	
+
 	unit_attack_label = _make_label("Att: -", 13, Color(0.961, 0.961, 1.0))
 	vbox.add_child(unit_attack_label)
-	
+
 	unit_defense_label = _make_label("Def: -", 13, Color(0.961, 0.961, 1.0))
 	vbox.add_child(unit_defense_label)
-	
+
 	unit_movement_label = _make_label("Mov: -", 13, Color(0.961, 0.961, 1.0))
 	vbox.add_child(unit_movement_label)
-	
+
+	unit_mana_label = _make_label("", 13, Color(0.502, 0.988, 1.0))
+	vbox.add_child(unit_mana_label)
+
+	unit_status_label = _make_label("", 12, Color(0.9, 0.8, 0.3))
+	vbox.add_child(unit_status_label)
+
 	unit_info_panel.position = Vector2(16, 200)
 	unit_info_panel.mouse_entered.connect(_on_unit_info_panel_mouse_entered)
 
@@ -124,11 +132,32 @@ func update_funds() -> void:
 	turn_label.text = "Team %d" % team
 
 func show_unit_info(unit: Unit) -> void:
-	unit_type_label.text = unit.unit_type
+	if unit.is_shade():
+		var shade = unit as Shade
+		unit_type_label.text = shade.shade_element + " Shade"
+		unit_mana_label.text = "Mana: %d/%d" % [shade.mana, shade.max_mana]
+		unit_mana_label.visible = true
+	else:
+		unit_type_label.text = unit.unit_type
+		unit_mana_label.visible = false
 	unit_hp_label.text = "HP: %d" % unit.health
 	unit_attack_label.text = "Att: %d" % unit.attack
 	unit_defense_label.text = "Def: %d" % unit.defense
 	unit_movement_label.text = "Mov: %d" % unit.movement_range
+	var status_parts = []
+	if unit.marked_turns > 0:
+		status_parts.append("Marked %d" % unit.marked_turns)
+	if unit.shield_turns > 0:
+		status_parts.append("Shield %d" % unit.shield_turns)
+	if unit.boost_turns > 0:
+		status_parts.append("Boost %d" % unit.boost_turns)
+	if unit.muddle_turns > 0:
+		status_parts.append("Muddle %d" % unit.muddle_turns)
+	if status_parts.is_empty():
+		unit_status_label.visible = false
+	else:
+		unit_status_label.text = " | ".join(status_parts)
+		unit_status_label.visible = true
 	unit_info_panel.visible = true
 
 func hide_unit_info() -> void:

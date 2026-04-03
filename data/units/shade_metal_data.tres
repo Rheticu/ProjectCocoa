@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=3 format=3 uid="uid://10axnlfjc535"]
+
+[ext_resource type="Script" uid="uid://vguawhqk205m" path="res://entities/unit_data.gd" id="1_3gjri"]
+[ext_resource type="Texture2D" uid="uid://dj3a5ai2yor1g" path="res://art/units/raider_metal.png" id="2_h44r0"]
+
+[resource]
+script = ExtResource("1_3gjri")
+unit_type = "Shade"
+ability_range = 3
+is_shade = true
+shade_element = "METAL"
+cost = 10000
+sprite_team1 = ExtResource("2_h44r0")
+sprite_team2 = ExtResource("2_h44r0")
+metadata/_custom_type_script = "uid://vguawhqk205m"

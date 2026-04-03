@@ -26,6 +26,9 @@ var _volley_center: Vector2i = Vector2i(-1,-1)
 var _current_building: Building = null
 var _overwatch_activated: bool = false
 var _ambush_activated: bool = false
+var _current_ability_shade: Shade = null
+var _current_ability_is_hostile: bool = true
+var _movement_tween: Tween = null
 
 signal _overwatch_resolved
 
@@ -50,6 +53,7 @@ func _ready() -> void:
 	action_system.overwatch_triggered.connect(_on_overwatch_triggered)
 	action_system.ambush_triggered.connect(_on_ambush_triggered)
 	game_manager.shade_view_toggled.connect(_on_shade_view_toggled)
+	selection_system.ability_targets_shown.connect(_on_ability_targets_shown)
 
 # ── Action Menu ───────────────────────────────────────────────────────────────
 
@@ -62,15 +66,24 @@ func show_action_menu(unit: Unit) -> void:
 	var has_bash_targets = selection_system.has_bash_targets(unit)
 	var has_volley_targets = selection_system.has_volley_targets(unit)
 	var has_overwatch = unit.unit_type == "Cannon" and unit.grid_position == unit.original_position
+	var has_mark_targets = false
+	var has_scorch_targets = false
+	var has_shield_targets = false
+	var has_muddle_targets = false
+	var has_boost_targets = false
+	if unit.is_shade():
+		var shade = unit as Shade
+		if shade.mana >= 2:
+			has_mark_targets = selection_system.has_ability_targets(shade, "MARK")
+			has_scorch_targets = selection_system.has_ability_targets(shade, "SCORCH")
+			has_shield_targets = selection_system.has_ability_targets(shade, "SHIELD")
+			has_muddle_targets = selection_system.has_ability_targets(shade, "MUDDLE")
+			has_boost_targets = selection_system.has_ability_targets(shade, "BOOST")
 	action_menu.show_for_unit(
-		unit, 
-		building, 
-		has_targets, 
-		has_thrust_targets, 
-		has_bash_targets, 
-		has_volley_targets,
-		has_overwatch
-		)
+		unit, building, has_targets, has_thrust_targets, has_bash_targets,
+		has_volley_targets, has_overwatch, has_mark_targets, has_scorch_targets,
+		has_shield_targets, has_muddle_targets, has_boost_targets
+	)
 	var screen_pos = get_viewport().get_canvas_transform() * unit.global_position
 	action_menu.position = screen_pos + Vector2(20, -20)
 	action_menu.visible = true
@@ -98,6 +111,27 @@ func _on_action_menu_capture() -> void:
 func _on_action_menu_ability(ability: String) -> void:
 	hide_action_menu()
 	input_controller.on_ability_pressed(ability)
+
+func _on_ability_targets_shown(targets: Array[Unit]) -> void:
+	move_range_overlay.clear()
+	selection_system.attack_targets = targets
+	var shade = selection_system.selected_unit as Shade
+	if shade:
+		var is_hostile = shade.shade_element in ["FIRE", "WATER", "EARTH"]
+		show_ability_range(shade, is_hostile)
+
+func show_ability_range(shade: Shade, is_hostile: bool) -> void:
+	_current_ability_shade = shade
+	_current_ability_is_hostile = is_hostile
+	attack_range_overlay.clear()
+	var tiles = grid_system.get_tiles_in_range(shade.grid_position, shade.ability_range, false)
+	var source_id = 0 if is_hostile else 2
+	for pos in tiles:
+		attack_range_overlay.set_cell(pos, source_id, Vector2i(0, 0))
+
+func hide_ability_range() -> void:
+	attack_range_overlay.clear()
+	_current_ability_shade = null
 
 # ── Overlays ─────────────────────────────────────────────────────────
 
@@ -208,11 +242,12 @@ func _on_shade_view_toggled(enabled: bool) -> void:
 		if not unit.is_shade():
 			unit.get_node("HealthLabel").modulate.a = 0.2 if enabled else 1.0
 
+	if _current_ability_shade and input_controller.mode == InputController.Mode.SHADE_ABILITY:
+		show_ability_range(_current_ability_shade, _current_ability_is_hostile)
+
 	fog_system.update_shade_view(enabled, game_manager.local_player_id)
 
 # ── Animación de movimiento ───────────────────────────────────────────────────
-
-var _movement_tween: Tween = null
 
 func _on_move_started(unit: Unit, path: Array[Vector2i]) -> void:
 	input_controller.lock()
@@ -330,6 +365,13 @@ func _process(_delta: float) -> void:
 					target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
 				else:
 					target.update_visual()
+		if input_controller.mode == InputController.Mode.SHADE_ABILITY:
+			var is_hostile = input_controller._pending_ability in ["MARK", "SCORCH", "MUDDLE"]
+			for target in selection_system.attack_targets:
+				if target.grid_position == grid_pos:
+					target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5) if is_hostile else Color(0.5, 2, 0.5)
+				else:
+					target.update_visual()
 
 	if input_controller.mode == InputController.Mode.TARGETING and input_controller._pending_ability == "THRUST":
 		var dir = get_thrust_direction_at(grid_pos)
@@ -409,7 +451,7 @@ func _update_movement_arrow(cursor_pos: Vector2i) -> void:
 	if action_menu.visible:
 		movement_arrow.clear_points()
 		return
-	if input_controller.mode == InputController.Mode.TARGETING:
+	if input_controller.mode == InputController.Mode.TARGETING or input_controller.mode == InputController.Mode.SHADE_ABILITY:
 		movement_arrow.clear_points()
 		return
 	var unit = selection_system.selected_unit

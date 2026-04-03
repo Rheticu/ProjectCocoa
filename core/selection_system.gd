@@ -118,6 +118,21 @@ func show_ability_options(shade: Shade, ability: String) -> void:
 					targets.append(unit)
 	ability_targets_shown.emit(targets)
 
+func has_ability_targets(shade: Shade, ability: String) -> bool:
+	for unit in game_manager.all_units:
+		if not unit.visible:
+			continue
+		if not combat_system.can_use_ability(shade, unit):
+			continue
+		match ability:
+			"MARK", "SCORCH", "MUDDLE":
+				if unit.team != shade.team:
+					return true
+			"SHIELD", "BOOST":
+				if unit.team == shade.team:
+					return true
+	return false
+
 func get_movement_path_to(destination: Vector2i) -> Array[Vector2i]:
 	if not selected_unit:
 		return []

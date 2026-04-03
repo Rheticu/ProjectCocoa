@@ -14,9 +14,10 @@ enum Mode {
 	UNIT_SELECTED,
 	ACTION_MENU,
 	TARGETING,
+	SHADE_ABILITY,
 	INSPECTING_A,
 	INSPECTING_B,
-}
+}	
 
 var mode: Mode = Mode.IDLE
 var _pending_ability: String = ""
@@ -59,8 +60,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		_cancel()
 	if event.is_action_pressed("toggle_shade_view"):
 		game_manager.toggle_shade_view()
-		selection_system.deselect()
-		mode = Mode.IDLE
+		if mode != Mode.SHADE_ABILITY:
+			selection_system.deselect()
+			mode = Mode.IDLE
 	if event.is_action_pressed("end_turn"):
 		action_system.queue_action(EndTurnAction.new(game_manager.local_player_id))
 
@@ -164,7 +166,8 @@ func _handle_left_click() -> void:
 					mode = Mode.IDLE
 					selection_system.deselect()
 				return
-			var target = game_manager.get_unit_at(grid_pos, game_manager.shade_view_enabled)
+			var is_shade_ability = _pending_ability in ["MARK", "SCORCH", "SHIELD", "MUDDLE", "BOOST"]
+			var target = game_manager.get_unit_at(grid_pos, game_manager.shade_view_enabled) if not is_shade_ability else game_manager.get_any_unit_at(grid_pos)
 			if target and target in selection_system.attack_targets:
 				var unit = selection_system.selected_unit
 				var path = _pending_move_path.duplicate()
@@ -175,6 +178,18 @@ func _handle_left_click() -> void:
 					var shade = unit as Shade
 					if shade:
 						action_system.queue_action(AbilityAction.new(shade, _pending_ability, target, path))
+					_pending_ability = ""
+				mode = Mode.IDLE
+				selection_system.deselect()
+
+		Mode.SHADE_ABILITY:
+			var target = game_manager.get_any_unit_at(grid_pos)
+			if target and target in selection_system.attack_targets:
+				var shade = selection_system.selected_unit as Shade
+				if shade:
+					var path = _pending_move_path.duplicate()
+					_pending_move_path.clear()
+					action_system.queue_action(AbilityAction.new(shade, _pending_ability, target, path))
 					_pending_ability = ""
 				mode = Mode.IDLE
 				selection_system.deselect()
@@ -208,6 +223,16 @@ func _handle_right_click() -> void:
 			mode = Mode.ACTION_MENU
 			ui_layer.show_action_menu(selection_system.selected_unit)
 
+		Mode.SHADE_ABILITY:
+			selection_system.attack_targets.clear()
+			ui_layer._clear_target_highlights()
+			ui_layer.hide_ability_range()
+			_pending_ability = ""
+			mode = Mode.ACTION_MENU
+			if not game_manager.shade_view_enabled:
+				game_manager.toggle_shade_view()
+			ui_layer.show_action_menu(selection_system.selected_unit)
+
 		_:
 			_cancel()
 
@@ -223,10 +248,12 @@ func clear_pending_path() -> void:
 # Llamados desde el ActionMenu
 func on_attack_pressed() -> void:
 	if selection_system.selected_unit:
+		ui_layer.move_range_overlay.clear()
 		selection_system.show_attack_options(selection_system.selected_unit)
 		mode = Mode.TARGETING
 
 func on_ability_pressed(ability: String) -> void:
+	ui_layer.move_range_overlay.clear()
 	match ability:
 		"THRUST":
 			ui_layer.show_thrust_options(selection_system.selected_unit)
@@ -243,6 +270,9 @@ func on_ability_pressed(ability: String) -> void:
 			var shade = selection_system.selected_unit as Shade
 			if shade:
 				selection_system.show_ability_options(shade, ability)
+			_pending_ability = ability
+			mode = Mode.SHADE_ABILITY
+			return
 	_pending_ability = ability
 	mode = Mode.TARGETING
 

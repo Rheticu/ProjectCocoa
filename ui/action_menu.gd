@@ -48,7 +48,12 @@ func show_for_unit(
 	has_thrust_targets: bool = false,
 	has_bash_targets: bool = false,
 	has_volley_targets: bool = false,
-	has_overwatch: bool = false
+	has_overwatch: bool = false,
+	has_scorch_targets: bool = false,
+	has_mark_targets: bool = false,
+	has_muddle_targets: bool = false,
+	has_shield_targets: bool = false,
+	has_boost_targets: bool = false
 ) -> void:
 	# Por defecto ocultar todo
 	attack_btn.visible = has_targets
@@ -56,7 +61,7 @@ func show_for_unit(
 	thrust_btn.visible = false
 	bash_btn.visible = false
 	volley_btn.visible = false
-	overwatch_btn.visible = has_overwatch
+	overwatch_btn.visible = false
 	mark_btn.visible = false
 	scorch_btn.visible = false
 	shield_btn.visible = false
@@ -82,11 +87,11 @@ func show_for_unit(
 		var shade = unit as Shade
 		if shade.mana >= 2:
 			match shade.shade_element:
-				"WATER": mark_btn.visible = true
-				"FIRE":  scorch_btn.visible = true
-				"METAL": shield_btn.visible = true
-				"EARTH": muddle_btn.visible = true
-				"WOOD":  boost_btn.visible = true
+				"WATER": mark_btn.visible = has_mark_targets
+				"FIRE":  scorch_btn.visible = has_scorch_targets
+				"METAL": shield_btn.visible = has_shield_targets
+				"EARTH": muddle_btn.visible = has_muddle_targets
+				"WOOD":  boost_btn.visible = has_boost_targets
 
 	# Captura
 	if building != null and building.team != unit.team:
