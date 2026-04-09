@@ -137,7 +137,11 @@ func _execute_capture(action: CaptureAction) -> void:
 
 func _execute_produce(action: ProduceAction) -> void:
 	game_manager.deduct_funds(action.team, action.cost)
-	var unit_scene = load("res://scenes/units/Unit.tscn")
+	var unit_scene
+	if action.unit_data.is_shade:
+		unit_scene = load("res://scenes/units/Shade.tscn")
+	else:
+		unit_scene = load("res://scenes/units/Unit.tscn")
 	var unit = unit_scene.instantiate()
 	unit.data = action.unit_data
 	unit.team = action.team

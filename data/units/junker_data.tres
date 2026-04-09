@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="UnitData" load_steps=4 format=3 uid="uid://bmwuc2nkieu6f"]
 
 [ext_resource type="Script" uid="uid://vguawhqk205m" path="res://entities/unit_data.gd" id="1_1hsnn"]
-[ext_resource type="Texture2D" uid="uid://kle50tw0otdb" path="res://art/units/Junker1_Blue.png" id="2_1hsnn"]
-[ext_resource type="Texture2D" uid="uid://dj13vk6k5odyj" path="res://art/units/Junker1_Red.png" id="3_jdnb1"]
+[ext_resource type="Texture2D" uid="uid://b362jn1ptcxs" path="res://art/units/Junker/Junker1_Blue.png" id="2_1hsnn"]
+[ext_resource type="Texture2D" uid="uid://ov5snkkiw3f" path="res://art/units/Junker/Junker1_Red.png" id="3_jdnb1"]
 
 [resource]
 script = ExtResource("1_1hsnn")
@@ -10,7 +10,8 @@ unit_type = "Junker"
 attack_range = 2
 vision_range = 1
 attack = 50
-defense = 0
+defense = 10
+cost = 4000
 sprite_team1 = ExtResource("2_1hsnn")
 sprite_team2 = ExtResource("3_jdnb1")
 metadata/_custom_type_script = "uid://vguawhqk205m"

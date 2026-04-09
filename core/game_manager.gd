@@ -95,12 +95,7 @@ func clear_overwatch(unit: Unit) -> void:
 	unit.is_in_overwatch = false
 
 func get_any_unit_at(pos: Vector2i) -> Unit:
-	# Primero buscar según la vista activa
 	for u in all_units:
 		if u.grid_position == pos and u.visible and u.is_shade() == shade_view_enabled:
-			return u
-	# Si no hay, buscar cualquier unidad visible (para habilidades cross-layer)
-	for u in all_units:
-		if u.grid_position == pos and u.visible:
 			return u
 	return null

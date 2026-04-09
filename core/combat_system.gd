@@ -31,7 +31,7 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 	shade.mana -= 2
 	match ability:
 		"MARK":
-			target.marked_turns = 8 if current_element == GameManager.Element.WATER else 4
+			target.marked_turns = 4 if current_element == GameManager.Element.WATER else 2
 		"SCORCH":
 			var multiplier = 2.5 if current_element == GameManager.Element.FIRE else 1.0
 			var dmg = int(max(0.0, multiplier * shade.health / 100.0 * 10 - target.get_total_defense(0)))
@@ -40,7 +40,7 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 			if target.check_death():
 				_handle_death(target)
 		"SHIELD":
-			target.shield_turns = 8 if current_element == GameManager.Element.METAL else 4
+			target.shield_turns = 4 if current_element == GameManager.Element.METAL else 2
 		"MUDDLE":
 			target.muddle_turns = 8 if current_element == GameManager.Element.EARTH else 4
 		"BOOST":

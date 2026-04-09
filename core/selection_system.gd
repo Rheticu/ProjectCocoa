@@ -5,6 +5,7 @@ extends Node
 @onready var movement_system = $"../MovementSystem"
 @onready var combat_system = $"../CombatSystem"
 @onready var turn_manager = $"../TurnManager"
+@onready var grid_system = $"../GridSystem"
 
 var selected_unit: Unit = null
 var inspected_unit: Unit = null
@@ -137,3 +138,10 @@ func get_movement_path_to(destination: Vector2i) -> Array[Vector2i]:
 	if not selected_unit:
 		return []
 	return movement_system.get_movement_path(selected_unit.grid_position, destination, selected_unit)
+
+func calculate_path_cost(path: Array[Vector2i], unit: Unit) -> int:
+	var total = 0
+	for i in range(1, path.size()):
+		var terrain = grid_system.get_terrain_type(path[i])
+		total += movement_system._get_movement_cost(unit, terrain)
+	return total

@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="UnitData" load_steps=4 format=3 uid="uid://kc6p0ij8gsd8"]
 
 [ext_resource type="Script" uid="uid://vguawhqk205m" path="res://entities/unit_data.gd" id="1_h3g2m"]
-[ext_resource type="Texture2D" uid="uid://dgcb4mcal2dqk" path="res://art/units/Cannon1_Blue.png" id="2_h3g2m"]
-[ext_resource type="Texture2D" uid="uid://c6dgbfnyvycju" path="res://art/units/Cannon1_Red.png" id="3_doxt2"]
+[ext_resource type="Texture2D" uid="uid://deg6jkglk5g2o" path="res://art/units/Cannon/Cannon1_Blue.png" id="2_h3g2m"]
+[ext_resource type="Texture2D" uid="uid://b20wkocvnb7xi" path="res://art/units/Cannon/Cannon1_Red.png" id="3_doxt2"]
 
 [resource]
 script = ExtResource("1_h3g2m")

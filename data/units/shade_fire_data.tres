@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="UnitData" load_steps=4 format=3 uid="uid://pu4shykaiycb"]
 
 [ext_resource type="Script" uid="uid://vguawhqk205m" path="res://entities/unit_data.gd" id="1_17qb2"]
-[ext_resource type="Texture2D" uid="uid://bvrn7jgepab5i" path="res://art/units/Raider_Blue.png" id="2_fvahq"]
-[ext_resource type="Texture2D" uid="uid://dun1iw15lb43m" path="res://art/units/raider_fire.png" id="3_ckqil"]
+[ext_resource type="Texture2D" uid="uid://bg8pvsshb5mfm" path="res://art/units/Fire_Shade/fire_shade_blue.png" id="2_fvahq"]
+[ext_resource type="Texture2D" uid="uid://1cg2abbjwydh" path="res://art/units/Fire_Shade/fire_shade_red.png" id="3_ckqil"]
 
 [resource]
 script = ExtResource("1_17qb2")

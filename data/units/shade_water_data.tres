@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=4 format=3 uid="uid://4co3aue3mle4"]
+
+[ext_resource type="Script" uid="uid://vguawhqk205m" path="res://entities/unit_data.gd" id="1_oalxa"]
+[ext_resource type="Texture2D" uid="uid://du4atbr8b7tvh" path="res://art/units/Water_Shade/water_shade_blue.png" id="2_pb24t"]
+[ext_resource type="Texture2D" uid="uid://y7pcm45piwi4" path="res://art/units/Water_Shade/water_shade_red.png" id="3_r2qm2"]
+
+[resource]
+script = ExtResource("1_oalxa")
+unit_type = "Shade"
+vision_range = 1
+ability_range = 4
+is_shade = true
+shade_element = "WATER"
+cost = 10000
+sprite_team1 = ExtResource("2_pb24t")
+sprite_team2 = ExtResource("3_r2qm2")
+metadata/_custom_type_script = "uid://vguawhqk205m"

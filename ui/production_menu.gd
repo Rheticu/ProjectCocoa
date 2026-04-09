@@ -65,7 +65,10 @@ func setup(building: Building, funds: int) -> void:
 		vbox.add_child(row)
 		
 		var name_label = Label.new()
-		name_label.text = unit_data.unit_type
+		if unit_data.is_shade and unit_data.shade_element != "":
+			name_label.text = unit_data.shade_element + " Shade"
+		else:
+			name_label.text = unit_data.unit_type
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_label.add_theme_font_size_override("font_size", 16)
 		if not can_afford:

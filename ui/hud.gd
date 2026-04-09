@@ -6,6 +6,7 @@ extends CanvasLayer
 
 var funds_panel: PanelContainer
 var unit_info_panel: PanelContainer
+var size_font = 10
 
 # Labels de fondos
 var funds_label: Label
@@ -45,16 +46,16 @@ func _build_funds_panel() -> void:
 	vbox.add_theme_constant_override("separation", 4)
 	margin.add_child(vbox)
 
-	turn_label = _make_label("Turn 1", 14, Color(0.9, 0.8, 0.3))
+	turn_label = _make_label("Turn 1", size_font + 1, Color(0.9, 0.8, 0.3))
 	vbox.add_child(turn_label)
 
-	funds_label = _make_label("$: 0k", 13, Color(0.961, 0.961, 1.0))
+	funds_label = _make_label("$: 0k", size_font, Color(0.961, 0.961, 1.0))
 	vbox.add_child(funds_label)
 
-	income_label = _make_label("+$: 0k", 13, Color(0.961, 0.961, 1.0))
+	income_label = _make_label("+$: 0k", size_font, Color(0.961, 0.961, 1.0))
 	vbox.add_child(income_label)
 
-	element_label = _make_label("EARTH", 13, Color(0.513, 0.338, 0.162))
+	element_label = _make_label("EARTH", size_font, Color(0.513, 0.338, 0.162))
 	vbox.add_child(element_label)
 
 	funds_panel.position = Vector2(16, 16)
@@ -78,28 +79,28 @@ func _build_unit_info_panel() -> void:
 	vbox.add_theme_constant_override("separation", 4)
 	margin.add_child(vbox)
 
-	unit_type_label = _make_label("", 14, Color(0.9, 0.8, 0.3))
+	unit_type_label = _make_label("", size_font + 1 , Color(0.9, 0.8, 0.3))
 	vbox.add_child(unit_type_label)
 
-	unit_hp_label = _make_label("HP: -", 13, Color(0.961, 0.961, 1.0))
+	unit_hp_label = _make_label("HP: -", size_font, Color(0.961, 0.961, 1.0))
 	vbox.add_child(unit_hp_label)
 
-	unit_attack_label = _make_label("Att: -", 13, Color(0.961, 0.961, 1.0))
+	unit_attack_label = _make_label("Att: -", size_font, Color(0.961, 0.961, 1.0))
 	vbox.add_child(unit_attack_label)
 
-	unit_defense_label = _make_label("Def: -", 13, Color(0.961, 0.961, 1.0))
+	unit_defense_label = _make_label("Def: -", size_font, Color(0.961, 0.961, 1.0))
 	vbox.add_child(unit_defense_label)
 
-	unit_movement_label = _make_label("Mov: -", 13, Color(0.961, 0.961, 1.0))
+	unit_movement_label = _make_label("Mov: -", size_font, Color(0.961, 0.961, 1.0))
 	vbox.add_child(unit_movement_label)
 
-	unit_mana_label = _make_label("", 13, Color(0.502, 0.988, 1.0))
+	unit_mana_label = _make_label("", size_font, Color(0.502, 0.988, 1.0))
 	vbox.add_child(unit_mana_label)
 
-	unit_status_label = _make_label("", 12, Color(0.9, 0.8, 0.3))
+	unit_status_label = _make_label("", size_font, Color(0.9, 0.8, 0.3))
 	vbox.add_child(unit_status_label)
 
-	unit_info_panel.position = Vector2(16, 200)
+	unit_info_panel.position = Vector2(16, 0)
 	unit_info_panel.mouse_entered.connect(_on_unit_info_panel_mouse_entered)
 
 func _make_panel_style() -> StyleBoxFlat:
@@ -134,7 +135,7 @@ func update_funds() -> void:
 func show_unit_info(unit: Unit) -> void:
 	if unit.is_shade():
 		var shade = unit as Shade
-		unit_type_label.text = shade.shade_element + " Shade"
+		unit_type_label.text = shade.shade_element
 		unit_mana_label.text = "Mana: %d/%d" % [shade.mana, shade.max_mana]
 		unit_mana_label.visible = true
 	else:
@@ -159,6 +160,13 @@ func show_unit_info(unit: Unit) -> void:
 		unit_status_label.text = " | ".join(status_parts)
 		unit_status_label.visible = true
 	unit_info_panel.visible = true
+	call_deferred("_reposition_unit_panel")
+
+func _reposition_unit_panel() -> void:
+	var viewport_height = get_viewport().get_visible_rect().size.y
+	var panel_height = unit_info_panel.size.y
+	var x = unit_info_panel.position.x  # mantener x actual (16 o 560)
+	unit_info_panel.position = Vector2(x, viewport_height - panel_height - 16)
 
 func hide_unit_info() -> void:
 	unit_info_panel.visible = false

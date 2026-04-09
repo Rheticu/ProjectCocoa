@@ -12,6 +12,8 @@ var _current_thrust_direction: Vector2i = Vector2i.ZERO
 var _bash_overlays: Dictionary = {}
 var _current_bash_direction: Vector2i = Vector2i.ZERO
 var _volley_center: Vector2i = Vector2i(-1,-1)
+var _cursor_path: Array[Vector2i] = []
+var _is_tracing: bool = false
 
 # Sistemas — sin cambios
 @onready var game_manager      = $"../GameManager"
@@ -147,6 +149,8 @@ func _on_unit_deselected() -> void:
 	attack_range_overlay.clear()
 	movement_arrow.clear_points()
 	_clear_target_highlights()
+	_cursor_path.clear()
+	_is_tracing = false
 	hud.hide_unit_info()
 
 func _draw_attack_range(unit: Unit) -> void:
@@ -300,6 +304,9 @@ func _on_action_executed(action: BaseAction) -> void:
 			attack_range_overlay.clear()
 			movement_arrow.clear_points()
 			_clear_target_highlights()
+			selection_system.deselect()
+			hud.hide_unit_info()
+			input_controller.mode = InputController.Mode.IDLE
 
 func _on_overwatch_triggered(_attacker: Unit, target: Unit, _tile: Vector2i, _previous_tile: Vector2i) -> void:
 	_overwatch_activated = true
@@ -460,10 +467,37 @@ func _update_movement_arrow(cursor_pos: Vector2i) -> void:
 		return
 	if cursor_pos not in selection_system.reachable_cells:
 		movement_arrow.clear_points()
+		_is_tracing = false
+		_cursor_path.clear()
 		return
-	var path = selection_system.get_movement_path_to(cursor_pos)
+
+	# Iniciar tracing si no está activo
+	if not _is_tracing:
+		_is_tracing = true
+		_cursor_path = [unit.grid_position]
+
+	# Si el cursor retrocedió a un tile que ya está en el path, truncar
+	if cursor_pos in _cursor_path:
+		var idx = _cursor_path.find(cursor_pos)
+		_cursor_path = _cursor_path.slice(0, idx + 1)
+	else:
+		var last = _cursor_path.back()
+		var dx = abs(cursor_pos.x - last.x)
+		var dy = abs(cursor_pos.y - last.y)
+		# Si es adyacente, añadir al path manual
+		if dx + dy == 1:
+			_cursor_path.append(cursor_pos)
+			# Verificar costo del path manual
+			var cost = selection_system.calculate_path_cost(_cursor_path, unit)
+			if cost > unit.movement_range:
+				# Revertir a A*
+				_cursor_path = selection_system.get_movement_path_to(cursor_pos)
+		else:
+			# No adyacente — salto del mouse, usar A*
+			_cursor_path = selection_system.get_movement_path_to(cursor_pos)
+
 	movement_arrow.clear_points()
-	for tile in path:
+	for tile in _cursor_path:
 		movement_arrow.add_point(grid_system.grid_to_world_center(tile))
 
 func _on_action_menu_end_turn() -> void:

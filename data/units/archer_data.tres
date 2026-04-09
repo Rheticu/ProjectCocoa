@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="UnitData" load_steps=4 format=3 uid="uid://cy8bxn1s3e3lc"]
 
 [ext_resource type="Script" uid="uid://vguawhqk205m" path="res://entities/unit_data.gd" id="1_hejsf"]
-[ext_resource type="Texture2D" uid="uid://dcpgap4gwge0m" path="res://art/units/Archer1_Blue.png" id="2_hejsf"]
-[ext_resource type="Texture2D" uid="uid://dfmqq3i5c2k6k" path="res://art/units/Archer1_Red.png" id="3_yuhdk"]
+[ext_resource type="Texture2D" uid="uid://cbvpfvwp3g2i2" path="res://art/units/Archer/Archer1_Blue.png" id="2_hejsf"]
+[ext_resource type="Texture2D" uid="uid://brg3vn4o8ddry" path="res://art/units/Archer/Archer1_Red.png" id="3_yuhdk"]
 
 [resource]
 script = ExtResource("1_hejsf")
@@ -10,7 +10,6 @@ unit_type = "Archer"
 attack_range = 3
 vision_range = 1
 attack = 50
-defense = 0
 cost = 1000
 sprite_team1 = ExtResource("2_hejsf")
 sprite_team2 = ExtResource("3_yuhdk")

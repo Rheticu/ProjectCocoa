@@ -1,38 +1,43 @@
-[gd_scene load_steps=46 format=4 uid="uid://bpb111flh0snl"]
+[gd_scene load_steps=51 format=4 uid="uid://bpb111flh0snl"]
 
 [ext_resource type="Texture2D" uid="uid://00f5seoj7dpb" path="res://art/maps/PlainsSheet1.png" id="1_pd3xk"]
 [ext_resource type="PackedScene" uid="uid://cbst1oom7mdbi" path="res://scenes/units/Unit.tscn" id="2_fp56n"]
 [ext_resource type="Texture2D" uid="uid://dlvuinec2gwnr" path="res://art/maps/RoadsSheet1.png" id="3_pd3xk"]
 [ext_resource type="Texture2D" uid="uid://b0ty2so8fq4v" path="res://art/maps/WaterSheet1.png" id="3_ro2cy"]
-[ext_resource type="Texture2D" uid="uid://eadp1jqv7s8f" path="res://art/units/Spear1_Blue.png" id="4_1lhmh"]
-[ext_resource type="Texture2D" uid="uid://dfmqq3i5c2k6k" path="res://art/units/Archer1_Red.png" id="4_80220"]
+[ext_resource type="Texture2D" uid="uid://b8m0sxuoi7l5t" path="res://art/units/Spear/Spear1_Blue.png" id="4_1lhmh"]
+[ext_resource type="Texture2D" uid="uid://brg3vn4o8ddry" path="res://art/units/Archer/Archer1_Red.png" id="4_80220"]
 [ext_resource type="Texture2D" uid="uid://b450pnrme861d" path="res://art/maps/Fog_Tile.png" id="4_djjkr"]
 [ext_resource type="Texture2D" uid="uid://cimgomiw77yli" path="res://art/ui/Grid.png" id="4_qxabq"]
 [ext_resource type="Resource" uid="uid://ck7ajhuvf0wl6" path="res://data/units/sword_data.tres" id="4_wcqb1"]
 [ext_resource type="Texture2D" uid="uid://cuuupeastpfwi" path="res://art/maps/ShadeOverlay.png" id="5_md4sb"]
-[ext_resource type="Texture2D" uid="uid://sxitdcwrhrcj" path="res://art/units/Sword1_Red.png" id="6_2e1b8"]
+[ext_resource type="Texture2D" uid="uid://bqcg3j1i7wp6d" path="res://art/units/Sword/Sword1_Red.png" id="6_2e1b8"]
 [ext_resource type="Resource" uid="uid://c8k1tlm0j5ocp" path="res://data/units/spear_data.tres" id="7_tg0gx"]
-[ext_resource type="Texture2D" uid="uid://bq0tjjbhueml5" path="res://art/units/Sword1_Blue.png" id="9_7dh4r"]
+[ext_resource type="Texture2D" uid="uid://dltmmbypolan6" path="res://art/units/Sword/Sword1_Blue.png" id="9_7dh4r"]
 [ext_resource type="Resource" uid="uid://kc6p0ij8gsd8" path="res://data/units/cannon_data.tres" id="9_8x8nt"]
-[ext_resource type="Texture2D" uid="uid://c6dgbfnyvycju" path="res://art/units/Cannon1_Red.png" id="10_jck17"]
-[ext_resource type="Texture2D" uid="uid://dcpgap4gwge0m" path="res://art/units/Archer1_Blue.png" id="11_8x8nt"]
-[ext_resource type="Texture2D" uid="uid://dgcb4mcal2dqk" path="res://art/units/Cannon1_Blue.png" id="11_wlibu"]
+[ext_resource type="Texture2D" uid="uid://b20wkocvnb7xi" path="res://art/units/Cannon/Cannon1_Red.png" id="10_jck17"]
+[ext_resource type="Texture2D" uid="uid://cbvpfvwp3g2i2" path="res://art/units/Archer/Archer1_Blue.png" id="11_8x8nt"]
+[ext_resource type="Texture2D" uid="uid://deg6jkglk5g2o" path="res://art/units/Cannon/Cannon1_Blue.png" id="11_wlibu"]
 [ext_resource type="Resource" uid="uid://cy8bxn1s3e3lc" path="res://data/units/archer_data.tres" id="13_v6s0w"]
 [ext_resource type="Resource" uid="uid://bmwuc2nkieu6f" path="res://data/units/junker_data.tres" id="16_iw16c"]
-[ext_resource type="Texture2D" uid="uid://dj13vk6k5odyj" path="res://art/units/Junker1_Red.png" id="17_83t8w"]
-[ext_resource type="Texture2D" uid="uid://kle50tw0otdb" path="res://art/units/Junker1_Blue.png" id="18_ew753"]
+[ext_resource type="Texture2D" uid="uid://ov5snkkiw3f" path="res://art/units/Junker/Junker1_Red.png" id="17_83t8w"]
+[ext_resource type="Texture2D" uid="uid://b362jn1ptcxs" path="res://art/units/Junker/Junker1_Blue.png" id="18_ew753"]
 [ext_resource type="PackedScene" uid="uid://p812134ba3to" path="res://scenes/buildings/Building.tscn" id="19_ew753"]
 [ext_resource type="Resource" uid="uid://8dwvombq2dls" path="res://data/buildings/city_data.tres" id="20_v6s0w"]
-[ext_resource type="PackedScene" uid="uid://cph1iqfjco8q" path="res://scenes/units/Shade.tscn" id="21_7fc2k"]
 [ext_resource type="Texture2D" uid="uid://dvc6oxqd66i62" path="res://art/buildings/City/City_Neutral.png" id="21_v6s0w"]
-[ext_resource type="Resource" uid="uid://pu4shykaiycb" path="res://data/units/shade_fire_data.tres" id="22_4qhu6"]
+[ext_resource type="PackedScene" uid="uid://cph1iqfjco8q" path="res://scenes/units/Shade.tscn" id="22_k24gi"]
 [ext_resource type="Resource" uid="uid://cjqu3u4b2iwnt" path="res://data/buildings/barracks_data.tres" id="22_qkj4u"]
-[ext_resource type="Texture2D" uid="uid://dun1iw15lb43m" path="res://art/units/raider_fire.png" id="23_4qhu6"]
+[ext_resource type="Resource" uid="uid://pu4shykaiycb" path="res://data/units/shade_fire_data.tres" id="23_d8fes"]
 [ext_resource type="Texture2D" uid="uid://ddipgcrb6qt7k" path="res://art/buildings/Barracks/Barracks_Blue.png" id="23_djjkr"]
-[ext_resource type="Texture2D" uid="uid://va6kdmmptkux" path="res://art/units/Raider.png" id="23_iivji"]
-[ext_resource type="Resource" uid="uid://10axnlfjc535" path="res://data/units/shade_metal_data.tres" id="23_k24gi"]
 [ext_resource type="Texture2D" uid="uid://cvvfjdeomufqh" path="res://art/buildings/City/City_Red.png" id="24_md4sb"]
+[ext_resource type="Texture2D" uid="uid://bg8pvsshb5mfm" path="res://art/units/Fire_Shade/fire_shade_blue.png" id="24_oahdw"]
+[ext_resource type="Texture2D" uid="uid://1cg2abbjwydh" path="res://art/units/Fire_Shade/fire_shade_red.png" id="25_0afsb"]
 [ext_resource type="Texture2D" uid="uid://cpun5jg4ytt1n" path="res://art/buildings/City/City_Blue.png" id="25_mg4i6"]
+[ext_resource type="Resource" uid="uid://10axnlfjc535" path="res://data/units/shade_metal_data.tres" id="25_oahdw"]
+[ext_resource type="Texture2D" uid="uid://diuj0e8l2rule" path="res://art/units/Metal_Shade/metal_shade_blue.png" id="27_h05hs"]
+[ext_resource type="Resource" uid="uid://4co3aue3mle4" path="res://data/units/shade_water_data.tres" id="28_cynmg"]
+[ext_resource type="Texture2D" uid="uid://du4atbr8b7tvh" path="res://art/units/Water_Shade/water_shade_blue.png" id="29_65iyu"]
+[ext_resource type="Resource" uid="uid://dd8eq6muameue" path="res://data/buildings/port_data.tres" id="35_0afsb"]
+[ext_resource type="Texture2D" uid="uid://k4bq78exit56" path="res://art/buildings/Port/Port_Red.png" id="36_1tjnf"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hyr6f"]
 texture = ExtResource("1_pd3xk")
@@ -199,7 +204,7 @@ team = 2
 data = ExtResource("7_tg0gx")
 
 [node name="Unit2" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(80, 368)
+position = Vector2(48, 144)
 data = ExtResource("7_tg0gx")
 
 [node name="Sprite2D" parent="Units/Unit2" index="0"]
@@ -221,21 +226,21 @@ data = ExtResource("9_8x8nt")
 texture = ExtResource("11_wlibu")
 
 [node name="Unit4" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(208, 112)
+position = Vector2(112, 144)
 data = ExtResource("4_wcqb1")
 
 [node name="Sprite2D" parent="Units/Unit4" index="0"]
 texture = ExtResource("9_7dh4r")
 
 [node name="Unit3" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(112, 16)
+position = Vector2(48, 80)
 data = ExtResource("13_v6s0w")
 
 [node name="Sprite2D" parent="Units/Unit3" index="0"]
 texture = ExtResource("11_8x8nt")
 
 [node name="Unit19" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(176, 48)
+position = Vector2(208, 16)
 team = 2
 data = ExtResource("13_v6s0w")
 
@@ -251,14 +256,14 @@ data = ExtResource("4_wcqb1")
 texture = ExtResource("6_2e1b8")
 
 [node name="Unit6" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(240, 112)
+position = Vector2(208, 112)
 data = ExtResource("4_wcqb1")
 
 [node name="Sprite2D" parent="Units/Unit6" index="0"]
 texture = ExtResource("9_7dh4r")
 
 [node name="Unit13" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(240, 80)
+position = Vector2(208, 48)
 team = 2
 data = ExtResource("4_wcqb1")
 
@@ -280,30 +285,34 @@ data = ExtResource("16_iw16c")
 [node name="Sprite2D" parent="Units/Unit10" index="0"]
 texture = ExtResource("18_ew753")
 
-[node name="Shade" parent="Units" instance=ExtResource("21_7fc2k")]
-position = Vector2(176, 80)
-data = ExtResource("23_k24gi")
+[node name="Shade" parent="Units" instance=ExtResource("22_k24gi")]
+position = Vector2(16, 80)
+data = ExtResource("23_d8fes")
 
 [node name="Sprite2D" parent="Units/Shade" index="0"]
-position = Vector2(0, 0)
-texture = ExtResource("23_iivji")
+texture = ExtResource("24_oahdw")
 
-[node name="Shade3" parent="Units" instance=ExtResource("21_7fc2k")]
-position = Vector2(240, 48)
-data = ExtResource("22_4qhu6")
+[node name="Shade3" parent="Units" instance=ExtResource("22_k24gi")]
+position = Vector2(16, 48)
+team = 2
+data = ExtResource("23_d8fes")
 
 [node name="Sprite2D" parent="Units/Shade3" index="0"]
-position = Vector2(0, 0)
-texture = ExtResource("23_iivji")
+texture = ExtResource("25_0afsb")
 
-[node name="Shade2" parent="Units" instance=ExtResource("21_7fc2k")]
-position = Vector2(176, 48)
-team = 2
-data = ExtResource("22_4qhu6")
+[node name="Shade2" parent="Units" instance=ExtResource("22_k24gi")]
+position = Vector2(112, 112)
+data = ExtResource("25_oahdw")
 
 [node name="Sprite2D" parent="Units/Shade2" index="0"]
-position = Vector2(0, 0)
-texture = ExtResource("23_4qhu6")
+texture = ExtResource("27_h05hs")
+
+[node name="Shade4" parent="Units" instance=ExtResource("22_k24gi")]
+position = Vector2(144, 80)
+data = ExtResource("28_cynmg")
+
+[node name="Sprite2D" parent="Units/Shade4" index="0"]
+texture = ExtResource("29_65iyu")
 
 [node name="Buildings" type="Node2D" parent="."]
 metadata/_edit_lock_ = true
@@ -339,6 +348,14 @@ data = ExtResource("22_qkj4u")
 [node name="Sprite2D" parent="Buildings/Building2" index="0"]
 texture = ExtResource("23_djjkr")
 
+[node name="Building5" parent="Buildings" instance=ExtResource("19_ew753")]
+position = Vector2(176, 176)
+team = 2
+data = ExtResource("35_0afsb")
+
+[node name="Sprite2D" parent="Buildings/Building5" index="0"]
+texture = ExtResource("36_1tjnf")
+
 [editable path="Units/Unit2"]
 [editable path="Units/Unit7"]
 [editable path="Units/Unit8"]
@@ -353,7 +370,9 @@ texture = ExtResource("23_djjkr")
 [editable path="Units/Shade"]
 [editable path="Units/Shade3"]
 [editable path="Units/Shade2"]
+[editable path="Units/Shade4"]
 [editable path="Buildings/Building"]
 [editable path="Buildings/Building3"]
 [editable path="Buildings/Building4"]
 [editable path="Buildings/Building2"]
+[editable path="Buildings/Building5"]

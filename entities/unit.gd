@@ -61,14 +61,17 @@ func get_effective_type() -> String:
 func get_total_defense(terrain_bonus: int) -> int:
 	var base = defense + terrain_bonus
 	if shield_turns > 0:
-		return defense * 3 + terrain_bonus
+		return (defense * 3) + terrain_bonus
 	return base
 
-func tick_buffs() -> void:
-	if marked_turns > 0: marked_turns -= 1
-	if shield_turns > 0: shield_turns -= 1
-	if muddle_turns > 0: muddle_turns -= 1
-	if boost_turns > 0:  boost_turns -= 1
+func tick_buffs(current_team) -> void:
+	if team == current_team:
+		if boost_turns > 0:  boost_turns -= 1
+		if shield_turns > 0: shield_turns -= 1
+	else:
+		if marked_turns > 0: marked_turns -= 1
+		if muddle_turns > 0: muddle_turns -= 1
+
 
 func check_death() -> bool:
 	return health <= 0

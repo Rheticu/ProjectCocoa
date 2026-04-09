@@ -18,7 +18,7 @@ func _begin_turn(team: int) -> void:
 	current_team = team
 
 	for unit in game_manager.all_units:
-		unit.tick_buffs()
+		unit.tick_buffs(current_team)
 		if unit.team == team and unit.is_in_overwatch:
 			game_manager.clear_overwatch(unit)
 

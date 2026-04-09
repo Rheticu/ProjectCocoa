@@ -81,7 +81,7 @@ func _handle_left_click() -> void:
 					mode = Mode.INSPECTING_A
 			elif turn_manager.is_my_turn(game_manager.local_player_id):
 				var building = game_manager.get_building_at(grid_pos)
-				if building and building.team == game_manager.local_player_id and building.can_produce:
+				if building and building.team == game_manager.local_player_id and not game_manager.shade_view_enabled:
 					ui_layer.show_production_menu(building)
 				else:
 					ui_layer.show_empty_tile_menu(grid_pos)
@@ -95,12 +95,22 @@ func _handle_left_click() -> void:
 				ui_layer.show_action_menu(unit)
 				return
 			if grid_pos in selection_system.reachable_cells:
-				_pending_move_path = selection_system.get_movement_path_to(grid_pos)
+				_pending_move_path = ui_layer._cursor_path.duplicate()
+				if _pending_move_path.is_empty() or _pending_move_path.back() != grid_pos:
+					_pending_move_path = selection_system.get_movement_path_to(grid_pos)
 				if not _pending_move_path.is_empty():
 					action_system.queue_action(MoveAction.new(unit, _pending_move_path))
 				return
-			var clicked_unit = game_manager.get_unit_at(grid_pos)
-			if not clicked_unit:
+			var clicked_unit = game_manager.get_unit_at(grid_pos, game_manager.shade_view_enabled)
+			if clicked_unit and clicked_unit.visible:
+				if clicked_unit.team == game_manager.local_player_id and turn_manager.is_my_turn(clicked_unit.team) and clicked_unit.state != Unit.State.MOVED:
+					selection_system.select_unit(clicked_unit)
+					mode = Mode.UNIT_SELECTED
+				else:
+					_cancel()
+					selection_system.inspect_unit_move(clicked_unit)
+					mode = Mode.INSPECTING_A
+			else:
 				_cancel()
 
 		Mode.INSPECTING_A:
