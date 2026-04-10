@@ -24,6 +24,7 @@ var _is_tracing: bool = false
 @onready var input_controller  = $"../InputController"
 @onready var fog_system = $"../FogSystem"
 @onready var hud = $"../HUD"
+@onready var multiplayer_manager = $"../MultiplayerManager"
 
 var _current_building: Building = null
 var _overwatch_activated: bool = false
@@ -253,7 +254,7 @@ func _on_shade_view_toggled(enabled: bool) -> void:
 
 # ── Animación de movimiento ───────────────────────────────────────────────────
 
-func _on_move_started(unit: Unit, path: Array[Vector2i]) -> void:
+func _on_move_started(unit: Unit, path: Array[Vector2i], is_remote: bool) -> void:
 	input_controller.lock()
 	move_range_overlay.clear()
 	await _animate_movement(unit, path)
@@ -261,17 +262,15 @@ func _on_move_started(unit: Unit, path: Array[Vector2i]) -> void:
 		input_controller.unlock()
 		return
 	if _ambush_activated:
-		input_controller.clear_pending_path()
 		action_system.move_confirmed.emit(null)
 		return
 	if _overwatch_activated and unit.state == Unit.State.MOVED:
-		input_controller.clear_pending_path()
 		input_controller.unlock()
 		return
 	action_system.move_confirmed.emit(unit)
-	input_controller.clear_pending_path()
 	input_controller.unlock()
-	show_action_menu(unit)
+	if not is_remote:
+		show_action_menu(unit)
 
 func _animate_movement(unit: Unit, path: Array[Vector2i]) -> void:
 	_overwatch_activated = false
@@ -338,6 +337,12 @@ func _on_ambush_triggered(moving_unit: Unit, _hidden_unit: Unit, _tile: Vector2i
 	input_controller.mode = InputController.Mode.IDLE
 	selection_system.deselect()
 	fog_system.recalculate(game_manager.local_player_id)
+	if multiplayer_manager.is_network_connected:
+		multiplayer_manager.sync_ambush(
+			moving_unit.unit_id,
+			moving_unit.grid_position,
+			_hidden_unit.unit_id
+		)
 
 func _show_ambush_effect(world_pos: Vector2) -> void:
 	var exclaim = Sprite2D.new()

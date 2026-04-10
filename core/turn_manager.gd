@@ -16,7 +16,6 @@ func start_game() -> void:
 
 func _begin_turn(team: int) -> void:
 	current_team = team
-
 	for unit in game_manager.all_units:
 		unit.tick_buffs(current_team)
 		if unit.team == team and unit.is_in_overwatch:
@@ -37,7 +36,9 @@ func _begin_turn(team: int) -> void:
 			unit.state = Unit.State.IDLE
 			unit.update_visual()
 
-	game_manager.local_player_id = team
+	if not game_manager.is_network_game:
+		game_manager.local_player_id = team
+
 	turn_started.emit(team)
 
 func end_turn(team: int) -> void:

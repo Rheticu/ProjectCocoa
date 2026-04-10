@@ -289,9 +289,11 @@ func on_ability_pressed(ability: String) -> void:
 func on_move_confirmed() -> void:
 	var unit = selection_system.selected_unit
 	if unit:
+		var confirmed_path = _pending_move_path.duplicate()
 		unit.original_position = unit.grid_position
 		unit.state = Unit.State.MOVED
 		unit.update_visual()
+		action_system.confirm_move(unit, confirmed_path)
 	fog_system.recalculate(game_manager.local_player_id)
 	selection_system.deselect()
 	_pending_move_path.clear()
@@ -299,7 +301,9 @@ func on_move_confirmed() -> void:
 
 func on_capture_pressed(building: Building) -> void:
 	if selection_system.selected_unit:
-		action_system.queue_action(CaptureAction.new(selection_system.selected_unit, building))
+		var path = _pending_move_path.duplicate()
+		_pending_move_path.clear()
+		action_system.queue_action(CaptureAction.new(selection_system.selected_unit, building, path))
 		selection_system.deselect()
 		mode = Mode.IDLE
 

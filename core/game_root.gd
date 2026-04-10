@@ -8,6 +8,8 @@ extends Node2D
 @onready var fog_system = $FogSystem
 @onready var current_map_container = $CurrentMap
 @onready var hud = $HUD
+@onready var multiplayer_manager = $MultiplayerManager
+@onready var lobby = $Lobby
 
 func _ready() -> void:
 	# Cargar mapa
@@ -59,3 +61,12 @@ func _fill_layer(layer: TileMapLayer) -> void:
 	for x in range(grid_system.map_size.x):
 		for y in range(grid_system.map_size.y):
 			layer.set_cell(Vector2i(x, y), 0, Vector2i(0, 0))
+
+func start_multiplayer_game() -> void:
+	game_manager.local_player_id = multiplayer_manager.player_id
+	game_manager.is_network_game = true
+	hud.update_funds()
+	hud.update_element()
+	if multiplayer_manager.player_id == 1:
+		turn_manager.start_game()
+		fog_system.recalculate(1)

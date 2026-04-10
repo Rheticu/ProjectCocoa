@@ -7,15 +7,17 @@ extends Node
 @onready var combat_system = $"../CombatSystem"
 @onready var fog_system = $"../FogSystem"
 @onready var grid_system = $"../GridSystem"
+@onready var multiplayer_manager = $"../MultiplayerManager"
 
 signal action_executed(action: BaseAction)
 signal action_rejected(reason: String)
-signal move_animation_requested(unit: Unit, path: Array[Vector2i])
+signal move_animation_requested(unit: Unit, path: Array[Vector2i], is_remote: bool)
 signal move_confirmed(unit: Unit)
 signal overwatch_triggered(attacker: Unit, target: Unit, tile: Vector2i, previous_tile: Vector2i)
 signal ambush_triggered(moving_unit: Unit, hidden_unit: Unit, tile: Vector2i)
 
 var _is_executing: bool = false
+var _executing_remote: bool = false
 
 func queue_action(action: BaseAction) -> void:
 	if _is_executing:
@@ -23,7 +25,11 @@ func queue_action(action: BaseAction) -> void:
 		return
 	if not _validate(action):
 		return
-	_execute(action)
+	await _execute(action)
+	if not _executing_remote and multiplayer_manager.is_network_connected:
+		if action.type != BaseAction.Type.MOVE:
+			var dict = multiplayer_manager.serialize_action(action)
+			multiplayer_manager.send_action(dict)
 
 func _validate(action: BaseAction) -> bool:
 	if not turn_manager.is_my_turn(action.team):
@@ -109,28 +115,41 @@ func _execute(action: BaseAction) -> void:
 func _execute_move(action: MoveAction) -> void:
 	if action.path.is_empty():
 		return
-	move_animation_requested.emit(action.actor, action.path)
+	move_animation_requested.emit(action.actor, action.path, _executing_remote)
 	await move_confirmed
 	if is_instance_valid(action.actor) and action.actor.state != Unit.State.MOVED and not action.path.is_empty():
 		action.actor.grid_position = action.path.back()
 
+func confirm_move(unit: Unit, path: Array[Vector2i]) -> void:
+	if multiplayer_manager.is_network_connected:
+		var action = MoveAction.new(unit, path)
+		var dict = multiplayer_manager.serialize_action(action)
+		multiplayer_manager.send_action(dict)
+
 func _execute_attack(action: AttackAction) -> void:
 	if not action.move_path.is_empty():
-		var move = MoveAction.new(action.actor, action.move_path, action.is_wrapped)
-		await _execute_move(move)
+		var destination = action.move_path.back()
+		if action.actor.grid_position != destination:
+			var move = MoveAction.new(action.actor, action.move_path, action.is_wrapped)
+			await _execute_move(move)
 	combat_system.execute_attack(action.actor, action.target)
 
 func _execute_ability(action: AbilityAction) -> void:
 	if not action.move_path.is_empty():
-		var move = MoveAction.new(action.actor, action.move_path, action.is_wrapped)
-		await _execute_move(move)
+		var destination = action.move_path.back()
+		if action.actor.grid_position != destination:
+			var move = MoveAction.new(action.actor, action.move_path, action.is_wrapped)
+			await _execute_move(move)
 	var shade = action.actor as Shade
 	combat_system.execute_ability(shade, action.ability, action.target, game_manager.current_element)
 
 func _execute_capture(action: CaptureAction) -> void:
+	print("capture move_path: ", action.move_path)
 	if not action.move_path.is_empty():
-		var move = MoveAction.new(action.actor, action.move_path)
-		await _execute_move(move)
+		var destination = action.move_path.back()
+		if action.actor.grid_position != destination:
+			var move = MoveAction.new(action.actor, action.move_path)
+			await _execute_move(move)
 	action.building.capture(int(action.actor.health / 10.0), action.team, action.actor)
 	action.actor.state = Unit.State.MOVED
 	action.actor.update_visual()
@@ -164,11 +183,13 @@ func _validate_special(action: SpecialAction) -> bool:
 
 func _execute_special(action: SpecialAction) -> void:
 	if not action.move_path.is_empty():
-		var move = MoveAction.new(action.actor, action.move_path)
-		await _execute_move(move)
+		var destination = action.move_path.back()
+		if action.actor.grid_position != destination:
+			var move = MoveAction.new(action.actor, action.move_path)
+			await _execute_move(move)
 	match action.ability_type:
 		"THRUST": combat_system.execute_thrust(action.actor, action.targets)
-		"BASH": combat_system.execute_bash(action.actor, action.targets)
+		"BASH":   combat_system.execute_bash(action.actor, action.targets)
 		"VOLLEY": combat_system.execute_volley(action.actor, action.targets)
 
 func _validate_overwatch(action: OverwatchAction) -> bool:
@@ -225,3 +246,13 @@ func check_ambush_at(moving_unit: Unit, tile: Vector2i, previous_tile: Vector2i)
 		ambush_triggered.emit(moving_unit, unit, tile)
 		return true
 	return false
+
+func execute_remote(action: BaseAction) -> void:
+	_executing_remote = true
+	await _execute(action)
+	_executing_remote = false
+	if action.type == BaseAction.Type.MOVE:
+		var move = action as MoveAction
+		if is_instance_valid(move.actor):
+			move.actor.state = Unit.State.MOVED
+			move.actor.update_visual()

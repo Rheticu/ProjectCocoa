@@ -15,6 +15,7 @@ var all_units: Array[Unit] = []
 var all_buildings: Array[Building] = []
 var overwatch_units: Array[Unit] = []
 var grid_layer: TileMapLayer
+var is_network_game: bool = false
 
 signal funds_changed(team: int, amount: int)
 signal element_changed(element: Element)
