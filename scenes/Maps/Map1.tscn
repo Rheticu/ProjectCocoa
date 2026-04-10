@@ -223,7 +223,7 @@ data = ExtResource("9_8x8nt")
 texture = ExtResource("10_jck17")
 
 [node name="Unit8" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(16, 16)
+position = Vector2(304, 336)
 data = ExtResource("9_8x8nt")
 
 [node name="Sprite2D" parent="Units/Unit8" index="0"]
@@ -252,7 +252,7 @@ data = ExtResource("13_v6s0w")
 texture = ExtResource("4_80220")
 
 [node name="Unit12" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(208, 80)
+position = Vector2(400, 304)
 team = 2
 data = ExtResource("4_wcqb1")
 
@@ -290,14 +290,14 @@ data = ExtResource("16_iw16c")
 texture = ExtResource("18_ew753")
 
 [node name="Shade" parent="Units" instance=ExtResource("22_k24gi")]
-position = Vector2(176, 80)
+position = Vector2(144, 80)
 data = ExtResource("23_d8fes")
 
 [node name="Sprite2D" parent="Units/Shade" index="0"]
 texture = ExtResource("24_oahdw")
 
 [node name="Shade3" parent="Units" instance=ExtResource("22_k24gi")]
-position = Vector2(208, 144)
+position = Vector2(176, 80)
 team = 2
 data = ExtResource("23_d8fes")
 
@@ -305,7 +305,7 @@ data = ExtResource("23_d8fes")
 texture = ExtResource("25_0afsb")
 
 [node name="Shade2" parent="Units" instance=ExtResource("22_k24gi")]
-position = Vector2(240, 80)
+position = Vector2(432, 336)
 data = ExtResource("25_oahdw")
 
 [node name="Sprite2D" parent="Units/Shade2" index="0"]
@@ -323,7 +323,7 @@ texture = ExtResource("30_cynmg")
 metadata/_edit_lock_ = true
 
 [node name="Building" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(144, 80)
+position = Vector2(48, 112)
 data = ExtResource("20_v6s0w")
 
 [node name="Sprite2D" parent="Buildings/Building" index="0"]

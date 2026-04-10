@@ -25,16 +25,17 @@ func _process(delta: float) -> void:
 		velocity.y += 1
 
 	# Mouse en orillas
-	var mouse_pos = get_viewport().get_mouse_position()
-	var viewport_size = get_viewport().get_visible_rect().size
-	if mouse_pos.x < edge_margin:
-		velocity.x -= 1
-	if mouse_pos.x > viewport_size.x - edge_margin:
-		velocity.x += 1
-	if mouse_pos.y < edge_margin:
-		velocity.y -= 1
-	if mouse_pos.y > viewport_size.y - edge_margin:
-		velocity.y += 1
+	if get_window().has_focus():
+		var mouse_pos = get_viewport().get_mouse_position()
+		var viewport_size = get_viewport().get_visible_rect().size
+		if mouse_pos.x < edge_margin:
+			velocity.x -= 1
+		if mouse_pos.x > viewport_size.x - edge_margin:
+			velocity.x += 1
+		if mouse_pos.y < edge_margin:
+			velocity.y -= 1
+		if mouse_pos.y > viewport_size.y - edge_margin:
+			velocity.y += 1
 
 	if velocity != Vector2.ZERO:
 		position += velocity.normalized() * move_speed * delta

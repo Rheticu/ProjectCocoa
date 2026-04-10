@@ -257,6 +257,7 @@ func _on_shade_view_toggled(enabled: bool) -> void:
 func _on_move_started(unit: Unit, path: Array[Vector2i], is_remote: bool) -> void:
 	input_controller.lock()
 	move_range_overlay.clear()
+	var saved_path = path.duplicate()
 	await _animate_movement(unit, path)
 	if not is_instance_valid(unit):
 		input_controller.unlock()
@@ -264,8 +265,20 @@ func _on_move_started(unit: Unit, path: Array[Vector2i], is_remote: bool) -> voi
 	if _ambush_activated:
 		action_system.move_confirmed.emit(null)
 		return
-	if _overwatch_activated and unit.state == Unit.State.MOVED:
+	if _overwatch_activated:
+		print("overwatch activated, is_remote: ", is_remote, " locked: ", input_controller._locked, " mode: ", input_controller.mode)
+		input_controller.clear_pending_path()
+		unit.state = Unit.State.MOVED
+		unit.update_visual()
 		input_controller.unlock()
+		input_controller.mode = InputController.Mode.IDLE
+		_overwatch_activated = false
+		print("después de overwatch, locked: ", input_controller._locked, " mode: ", input_controller.mode)
+		fog_system.recalculate(game_manager.local_player_id)
+		if multiplayer_manager.is_network_connected and not is_remote:
+			var action = MoveAction.new(unit, saved_path)
+			var dict = multiplayer_manager.serialize_action(action)
+			multiplayer_manager.send_action(dict)
 		return
 	action_system.move_confirmed.emit(unit)
 	input_controller.unlock()
@@ -309,24 +322,31 @@ func _on_action_executed(action: BaseAction) -> void:
 
 func _on_overwatch_triggered(_attacker: Unit, target: Unit, _tile: Vector2i, _previous_tile: Vector2i) -> void:
 	_overwatch_activated = true
+
 	if not is_instance_valid(target):
 		_overwatch_resolved.emit()
+		action_system.move_confirmed.emit(null)
 		return
+
 	target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
 	movement_arrow.clear_points()
+
 	await get_tree().create_timer(0.5).timeout
+
 	if not is_instance_valid(target):
 		input_controller.unlock()
 		hud.hide_unit_info()
 		selection_system.deselect()
-		action_system.move_confirmed.emit(null)
 		input_controller.mode = InputController.Mode.IDLE
 		_overwatch_resolved.emit()
+		action_system.move_confirmed.emit(null)
 		return
+
 	target.update_visual()
 	_overwatch_resolved.emit()
+	action_system.move_confirmed.emit(target)
 
-func _on_ambush_triggered(moving_unit: Unit, _hidden_unit: Unit, _tile: Vector2i) -> void:
+func _on_ambush_triggered(moving_unit: Unit, hidden_unit: Unit, _tile: Vector2i) -> void:
 	_ambush_activated = true
 	if _movement_tween:
 		_movement_tween.kill()
@@ -341,7 +361,7 @@ func _on_ambush_triggered(moving_unit: Unit, _hidden_unit: Unit, _tile: Vector2i
 		multiplayer_manager.sync_ambush(
 			moving_unit.unit_id,
 			moving_unit.grid_position,
-			_hidden_unit.unit_id
+			hidden_unit.unit_id
 		)
 
 func _show_ambush_effect(world_pos: Vector2) -> void:

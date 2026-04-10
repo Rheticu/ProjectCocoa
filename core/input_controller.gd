@@ -28,6 +28,9 @@ func lock() -> void:   _locked = true
 func unlock() -> void: _locked = false
 
 func _unhandled_input(event: InputEvent) -> void:
+	print("CLICK → mode:", mode, " locked:", _locked)
+	print("current_team:", turn_manager.current_team, " local:", game_manager.local_player_id)
+	print("is_my_turn:", turn_manager.is_my_turn(game_manager.local_player_id))
 	if _locked:
 		return
 	if ui_layer.production_menu.visible:
@@ -52,17 +55,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		_handle_right_click()
 		return
 
-	# Lo demás solo funciona en tu turno
-	if not turn_manager.is_my_turn(game_manager.local_player_id):
-		return
-
-	if event.is_action_pressed("ui_cancel"):
-		_cancel()
 	if event.is_action_pressed("toggle_shade_view"):
 		game_manager.toggle_shade_view()
 		if mode != Mode.SHADE_ABILITY:
 			selection_system.deselect()
 			mode = Mode.IDLE
+
+	# Lo demás solo funciona en tu turno
+	if not turn_manager.is_my_turn(game_manager.local_player_id):
+		return
+	if event.is_action_pressed("ui_cancel"):
+		_cancel()
 	if event.is_action_pressed("end_turn"):
 		action_system.queue_action(EndTurnAction.new(game_manager.local_player_id))
 
@@ -99,6 +102,8 @@ func _handle_left_click() -> void:
 				if _pending_move_path.is_empty() or _pending_move_path.back() != grid_pos:
 					_pending_move_path = selection_system.get_movement_path_to(grid_pos)
 				if not _pending_move_path.is_empty():
+					print("QUEUE MOVE → unit:", unit, " state:", unit.state)
+					print("current_team:", turn_manager.current_team, " local:", game_manager.local_player_id)
 					action_system.queue_action(MoveAction.new(unit, _pending_move_path))
 				return
 			var clicked_unit = game_manager.get_unit_at(grid_pos, game_manager.shade_view_enabled)

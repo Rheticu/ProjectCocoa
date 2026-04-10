@@ -174,9 +174,12 @@ func receive_action(action_dict: Dictionary) -> void:
 	var sender_player = 1 if sender == 1 else 2
 	if sender_player == player_id:
 		return
+	print("receive_action: ", action_dict)
 	var action = _deserialize_action(action_dict)
 	if action:
 		action_system.execute_remote(action)
+	else:
+		print("ERROR: no se pudo deserializar")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SERIALIZACIÓN / DESERIALIZACIÓN
@@ -184,6 +187,7 @@ func receive_action(action_dict: Dictionary) -> void:
 
 func serialize_action(action: BaseAction) -> Dictionary:
 	var d = action.to_dict()
+	print("serialized: ", d)
 	d["type_int"] = action.type
 	return d
 
@@ -278,3 +282,19 @@ func receive_new_unit_id(new_id: int, gx: int, gy: int, team: int) -> void:
 		if unit.grid_position == Vector2i(gx, gy) and unit.team == team and unit.unit_id == -1:
 			unit.unit_id = new_id
 			return
+
+func sync_ambush(moving_unit_id: int, stopped_pos: Vector2i, revealed_unit_id: int) -> void:
+	rpc("receive_ambush", moving_unit_id, stopped_pos.x, stopped_pos.y, revealed_unit_id)
+
+@rpc("any_peer", "reliable")
+func receive_ambush(moving_unit_id: int, stopped_x: int, stopped_y: int, revealed_unit_id: int) -> void:
+	var moving_unit = game_manager.get_unit_by_id(moving_unit_id)
+	var revealed_unit = game_manager.get_unit_by_id(revealed_unit_id)
+	if moving_unit:
+		moving_unit.grid_position = Vector2i(stopped_x, stopped_y)
+		moving_unit.state = Unit.State.MOVED
+		moving_unit.update_visual()
+	if revealed_unit:
+		revealed_unit.visible = true
+		revealed_unit.update_visual()
+	fog_system.recalculate(player_id)

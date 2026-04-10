@@ -25,6 +25,8 @@ func queue_action(action: BaseAction) -> void:
 		return
 	if not _validate(action):
 		return
+	if action.type == BaseAction.Type.MOVE:
+		print("queue_action MOVE path: ", (action as MoveAction).path)
 	await _execute(action)
 	if not _executing_remote and multiplayer_manager.is_network_connected:
 		if action.type != BaseAction.Type.MOVE:
@@ -121,6 +123,7 @@ func _execute_move(action: MoveAction) -> void:
 		action.actor.grid_position = action.path.back()
 
 func confirm_move(unit: Unit, path: Array[Vector2i]) -> void:
+	print("confirm_move path: ", path)
 	if multiplayer_manager.is_network_connected:
 		var action = MoveAction.new(unit, path)
 		var dict = multiplayer_manager.serialize_action(action)
