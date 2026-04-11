@@ -3,6 +3,7 @@ extends BaseAction
 
 var path: Array[Vector2i] = []
 var is_wrapped: bool = false
+var skip_animation: bool = false
 
 func _init(p_actor: Unit, p_path: Array[Vector2i], p_wrapped: bool = false) -> void:
 	type = Type.MOVE

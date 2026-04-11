@@ -31,7 +31,6 @@ func select_unit(unit: Unit) -> void:
 	unit.update_visual()
 	reachable_cells = movement_system.get_reachable_cells(unit)
 	unit_selected.emit(unit, reachable_cells)
-	print("SELECT:", unit, " team:", unit.team, " state:", unit.state)
 
 func deselect() -> void:
 	if selected_unit:

@@ -254,8 +254,5 @@ func execute_remote(action: BaseAction) -> void:
 	_executing_remote = true
 	await _execute(action)
 	_executing_remote = false
-	if action.type == BaseAction.Type.MOVE:
-		var move = action as MoveAction
-		if is_instance_valid(move.actor):
-			move.actor.state = Unit.State.MOVED
-			move.actor.update_visual()
+	var viewing_team = game_manager.local_player_id if game_manager.local_player_id > 0 else 1
+	fog_system.recalculate(viewing_team)

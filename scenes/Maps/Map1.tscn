@@ -208,14 +208,14 @@ data = ExtResource("7_tg0gx")
 texture = ExtResource("9_cynmg")
 
 [node name="Unit2" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(144, 336)
+position = Vector2(80, 112)
 data = ExtResource("7_tg0gx")
 
 [node name="Sprite2D" parent="Units/Unit2" index="0"]
 texture = ExtResource("4_1lhmh")
 
 [node name="Unit7" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(272, 112)
+position = Vector2(48, 80)
 team = 2
 data = ExtResource("9_8x8nt")
 
@@ -223,14 +223,14 @@ data = ExtResource("9_8x8nt")
 texture = ExtResource("10_jck17")
 
 [node name="Unit8" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(304, 336)
+position = Vector2(48, 272)
 data = ExtResource("9_8x8nt")
 
 [node name="Sprite2D" parent="Units/Unit8" index="0"]
 texture = ExtResource("11_wlibu")
 
 [node name="Unit4" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(144, 144)
+position = Vector2(432, 208)
 data = ExtResource("4_wcqb1")
 
 [node name="Sprite2D" parent="Units/Unit4" index="0"]
@@ -244,7 +244,7 @@ data = ExtResource("13_v6s0w")
 texture = ExtResource("11_8x8nt")
 
 [node name="Unit19" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(208, 16)
+position = Vector2(48, 48)
 team = 2
 data = ExtResource("13_v6s0w")
 
@@ -252,7 +252,7 @@ data = ExtResource("13_v6s0w")
 texture = ExtResource("4_80220")
 
 [node name="Unit12" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(400, 304)
+position = Vector2(400, 208)
 team = 2
 data = ExtResource("4_wcqb1")
 
@@ -260,14 +260,14 @@ data = ExtResource("4_wcqb1")
 texture = ExtResource("6_2e1b8")
 
 [node name="Unit6" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(208, 112)
+position = Vector2(144, 304)
 data = ExtResource("4_wcqb1")
 
 [node name="Sprite2D" parent="Units/Unit6" index="0"]
 texture = ExtResource("9_7dh4r")
 
 [node name="Unit13" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(208, 48)
+position = Vector2(80, 48)
 team = 2
 data = ExtResource("4_wcqb1")
 
@@ -290,14 +290,14 @@ data = ExtResource("16_iw16c")
 texture = ExtResource("18_ew753")
 
 [node name="Shade" parent="Units" instance=ExtResource("22_k24gi")]
-position = Vector2(144, 80)
+position = Vector2(304, 368)
 data = ExtResource("23_d8fes")
 
 [node name="Sprite2D" parent="Units/Shade" index="0"]
 texture = ExtResource("24_oahdw")
 
 [node name="Shade3" parent="Units" instance=ExtResource("22_k24gi")]
-position = Vector2(176, 80)
+position = Vector2(112, 272)
 team = 2
 data = ExtResource("23_d8fes")
 
@@ -305,14 +305,14 @@ data = ExtResource("23_d8fes")
 texture = ExtResource("25_0afsb")
 
 [node name="Shade2" parent="Units" instance=ExtResource("22_k24gi")]
-position = Vector2(432, 336)
+position = Vector2(464, 80)
 data = ExtResource("25_oahdw")
 
 [node name="Sprite2D" parent="Units/Shade2" index="0"]
 texture = ExtResource("27_h05hs")
 
 [node name="Shade4" parent="Units" instance=ExtResource("22_k24gi")]
-position = Vector2(176, 144)
+position = Vector2(48, 304)
 team = 2
 data = ExtResource("28_cynmg")
 
@@ -330,7 +330,7 @@ data = ExtResource("20_v6s0w")
 texture = ExtResource("21_v6s0w")
 
 [node name="Building3" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(272, 112)
+position = Vector2(80, 144)
 team = 2
 data = ExtResource("20_v6s0w")
 

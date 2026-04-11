@@ -28,9 +28,6 @@ func lock() -> void:   _locked = true
 func unlock() -> void: _locked = false
 
 func _unhandled_input(event: InputEvent) -> void:
-	print("CLICK → mode:", mode, " locked:", _locked)
-	print("current_team:", turn_manager.current_team, " local:", game_manager.local_player_id)
-	print("is_my_turn:", turn_manager.is_my_turn(game_manager.local_player_id))
 	if _locked:
 		return
 	if ui_layer.production_menu.visible:
@@ -102,8 +99,6 @@ func _handle_left_click() -> void:
 				if _pending_move_path.is_empty() or _pending_move_path.back() != grid_pos:
 					_pending_move_path = selection_system.get_movement_path_to(grid_pos)
 				if not _pending_move_path.is_empty():
-					print("QUEUE MOVE → unit:", unit, " state:", unit.state)
-					print("current_team:", turn_manager.current_team, " local:", game_manager.local_player_id)
 					action_system.queue_action(MoveAction.new(unit, _pending_move_path))
 				return
 			var clicked_unit = game_manager.get_unit_at(grid_pos, game_manager.shade_view_enabled)
@@ -315,6 +310,11 @@ func on_capture_pressed(building: Building) -> void:
 func on_cancel_from_menu() -> void:
 	var unit = selection_system.selected_unit
 	if unit:
+		if unit.state == Unit.State.MOVED:
+			selection_system.deselect()
+			_pending_move_path.clear()
+			mode = Mode.IDLE
+			return
 		unit.grid_position = unit.original_position
 		unit.state = Unit.State.IDLE
 		unit.update_visual()

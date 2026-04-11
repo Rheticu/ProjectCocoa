@@ -15,7 +15,6 @@ func start_game() -> void:
 	_begin_turn(current_team)
 
 func _begin_turn(team: int) -> void:
-	print("BEGIN TURN → current_team:", team, " local:", game_manager.local_player_id)
 	current_team = team
 	for unit in game_manager.all_units:
 		unit.tick_buffs(current_team)

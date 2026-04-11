@@ -7,7 +7,8 @@
 [resource]
 script = ExtResource("1_3gjri")
 unit_type = "Shade"
-vision_range = 4
+movement_range = 9
+vision_range = 1
 ability_range = 3
 is_shade = true
 shade_element = "METAL"

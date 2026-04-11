@@ -258,7 +258,9 @@ func _on_move_started(unit: Unit, path: Array[Vector2i], is_remote: bool) -> voi
 	input_controller.lock()
 	move_range_overlay.clear()
 	var saved_path = path.duplicate()
-	await _animate_movement(unit, path)
+	if is_remote and unit.team != game_manager.local_player_id:
+		unit.visible = fog_system.is_visible(path[0], game_manager.local_player_id)
+	await _animate_movement(unit, path, is_remote)
 	if not is_instance_valid(unit):
 		input_controller.unlock()
 		return
@@ -266,18 +268,19 @@ func _on_move_started(unit: Unit, path: Array[Vector2i], is_remote: bool) -> voi
 		action_system.move_confirmed.emit(null)
 		return
 	if _overwatch_activated:
-		print("overwatch activated, is_remote: ", is_remote, " locked: ", input_controller._locked, " mode: ", input_controller.mode)
 		input_controller.clear_pending_path()
 		unit.state = Unit.State.MOVED
 		unit.update_visual()
 		input_controller.unlock()
 		input_controller.mode = InputController.Mode.IDLE
 		_overwatch_activated = false
-		print("después de overwatch, locked: ", input_controller._locked, " mode: ", input_controller.mode)
 		fog_system.recalculate(game_manager.local_player_id)
+		action_system.move_confirmed.emit(unit)
+		unit.original_position = unit.grid_position
 		if multiplayer_manager.is_network_connected and not is_remote:
 			var action = MoveAction.new(unit, saved_path)
 			var dict = multiplayer_manager.serialize_action(action)
+			dict["triggered_by_overwatch"] = true
 			multiplayer_manager.send_action(dict)
 		return
 	action_system.move_confirmed.emit(unit)
@@ -285,7 +288,7 @@ func _on_move_started(unit: Unit, path: Array[Vector2i], is_remote: bool) -> voi
 	if not is_remote:
 		show_action_menu(unit)
 
-func _animate_movement(unit: Unit, path: Array[Vector2i]) -> void:
+func _animate_movement(unit: Unit, path: Array[Vector2i], _is_remote: bool = false) -> void:
 	_overwatch_activated = false
 	_ambush_activated = false
 	var previous_tile = unit.grid_position
@@ -294,7 +297,11 @@ func _animate_movement(unit: Unit, path: Array[Vector2i]) -> void:
 		tween.tween_property(unit, "position", grid_system.grid_to_world_center(tile), 0.1)
 		tween.tween_interval(0.04)
 		await tween.finished
-		
+		if unit.team != game_manager.local_player_id:
+			if unit.is_shade():
+				unit.visible = game_manager.shade_view_enabled and fog_system.is_shade_visible(tile, game_manager.local_player_id)
+			else:
+				unit.visible = fog_system.is_visible(tile, game_manager.local_player_id)
 		if action_system.check_ambush_at(unit, tile, previous_tile):
 			return
 		if action_system.check_overwatch_at(unit, tile, previous_tile):
@@ -322,17 +329,13 @@ func _on_action_executed(action: BaseAction) -> void:
 
 func _on_overwatch_triggered(_attacker: Unit, target: Unit, _tile: Vector2i, _previous_tile: Vector2i) -> void:
 	_overwatch_activated = true
-
 	if not is_instance_valid(target):
 		_overwatch_resolved.emit()
 		action_system.move_confirmed.emit(null)
 		return
-
 	target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
 	movement_arrow.clear_points()
-
 	await get_tree().create_timer(0.5).timeout
-
 	if not is_instance_valid(target):
 		input_controller.unlock()
 		hud.hide_unit_info()
@@ -341,10 +344,8 @@ func _on_overwatch_triggered(_attacker: Unit, target: Unit, _tile: Vector2i, _pr
 		_overwatch_resolved.emit()
 		action_system.move_confirmed.emit(null)
 		return
-
 	target.update_visual()
 	_overwatch_resolved.emit()
-	action_system.move_confirmed.emit(target)
 
 func _on_ambush_triggered(moving_unit: Unit, hidden_unit: Unit, _tile: Vector2i) -> void:
 	_ambush_activated = true

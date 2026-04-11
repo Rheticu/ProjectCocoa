@@ -198,7 +198,9 @@ func _deserialize_action(d: Dictionary) -> BaseAction:
 		BaseAction.Type.MOVE:
 			var actor = game_manager.get_unit_by_id(d["actor_id"])
 			if not actor: return null
-			return MoveAction.new(actor, _unpack_path(d), d.get("is_wrapped", false))
+			var action = MoveAction.new(actor, _unpack_path(d), d.get("is_wrapped", false))
+			action.skip_animation = d.get("triggered_by_overwatch", false)
+			return action
 
 		BaseAction.Type.ATTACK:
 			var actor  = game_manager.get_unit_by_id(d["actor_id"])
