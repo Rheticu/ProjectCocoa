@@ -84,8 +84,11 @@ func _update_unit_visibility(viewing_team: int) -> void:
 				unit.visible = true
 			continue
 		if unit.marked_turns > 0:
-			unit.visible = true
-			continue
+					if unit.is_shade():
+						unit.visible = shade_view
+					else:
+						unit.visible = true
+					continue
 		if unit.is_shade():
 			unit.visible = shade_view and _shade_visible_tiles.get(viewing_team, {}).has(unit.grid_position)
 		else:

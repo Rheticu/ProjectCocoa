@@ -267,7 +267,15 @@ func _on_move_started(unit: Unit, path: Array[Vector2i], is_remote: bool) -> voi
 	move_range_overlay.clear()
 	var saved_path = path.duplicate()
 	if is_remote and unit.team != game_manager.local_player_id:
-		unit.visible = fog_system.is_visible(path[0], game_manager.local_player_id)
+		if unit.marked_turns > 0:
+			if unit.is_shade():
+				unit.visible = game_manager.shade_view_enabled
+			else:
+				unit.visible = true
+		elif unit.is_shade():
+			unit.visible = game_manager.shade_view_enabled and fog_system.is_shade_visible(path[0], game_manager.local_player_id)
+		else:
+			unit.visible = fog_system.is_visible(path[0], game_manager.local_player_id)
 	await _animate_movement(unit, path, is_remote)
 	if not is_instance_valid(unit):
 		input_controller.unlock()
@@ -308,7 +316,12 @@ func _animate_movement(unit: Unit, path: Array[Vector2i], _is_remote: bool = fal
 		tween.tween_interval(0.04)
 		await tween.finished
 		if unit.team != game_manager.local_player_id:
-			if unit.is_shade():
+			if unit.marked_turns > 0:
+				if unit.is_shade():
+					unit.visible = game_manager.shade_view_enabled
+				else:
+					unit.visible = true
+			elif unit.is_shade():
 				unit.visible = game_manager.shade_view_enabled and fog_system.is_shade_visible(tile, game_manager.local_player_id)
 			else:
 				unit.visible = fog_system.is_visible(tile, game_manager.local_player_id)

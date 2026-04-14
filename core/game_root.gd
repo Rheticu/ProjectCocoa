@@ -50,6 +50,12 @@ func start_multiplayer_game() -> void:
 	game_manager.is_network_game = true
 	hud.update_funds()
 	hud.update_element()
+	turn_manager.turn_started.connect(func(team):
+		if team == game_manager.local_player_id:
+			hud.show_turn_message("¡Es tu turno!")
+		else:
+			hud.show_turn_message("¡Turno del adversario!")
+	)
 	if multiplayer_manager.player_id == 1:
 		turn_manager.start_game()
 		fog_system.recalculate(1)

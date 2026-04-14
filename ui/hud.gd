@@ -7,6 +7,8 @@ extends CanvasLayer
 var funds_panel: PanelContainer
 var unit_info_panel: PanelContainer
 var size_font = 10
+var turn_message_label: Label
+var _turn_tween: Tween
 
 # Labels de fondos
 var funds_label: Label
@@ -27,6 +29,14 @@ var unit_status_label: Label
 func _ready() -> void:
 	_build_funds_panel()
 	_build_unit_info_panel()
+	turn_message_label = Label.new()
+	turn_message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	turn_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	turn_message_label.add_theme_font_size_override("font_size", 32)
+	turn_message_label.add_theme_color_override("font_color", Color(1, 1, 1))
+	turn_message_label.set_anchors_preset(Control.PRESET_CENTER)
+	turn_message_label.visible = false
+	add_child(turn_message_label)
 
 func _build_funds_panel() -> void:
 	funds_panel = PanelContainer.new()
@@ -195,3 +205,20 @@ func update_element() -> void:
 	var idx = game_manager.current_element
 	element_label.text = element_names[idx]
 	element_label.add_theme_color_override("font_color", element_colors[idx])
+
+func show_turn_message(message: String) -> void:
+	turn_message_label.text = message
+	turn_message_label.modulate.a = 1.0
+	turn_message_label.visible = true
+	await get_tree().process_frame  # Esperar a que se calcule el tamaño
+	var viewport_size = get_viewport().get_visible_rect().size
+	turn_message_label.position = Vector2(
+		(viewport_size.x - turn_message_label.size.x) / 2.0,
+		(viewport_size.y - turn_message_label.size.y) / 2.0
+	)
+	if _turn_tween:
+		_turn_tween.kill()
+	_turn_tween = create_tween()
+	_turn_tween.tween_interval(1.5)
+	_turn_tween.tween_property(turn_message_label, "modulate:a", 0.0, 0.8)
+	_turn_tween.tween_callback(func(): turn_message_label.visible = false)
