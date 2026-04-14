@@ -174,12 +174,11 @@ func receive_action(action_dict: Dictionary) -> void:
 	var sender_player = 1 if sender == 1 else 2
 	if sender_player == player_id:
 		return
-	print("receive_action: ", action_dict)
 	var action = _deserialize_action(action_dict)
 	if action:
 		action_system.execute_remote(action)
 	else:
-		print("ERROR: no se pudo deserializar")
+		push_error("MultiplayerManager: no se pudo deserializar la acción: " + str(action_dict))
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SERIALIZACIÓN / DESERIALIZACIÓN
@@ -187,7 +186,6 @@ func receive_action(action_dict: Dictionary) -> void:
 
 func serialize_action(action: BaseAction) -> Dictionary:
 	var d = action.to_dict()
-	print("serialized: ", d)
 	d["type_int"] = action.type
 	return d
 
@@ -223,22 +221,22 @@ func _deserialize_action(d: Dictionary) -> BaseAction:
 			return CaptureAction.new(actor, building, _unpack_path(d))
 
 		BaseAction.Type.PRODUCE:
-			var building = game_manager.get_building_at(Vector2i(d["building_x"], d["building_y"]))
-			if not building: return null
-			# Buscar el UnitData correcto en el BuildingData del edificio
-			var unit_data: UnitData = null
-			if building.data:
-				for ud in building.data.producible_units:
-					if ud.unit_type == d["unit_type"]:
-						unit_data = ud
-						break
-			# Fallback si no se encontró en producible_units
-			if not unit_data:
-				unit_data = UnitData.new()
-				unit_data.unit_type     = d["unit_type"]
-				unit_data.is_shade      = d.get("is_shade", false)
-				unit_data.shade_element = d.get("shade_element", "")
-			return ProduceAction.new(building, unit_data, d["cost"], d["team"])
+					var building = game_manager.get_building_at(Vector2i(d["building_x"], d["building_y"]))
+					if not building: return null
+					var unit_data: UnitData = null
+					if building.data:
+						for ud in building.data.producible_units:
+							if ud.unit_type == d["unit_type"]:
+								unit_data = ud
+								break
+					if not unit_data:
+						unit_data = UnitData.new()
+						unit_data.unit_type     = d["unit_type"]
+						unit_data.is_shade      = d.get("is_shade", false)
+						unit_data.shade_element = d.get("shade_element", "")
+					var produce = ProduceAction.new(building, unit_data, d["cost"], d["team"])
+					produce.unit_id = d.get("unit_id", -1)
+					return produce
 
 		BaseAction.Type.SPECIAL:
 			var actor = game_manager.get_unit_by_id(d["actor_id"])
@@ -272,11 +270,6 @@ func _unpack_path(d: Dictionary) -> Array[Vector2i]:
 # ══════════════════════════════════════════════════════════════════════════════
 # SYNC DE IDs DE UNIDADES PRODUCIDAS
 # ══════════════════════════════════════════════════════════════════════════════
-
-func sync_new_unit_id(unit: Unit) -> void:
-	if player_id == 1:
-		rpc("receive_new_unit_id", unit.unit_id,
-			unit.grid_position.x, unit.grid_position.y, unit.team)
 
 @rpc("authority", "reliable")
 func receive_new_unit_id(new_id: int, gx: int, gy: int, team: int) -> void:

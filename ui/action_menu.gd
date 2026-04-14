@@ -49,10 +49,10 @@ func show_for_unit(
 	has_bash_targets: bool = false,
 	has_volley_targets: bool = false,
 	has_overwatch: bool = false,
-	has_scorch_targets: bool = false,
 	has_mark_targets: bool = false,
-	has_muddle_targets: bool = false,
+	has_scorch_targets: bool = false,
 	has_shield_targets: bool = false,
+	has_muddle_targets: bool = false,
 	has_boost_targets: bool = false
 ) -> void:
 	# Por defecto ocultar todo

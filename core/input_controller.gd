@@ -81,7 +81,7 @@ func _handle_left_click() -> void:
 					mode = Mode.INSPECTING_A
 			elif turn_manager.is_my_turn(game_manager.local_player_id):
 				var building = game_manager.get_building_at(grid_pos)
-				if building and building.team == game_manager.local_player_id and not game_manager.shade_view_enabled:
+				if building and building.team == game_manager.local_player_id and not game_manager.shade_view_enabled and building.can_produce:
 					ui_layer.show_production_menu(building)
 				else:
 					ui_layer.show_empty_tile_menu(grid_pos)
@@ -148,6 +148,8 @@ func _handle_left_click() -> void:
 						var t = game_manager.get_unit_at(unit.grid_position + dir * i)
 						if t and t.team != unit.team and t.visible:
 							targets.append(t)
+					if targets.is_empty():
+						return
 					var path = _pending_move_path.duplicate()
 					_pending_move_path.clear()
 					_pending_ability = ""
@@ -169,6 +171,8 @@ func _handle_left_click() -> void:
 						var t = game_manager.get_unit_at(pos)
 						if t and t.team != unit.team and t.visible:
 							targets.append(t)
+					if targets.is_empty():
+						return
 					var path = _pending_move_path.duplicate()
 					_pending_move_path.clear()
 					_pending_ability = ""
@@ -230,6 +234,7 @@ func _handle_right_click() -> void:
 			selection_system.attack_targets.clear()
 			ui_layer._clear_target_highlights()
 			ui_layer.attack_range_overlay.clear()
+			_pending_ability = ""
 			mode = Mode.ACTION_MENU
 			ui_layer.show_action_menu(selection_system.selected_unit)
 

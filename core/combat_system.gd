@@ -34,7 +34,7 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 			target.marked_turns = 4 if current_element == GameManager.Element.WATER else 2
 		"SCORCH":
 			var multiplier = 2.5 if current_element == GameManager.Element.FIRE else 1.0
-			var dmg = int(max(0.0, multiplier * shade.health / 100.0 * 10 - target.get_total_defense(0)))
+			var dmg = int(max(0.0, multiplier * shade.health / 10.0 - target.get_total_defense(0)))
 			target.health -= dmg
 			target.update_visual()
 			if target.check_death():
@@ -42,15 +42,17 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 		"SHIELD":
 			target.shield_turns = 4 if current_element == GameManager.Element.METAL else 2
 		"MUDDLE":
-			target.muddle_turns = 8 if current_element == GameManager.Element.EARTH else 4
+			target.muddle_turns = 4 if current_element == GameManager.Element.EARTH else 2
 		"BOOST":
-			target.boost_turns = 8 if current_element == GameManager.Element.WOOD else 4
+			target.boost_turns = 4 if current_element == GameManager.Element.WOOD else 2
 	shade.state = Unit.State.MOVED
 	shade.update_visual()
 	target.update_visual()
 
 func execute_thrust(attacker: Unit, targets: Array[Unit]) -> void:
 	for target in targets:
+		if not is_instance_valid(target):
+			continue
 		if not target.visible:
 			continue
 		var damage = int(calculate_damage(attacker, target) * 0.8)
@@ -63,6 +65,8 @@ func execute_thrust(attacker: Unit, targets: Array[Unit]) -> void:
 
 func execute_bash(attacker: Unit, targets: Array[Unit]) -> void:
 	for target in targets:
+		if not is_instance_valid(target):
+			continue
 		if not target.visible:
 			continue
 		var damage = int(calculate_damage(attacker, target) * 0.7)
@@ -75,6 +79,8 @@ func execute_bash(attacker: Unit, targets: Array[Unit]) -> void:
 
 func execute_volley(attacker: Unit, targets: Array[Unit]) -> void:
 	for target in targets:
+		if not is_instance_valid(target):
+			continue
 		if not target.visible:
 			continue
 		var damage = int(calculate_damage(attacker, target) * 0.6)

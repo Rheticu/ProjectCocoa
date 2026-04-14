@@ -4,7 +4,7 @@ extends PanelContainer
 signal unit_selected(unit_data: UnitData, cost: int)
 signal closed()
 
-func setup(building: Building, funds: int) -> void:
+func setup(building: Building, funds: int, shade_count: int) -> void:
 	# Limpiar contenido previo
 	for child in get_children():
 		child.queue_free()
@@ -58,6 +58,8 @@ func setup(building: Building, funds: int) -> void:
 	for unit_data in building.data.producible_units:
 		var cost = unit_data.cost
 		var can_afford = funds >= cost
+		var shade_limit = unit_data.is_shade and shade_count >= 5
+		var can_build = can_afford and not shade_limit
 		
 		var row = HBoxContainer.new()
 		row.add_theme_constant_override("separation", 15)
@@ -71,22 +73,22 @@ func setup(building: Building, funds: int) -> void:
 			name_label.text = unit_data.unit_type
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_label.add_theme_font_size_override("font_size", 16)
-		if not can_afford:
+		if not can_build:
 			name_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 		row.add_child(name_label)
 		
 		var cost_label = Label.new()
 		cost_label.text = "$" + str(cost)
 		cost_label.add_theme_font_size_override("font_size", 16)
-		if not can_afford:
+		if not can_build:
 			cost_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 		row.add_child(cost_label)
 		
 		var btn = Button.new()
 		btn.text = "BUILD"
 		btn.custom_minimum_size = Vector2(80, 32)
-		btn.disabled = not can_afford
-		if can_afford:
+		btn.disabled = not can_build
+		if can_build:
 			var style = StyleBoxFlat.new()
 			style.bg_color = Color(0.2, 0.6, 0.2, 0.9)
 			style.border_color = Color(0.3, 0.8, 0.3)

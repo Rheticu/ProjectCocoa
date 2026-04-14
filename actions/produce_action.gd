@@ -4,6 +4,7 @@ extends BaseAction
 var building: Building
 var unit_data: UnitData
 var cost: int
+var unit_id: int = -1
 
 func _init(p_building: Building, p_unit_data: UnitData, p_cost: int, p_team: int) -> void:
 	type = Type.PRODUCE
@@ -11,6 +12,7 @@ func _init(p_building: Building, p_unit_data: UnitData, p_cost: int, p_team: int
 	building = p_building
 	unit_data = p_unit_data
 	cost = p_cost
+	unit_id = randi_range(1, 999999)  # ← asignar aquí
 
 func to_dict() -> Dictionary:
 	return {
@@ -22,4 +24,5 @@ func to_dict() -> Dictionary:
 		"shade_element": unit_data.shade_element if unit_data.is_shade else "",
 		"cost":          cost,
 		"team":          team,
+		"unit_id": unit_id,
 	}

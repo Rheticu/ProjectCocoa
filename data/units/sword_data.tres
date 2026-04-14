@@ -7,7 +7,7 @@
 [resource]
 script = ExtResource("1_qvghf")
 unit_type = "Sword"
-movement_range = 6
+movement_range = 4
 vision_range = 1
 attack = 50
 cost = 2000

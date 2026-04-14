@@ -17,7 +17,6 @@ var original_position: Vector2i
 var grid_position: Vector2i:
 	get: return Vector2i(position / 32)
 	set(value):
-		print("grid_position set to: ", value, " from: ", get_stack())
 		position = Vector2(value) * 32 + Vector2(16, 16)
 		moved.emit(value)
 

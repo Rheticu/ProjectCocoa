@@ -13,7 +13,6 @@ func _init(p_actor: Unit, p_path: Array[Vector2i], p_wrapped: bool = false) -> v
 	is_wrapped = p_wrapped
 
 func to_dict() -> Dictionary:
-	print("to_dict path: ", path)
 	var path_x: Array = []
 	var path_y: Array = []
 	for p in path:

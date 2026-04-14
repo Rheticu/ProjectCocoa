@@ -7,7 +7,8 @@
 [resource]
 script = ExtResource("1_oalxa")
 unit_type = "Shade"
-vision_range = 4
+vision_range = 3
+attack = 50
 ability_range = 4
 is_shade = true
 shade_element = "WATER"

@@ -87,9 +87,17 @@ func show_action_menu(unit: Unit) -> void:
 		has_volley_targets, has_overwatch, has_mark_targets, has_scorch_targets,
 		has_shield_targets, has_muddle_targets, has_boost_targets
 	)
-	var screen_pos = get_viewport().get_canvas_transform() * unit.global_position
-	action_menu.position = screen_pos + Vector2(20, -20)
 	action_menu.visible = true
+	await get_tree().process_frame
+	var screen_pos = get_viewport().get_canvas_transform() * unit.global_position
+	var viewport_size = get_viewport().get_visible_rect().size
+	action_menu.reset_size()
+	if abs(viewport_size.y - screen_pos.y) < 64:
+		action_menu.position = screen_pos + Vector2(20, -action_menu.size.y)
+	elif abs(viewport_size.x - screen_pos.x) < 64:
+		action_menu.position = screen_pos + Vector2(-90, -12)
+	else:
+		action_menu.position = screen_pos + Vector2(20, -12)
 
 func hide_action_menu() -> void:
 	action_menu.visible = false
@@ -265,6 +273,8 @@ func _on_move_started(unit: Unit, path: Array[Vector2i], is_remote: bool) -> voi
 		input_controller.unlock()
 		return
 	if _ambush_activated:
+		_ambush_activated = false
+		input_controller.unlock()
 		action_system.move_confirmed.emit(null)
 		return
 	if _overwatch_activated:
@@ -541,8 +551,17 @@ func show_empty_tile_menu(grid_pos: Vector2i) -> void:
 
 func show_production_menu(building: Building) -> void:
 	var funds = game_manager.get_funds(building.team)
+	var shade_count = 0
+	var shades_pos: Array
+	for unit in game_manager.all_units:
+		if unit.is_shade():
+			shades_pos.append(unit.grid_position)
+			if unit.team == building.team :
+				shade_count += 1
 	_current_building = building
-	production_menu.setup(building, funds)
+	if building.building_type == "HQ" and building.building_position in shades_pos:
+		return
+	production_menu.setup(building, funds, shade_count)
 	production_menu.position = Vector2(get_viewport().get_visible_rect().size / 2) - Vector2(160, 170)
 	production_menu.visible = true
 

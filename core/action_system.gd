@@ -25,8 +25,6 @@ func queue_action(action: BaseAction) -> void:
 		return
 	if not _validate(action):
 		return
-	if action.type == BaseAction.Type.MOVE:
-		print("queue_action MOVE path: ", (action as MoveAction).path)
 	await _execute(action)
 	if not _executing_remote and multiplayer_manager.is_network_connected:
 		if action.type != BaseAction.Type.MOVE:
@@ -123,7 +121,6 @@ func _execute_move(action: MoveAction) -> void:
 		action.actor.grid_position = action.path.back()
 
 func confirm_move(unit: Unit, path: Array[Vector2i]) -> void:
-	print("confirm_move path: ", path)
 	if multiplayer_manager.is_network_connected:
 		var action = MoveAction.new(unit, path)
 		var dict = multiplayer_manager.serialize_action(action)
@@ -147,7 +144,6 @@ func _execute_ability(action: AbilityAction) -> void:
 	combat_system.execute_ability(shade, action.ability, action.target, game_manager.current_element)
 
 func _execute_capture(action: CaptureAction) -> void:
-	print("capture move_path: ", action.move_path)
 	if not action.move_path.is_empty():
 		var destination = action.move_path.back()
 		if action.actor.grid_position != destination:
@@ -167,6 +163,7 @@ func _execute_produce(action: ProduceAction) -> void:
 	var unit = unit_scene.instantiate()
 	unit.data = action.unit_data
 	unit.team = action.team
+	unit.unit_id = action.unit_id
 	unit.grid_position = action.building.building_position
 	unit.state = Unit.State.MOVED
 	game_manager.current_map.get_node("Units").add_child(unit)

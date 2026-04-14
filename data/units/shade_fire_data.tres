@@ -7,7 +7,7 @@
 [resource]
 script = ExtResource("1_17qb2")
 unit_type = "Shade"
-vision_range = 1
+vision_range = 3
 attack = 50
 ability_range = 3
 is_shade = true

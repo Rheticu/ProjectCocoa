@@ -7,7 +7,9 @@
 [resource]
 script = ExtResource("1_mw721")
 unit_type = "Shade"
-ability_range = 3
+vision_range = 3
+attack = 50
+ability_range = 4
 is_shade = true
 shade_element = "EARTH"
 cost = 10000
