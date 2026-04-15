@@ -9,6 +9,7 @@ var _shade_fog_layer: TileMapLayer
 var _shade_overlay: TileMapLayer
 var _visible_tiles: Dictionary = {}
 var _shade_visible_tiles: Dictionary = {}
+var _last_known_building_team: Dictionary = {}  # building_position -> team
 
 var enabled: bool = true:
 	set(value):
@@ -62,17 +63,44 @@ func _apply_fog(viewing_team: int) -> void:
 	for x in range(grid_system.map_size.x):
 		for y in range(grid_system.map_size.y):
 			var pos = Vector2i(x, y)
-			# Fog normal
 			if _visible_tiles.get(viewing_team, {}).has(pos):
 				_fog_layer.erase_cell(pos)
 			else:
 				_fog_layer.set_cell(pos, 0, Vector2i(0, 0))
-			# Shade fog
 			if _shade_fog_layer:
 				if _shade_visible_tiles.get(viewing_team, {}).has(pos):
 					_shade_fog_layer.erase_cell(pos)
 				else:
 					_shade_fog_layer.set_cell(pos, 0, Vector2i(0, 0))
+	
+	for building in game_manager.all_buildings:
+		var pos = building.building_position
+		var tile_visible = _visible_tiles.get(viewing_team, {}).has(pos)  # ← nombre diferente
+
+		# Manejar label de captura (solo si es visible)
+		if building.has_node("CaptureLabel"):
+			var label = building.get_node("CaptureLabel")
+			if tile_visible and building.capture_points < building.max_capture_points:
+				label.text = str(building.capture_points)
+				label.visible = true
+			else:
+				label.visible = false
+
+		# HQ siempre visible (si es HQ)
+		if building.building_type == "HQ":
+			building.show_as_team(building.team)
+			continue
+
+		# Para otros edificios
+		if tile_visible:
+			_last_known_building_team[pos] = building.team
+			building.update_visual()
+		else:
+			var known_team = _last_known_building_team.get(pos, -1)
+			if known_team == -1:
+				building.show_as_team(0)
+			else:
+				building.show_as_team(known_team)
 
 func _update_unit_visibility(viewing_team: int) -> void:
 	var shade_view = game_manager.shade_view_enabled

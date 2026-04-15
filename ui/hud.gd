@@ -56,8 +56,8 @@ func _build_funds_panel() -> void:
 	vbox.add_theme_constant_override("separation", 4)
 	margin.add_child(vbox)
 
-	turn_label = _make_label("Turn 1", size_font + 1, Color(0.9, 0.8, 0.3))
-	vbox.add_child(turn_label)
+	#turn_label = _make_label("Turn 1", size_font + 1, Color(0.9, 0.8, 0.3))
+	#vbox.add_child(turn_label)
 
 	funds_label = _make_label("$: 0k", size_font, Color(0.961, 0.961, 1.0))
 	vbox.add_child(funds_label)
@@ -120,7 +120,7 @@ func _make_panel_style() -> StyleBoxFlat:
 	style.border_width_top = 2
 	style.border_width_right = 2
 	style.border_width_bottom = 2
-	style.border_color = Color(0.894, 0.093, 0.44, 1.0)
+	style.border_color = Color(0.905, 0.0, 0.213)
 	style.corner_radius_top_left = 5
 	style.corner_radius_top_right = 5
 	style.corner_radius_bottom_left = 5
@@ -140,7 +140,7 @@ func update_funds() -> void:
 	var income = game_manager.team1_income if team == 1 else game_manager.team2_income
 	funds_label.text = "$: %dk" % (funds / 1000)
 	income_label.text = "+$: %dk" % (income / 1000)
-	turn_label.text = "Team %d" % team
+	#turn_label.text = "Team %d" % team
 
 func show_unit_info(unit: Unit) -> void:
 	if unit.is_shade():

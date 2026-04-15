@@ -25,32 +25,43 @@ func _ready() -> void:
 	update_visual()
 
 func capture(amount: int, capturing_team: int, unit: Unit) -> void:
-	capturing_unit = unit
-	if not unit.tree_exiting.is_connected(_on_capturing_unit_died):
-		unit.tree_exiting.connect(_on_capturing_unit_died)
-	if not unit.moved.is_connected(_on_capturing_unit_moved):
-		unit.moved.connect(_on_capturing_unit_moved)
+	if capturing_unit and capturing_unit != unit:
+		return
+	
+	if not capturing_unit:
+		capturing_unit = unit
+		if not unit.tree_exiting.is_connected(_on_capturing_unit_died):
+			unit.tree_exiting.connect(_on_capturing_unit_died)
+		if not unit.moved.is_connected(_on_capturing_unit_moved):
+			unit.moved.connect(_on_capturing_unit_moved)
+	
 	capture_points -= amount
 	if capture_points <= 0:
 		var old_team = team
 		team = capturing_team
 		capture_points = max_capture_points
-		capturing_unit = null
+		_clear_capturing_unit()
 		if old_team != team:
 			ownership_changed.emit(self)
 	update_visual()
 
+func _clear_capturing_unit() -> void:
+	if capturing_unit:
+		if is_instance_valid(capturing_unit):
+			if capturing_unit.tree_exiting.is_connected(_on_capturing_unit_died):
+				capturing_unit.tree_exiting.disconnect(_on_capturing_unit_died)
+			if capturing_unit.moved.is_connected(_on_capturing_unit_moved):
+				capturing_unit.moved.disconnect(_on_capturing_unit_moved)
+		capturing_unit = null
+
 func _on_capturing_unit_died() -> void:
 	reset_capture()
-	capturing_unit = null
+	_clear_capturing_unit()
 
 func _on_capturing_unit_moved(new_pos: Vector2i) -> void:
 	if new_pos != building_position:
-		var unit = capturing_unit
-		capturing_unit = null
-		if is_instance_valid(unit):
-			unit.moved.disconnect(_on_capturing_unit_moved)
 		reset_capture()
+		_clear_capturing_unit()
 
 func reset_capture() -> void:
 	capture_points = max_capture_points
@@ -70,8 +81,16 @@ func update_visual() -> void:
 			1: $Sprite2D.modulate = Color(0.0, 0.635, 0.957)
 			2: $Sprite2D.modulate = Color(1, 0.5, 0.5)
 
-	if has_node("CaptureLabel"):
-		if capture_points < max_capture_points:
-			$CaptureLabel.text = str(capture_points)
-		else:
-			$CaptureLabel.text = ""
+func show_as_team(visual_team: int) -> void:
+	if not has_node("Sprite2D"):
+		return
+	if data:
+		match visual_team:
+			0: $Sprite2D.texture = data.sprite_neutral
+			1: $Sprite2D.texture = data.sprite_team1
+			2: $Sprite2D.texture = data.sprite_team2
+	else:
+		match visual_team:
+			0: $Sprite2D.modulate = Color(1, 1, 1)
+			1: $Sprite2D.modulate = Color(0.0, 0.635, 0.957)
+			2: $Sprite2D.modulate = Color(1, 0.5, 0.5)

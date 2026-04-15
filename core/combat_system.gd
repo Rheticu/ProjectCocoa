@@ -34,7 +34,7 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 			target.marked_turns = 4 if current_element == GameManager.Element.WATER else 2
 		"SCORCH":
 			var multiplier = 2.5 if current_element == GameManager.Element.FIRE else 1.0
-			var dmg = int(max(0.0, multiplier * shade.health / 10.0 - target.get_total_defense(0)))
+			var dmg = int(max(0.0, multiplier * shade.health/5 - target.get_total_defense(0)))
 			target.health -= dmg
 			target.update_visual()
 			if target.check_death():
