@@ -221,22 +221,26 @@ func _deserialize_action(d: Dictionary) -> BaseAction:
 			return CaptureAction.new(actor, building, _unpack_path(d))
 
 		BaseAction.Type.PRODUCE:
-					var building = game_manager.get_building_at(Vector2i(d["building_x"], d["building_y"]))
-					if not building: return null
-					var unit_data: UnitData = null
-					if building.data:
-						for ud in building.data.producible_units:
-							if ud.unit_type == d["unit_type"]:
-								unit_data = ud
-								break
-					if not unit_data:
-						unit_data = UnitData.new()
-						unit_data.unit_type     = d["unit_type"]
-						unit_data.is_shade      = d.get("is_shade", false)
-						unit_data.shade_element = d.get("shade_element", "")
-					var produce = ProduceAction.new(building, unit_data, d["cost"], d["team"])
-					produce.unit_id = d.get("unit_id", -1)
-					return produce
+			var building = game_manager.get_building_at(Vector2i(d["building_x"], d["building_y"]))
+			if not building: return null
+			var unit_data: UnitData = null
+			if d.get("is_shade", false) and d.get("shade_element", "") != "":
+				var element = d["shade_element"].to_lower()
+				unit_data = load("res://data/units/shade_%s_data.tres" % element)
+			else:
+				if building.data:
+					for ud in building.data.producible_units:
+						if ud.unit_type == d["unit_type"]:
+							unit_data = ud
+							break
+			if not unit_data:
+				unit_data = UnitData.new()
+				unit_data.unit_type     = d["unit_type"]
+				unit_data.is_shade      = d.get("is_shade", false)
+				unit_data.shade_element = d.get("shade_element", "")
+			var produce = ProduceAction.new(building, unit_data, d["cost"], d["team"])
+			produce.unit_id = d.get("unit_id", -1)
+			return produce
 
 		BaseAction.Type.SPECIAL:
 			var actor = game_manager.get_unit_by_id(d["actor_id"])

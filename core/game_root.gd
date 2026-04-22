@@ -37,8 +37,8 @@ func _ready() -> void:
 			building.ownership_changed.connect(func(_b): game_manager.recalculate_income())
 	game_manager.recalculate_income()
 	game_manager.element_changed.connect(func(_e): hud.update_element())
-	game_manager.funds_changed.connect(func(_team, _amount): hud.update_funds())
-	turn_manager.turn_started.connect(func(_team): hud.update_funds())
+	game_manager.funds_changed.connect(func(_team, _amount): hud.update_game_panel())
+	turn_manager.turn_started.connect(func(_team): hud.update_game_panel())
 
 func _fill_layer(layer: TileMapLayer) -> void:
 	for x in range(grid_system.map_size.x):
@@ -48,13 +48,13 @@ func _fill_layer(layer: TileMapLayer) -> void:
 func start_multiplayer_game() -> void:
 	game_manager.local_player_id = multiplayer_manager.player_id
 	game_manager.is_network_game = true
-	hud.update_funds()
+	hud.update_game_panel()
 	hud.update_element()
 	turn_manager.turn_started.connect(func(team):
 		if team == game_manager.local_player_id:
 			hud.show_turn_message("¡Es tu turno!")
 		else:
-			hud.show_turn_message("¡Turno del adversario!")
+			hud.show_turn_message("¡Turno enemigo!")
 	)
 	if multiplayer_manager.player_id == 1:
 		turn_manager.start_game()

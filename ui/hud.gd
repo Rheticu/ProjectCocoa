@@ -56,8 +56,8 @@ func _build_funds_panel() -> void:
 	vbox.add_theme_constant_override("separation", 4)
 	margin.add_child(vbox)
 
-	#turn_label = _make_label("Turn 1", size_font + 1, Color(0.9, 0.8, 0.3))
-	#vbox.add_child(turn_label)
+	turn_label = _make_label("Turn 1", size_font + 1, Color(0.961, 0.961, 1.0))
+	vbox.add_child(turn_label)
 
 	funds_label = _make_label("$: 0k", size_font, Color(0.961, 0.961, 1.0))
 	vbox.add_child(funds_label)
@@ -134,13 +134,19 @@ func _make_label(text: String, size: int, color: Color) -> Label:
 	label.add_theme_color_override("font_color", color)
 	return label
 
-func update_funds() -> void:
-	var team = game_manager.local_player_id
-	var funds = game_manager.get_funds(team)
-	var income = game_manager.team1_income if team == 1 else game_manager.team2_income
+func update_game_panel() -> void:
+	var local_team = game_manager.local_player_id
+	var current_team = turn_manager.current_team
+	var funds = game_manager.get_funds(local_team)
+	var income = game_manager.team1_income if local_team == 1 else game_manager.team2_income
 	funds_label.text = "$: %dk" % (funds / 1000)
 	income_label.text = "+$: %dk" % (income / 1000)
-	#turn_label.text = "Team %d" % team
+	#turn_label.text = "hola"
+	if local_team == current_team:
+		turn_label.visible = true
+		turn_label.text = "Tu Turno"
+	else:
+		turn_label.visible = false
 
 func show_unit_info(unit: Unit) -> void:
 	if unit.is_shade():
@@ -195,6 +201,7 @@ func _on_unit_info_panel_mouse_entered() -> void:
 
 func update_element() -> void:
 	var element_names = ["EARTH", "METAL", "WATER", "WOOD", "FIRE"]
+	var style = funds_panel.get_theme_stylebox("panel") as StyleBoxFlat
 	var element_colors = [
 		Color(0.513, 0.338, 0.162),
 		Color(0.968, 0.862, 0.106),
@@ -205,6 +212,8 @@ func update_element() -> void:
 	var idx = game_manager.current_element
 	element_label.text = element_names[idx]
 	element_label.add_theme_color_override("font_color", element_colors[idx])
+	if style:
+		style.border_color = element_colors[idx]
 
 func show_turn_message(message: String) -> void:
 	turn_message_label.text = message
