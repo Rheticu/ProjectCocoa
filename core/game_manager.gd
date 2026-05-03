@@ -1,7 +1,7 @@
 class_name GameManager
 extends Node
 
-var team1_funds: int = 4000
+var team1_funds: int = 1000
 var team2_funds: int = 2000
 var team1_income: int = 0
 var team2_income: int = 0
