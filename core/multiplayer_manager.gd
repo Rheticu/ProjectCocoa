@@ -6,6 +6,7 @@ extends Node
 @onready var action_system = $"../ActionSystem"
 @onready var turn_manager  = $"../TurnManager"
 @onready var fog_system    = $"../FogSystem"
+@onready var state_hasher = $"../StateHasher"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 const PORT      := 9999
@@ -60,10 +61,9 @@ func is_multiplayer_active() -> bool:
 # CALLBACKS DE CONEXIÓN
 # ══════════════════════════════════════════════════════════════════════════════
 
-func _on_peer_connected(id: int) -> void:
+func _on_peer_connected(_id: int) -> void:
 	if player_id == 1:
 		await get_tree().create_timer(0.3).timeout
-		_send_initial_state(id)
 	peer_joined.emit()
 
 func _on_connected_to_server() -> void:
@@ -121,6 +121,10 @@ func _send_initial_state(client_id: int) -> void:
 
 	rpc_id(client_id, "receive_initial_state_done", {})
 
+func send_initial_state_to_all() -> void:
+	for peer_id in multiplayer.get_peers():
+		_send_initial_state(peer_id)
+
 @rpc("authority", "reliable")
 func receive_initial_state(state: Dictionary) -> void:
 	game_manager.team1_funds     = state["team1_funds"]
@@ -156,6 +160,7 @@ func receive_building_state(bdata: Dictionary) -> void:
 
 @rpc("authority", "reliable")
 func receive_initial_state_done(_data: Dictionary) -> void:
+	#print("INITIAL STATE [player %d]:\n" % game_manager.local_player_id, state_hasher.compute_state_string())
 	fog_system.recalculate(player_id)
 	game_ready.emit()
 
@@ -176,7 +181,8 @@ func receive_action(action_dict: Dictionary) -> void:
 		return
 	var action = _deserialize_action(action_dict)
 	if action:
-		action_system.execute_remote(action)
+		await action_system.execute_remote(action)
+		send_checksum(action_dict.get("type", "unknown"))
 	else:
 		push_error("MultiplayerManager: no se pudo deserializar la acción: " + str(action_dict))
 
@@ -297,3 +303,24 @@ func receive_ambush(moving_unit_id: int, stopped_x: int, stopped_y: int, reveale
 		revealed_unit.visible = true
 		revealed_unit.update_visual()
 	fog_system.recalculate(player_id)
+
+func send_checksum(action_name: String) -> void:
+	if not is_multiplayer_active():
+		return
+	var checksum = state_hasher.compute_checksum()
+	#print("LOCAL STATE después de '%s':\n" % action_name, state_hasher.compute_state_string())
+	rpc("receive_checksum", checksum, action_name)
+
+@rpc("any_peer", "reliable")
+func receive_checksum(remote_checksum: int, action_name: String) -> void:
+	var sender = multiplayer.get_remote_sender_id()
+	var sender_player = 1 if sender == 1 else 2
+	if sender_player == player_id:
+		return
+	var local_checksum = state_hasher.compute_checksum()
+	if local_checksum != remote_checksum:
+		push_error("DESYNC después de '%s': local=%d remote=%d" % [action_name, local_checksum, remote_checksum])
+		print("DESYNC STATE:\n", state_hasher.compute_state_string())
+	else:
+		return
+		#print("OK checksum después de '%s'" % action_name)

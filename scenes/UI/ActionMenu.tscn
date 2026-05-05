@@ -42,14 +42,6 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
 text = "Attack"
 
-[node name="Mark" type="Button" parent="."]
-layout_mode = 2
-theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
-theme_override_font_sizes/font_size = 10
-theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
-theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
-text = "Mark"
-
 [node name="Capture" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
@@ -98,6 +90,14 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
 text = "Scorch"
 
+[node name="Mark" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Mark"
+
 [node name="Shield" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
@@ -121,6 +121,46 @@ theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
 text = "Boost"
+
+[node name="Scorch2" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Scorch2"
+
+[node name="Mark2" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Mark2"
+
+[node name="Shield2" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Shield2"
+
+[node name="Muddle2" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Muddle2"
+
+[node name="Boost2" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Boost2"
 
 [node name="Options" type="Button" parent="."]
 layout_mode = 2

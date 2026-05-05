@@ -13,6 +13,7 @@ func start_game() -> void:
 	current_team = 1
 	turn_number = 1
 	_begin_turn(current_team)
+	#print("INITIAL STATE [player %d]:\n" % game_manager.local_player_id, get_node("../StateHasher").compute_state_string())
 
 func _begin_turn(team: int) -> void:
 	current_team = team

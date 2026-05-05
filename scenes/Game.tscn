@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://mscq8xb55cqc"]
+[gd_scene load_steps=31 format=3 uid="uid://mscq8xb55cqc"]
 
 [ext_resource type="Script" uid="uid://mcejuc7m0x7b" path="res://core/game_root.gd" id="1_fx2fv"]
 [ext_resource type="Script" uid="uid://b7u8jqsdvkpbj" path="res://core/grid_system.gd" id="2_dg17b"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://cqmmsgbf0knl8" path="res://core/input_controller.gd" id="10_i83up"]
 [ext_resource type="Texture2D" uid="uid://b75htgxqc1en" path="res://art/ui/MovementOverlay.png" id="11_1hd46"]
 [ext_resource type="Script" uid="uid://0n6yowrokfk7" path="res://core/multiplayer_manager.gd" id="11_sv1m6"]
+[ext_resource type="Script" uid="uid://bq441wohcath0" path="res://core/state_hasher.gd" id="12_attvq"]
 [ext_resource type="Texture2D" uid="uid://ckahndn04mcs5" path="res://art/ui/AttackRangeOverlay.png" id="12_emoqw"]
 [ext_resource type="Texture2D" uid="uid://ck4phyeloyxra" path="res://art/ui/GreenOverlay.png" id="13_45i86"]
 [ext_resource type="Texture2D" uid="uid://dtdwjl5542sfv" path="res://art/ui/Azul1.png" id="13_t4i5m"]
@@ -93,6 +94,9 @@ script = ExtResource("10_i83up")
 
 [node name="MultiplayerManager" type="Node" parent="."]
 script = ExtResource("11_sv1m6")
+
+[node name="StateHasher" type="Node" parent="."]
+script = ExtResource("12_attvq")
 
 [node name="CurrentMap" type="Node2D" parent="."]
 metadata/_edit_lock_ = true

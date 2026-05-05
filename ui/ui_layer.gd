@@ -128,7 +128,8 @@ func _on_ability_targets_shown(targets: Array[Unit]) -> void:
 	selection_system.attack_targets = targets
 	var shade = selection_system.selected_unit as Shade
 	if shade:
-		var is_hostile = shade.shade_element in ["FIRE", "WATER", "EARTH"]
+		var hostile_abilities = ["MARK", "SCORCH", "MUDDLE", "MARK2", "MUDDLE2", "SCORCH2"]
+		var is_hostile = input_controller._pending_ability in hostile_abilities
 		show_ability_range(shade, is_hostile)
 
 func show_ability_range(shade: Shade, is_hostile: bool) -> void:

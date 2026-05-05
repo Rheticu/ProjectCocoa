@@ -27,12 +27,31 @@ func execute_attack(attacker: Unit, target: Unit) -> void:
 	if attacker.check_death():
 		_handle_death(attacker)
 
+func _get_aura_targets(source: Unit, caster: Shade) -> Array[Unit]:
+	var result: Array[Unit] = []
+	var dirs = [Vector2i(0,-1), Vector2i(0,1), Vector2i(-1,0), Vector2i(1,0)]
+	print("Buscando adyacentes a: ", source.grid_position, " caster.is_shade=", caster.is_shade())
+	for dir in dirs:
+		var adjacent_pos = source.grid_position + dir
+		for unit in game_manager.all_units:
+			print("  chequeando unit en ", unit.grid_position, " is_shade=", unit.is_shade())
+			if unit == source:
+				continue
+			if unit.grid_position != adjacent_pos:
+				continue
+			if unit.is_shade() != source.is_shade():
+				continue
+			result.append(unit)
+	return result
+
 func execute_ability(shade: Shade, ability: String, target: Unit, current_element: GameManager.Element) -> void:
-	shade.mana -= 2
+	print("execute_ability llamado con: ", ability)
 	match ability:
 		"MARK":
+			shade.mana -= 2
 			target.marked_turns = 4 if current_element == GameManager.Element.WATER else 2
 		"SCORCH":
+			shade.mana -= 2
 			var multiplier = 2.5 if current_element == GameManager.Element.FIRE else 1.0
 			var dmg = int(max(0.0, multiplier * shade.health/5 - target.get_total_defense(0)))
 			target.health -= dmg
@@ -40,11 +59,36 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 			if target.check_death():
 				_handle_death(target)
 		"SHIELD":
+			shade.mana -= 2
 			target.shield_turns = 4 if current_element == GameManager.Element.METAL else 2
 		"MUDDLE":
+			shade.mana -= 2
+			print("Muddle1")
 			target.muddle_turns = 4 if current_element == GameManager.Element.EARTH else 2
 		"BOOST":
+			shade.mana -= 2
 			target.boost_turns = 4 if current_element == GameManager.Element.WOOD else 2
+		"MUDDLE2":
+			print("Entró al caso MUDDLE2")
+			target.muddle_turns = 4 if current_element == GameManager.Element.EARTH else 2
+			target.aura_muddle_source = null
+			for adj in _get_aura_targets(target, shade):
+				print("Adyacente encontrado: ", adj.unit_type)
+				adj.aura_muddle_source = target
+				adj.muddle_turns = target.muddle_turns
+		"BOOST2":
+			target.boost_turns = 4 if current_element == GameManager.Element.WOOD else 2
+			target.aura_boost_source = null
+			for adj in _get_aura_targets(target, shade):
+				adj.aura_boost_source = target
+				adj.boost_turns = target.boost_turns
+		"SHIELD2":
+			target.shield_turns = 4 if current_element == GameManager.Element.METAL else 2
+			target.aura_shield_source = null
+			for adj in _get_aura_targets(target, shade):
+				adj.aura_shield_source = target
+				adj.shield_turns = target.shield_turns
+
 	shade.state = Unit.State.MOVED
 	shade.update_visual()
 	target.update_visual()

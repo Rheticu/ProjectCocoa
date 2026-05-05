@@ -111,10 +111,10 @@ func show_ability_options(shade: Shade, ability: String) -> void:
 		if not combat_system.can_use_ability(shade, unit):
 			continue
 		match ability:
-			"MARK", "SCORCH", "MUDDLE":
+			"MARK", "SCORCH", "MUDDLE", "MARK2", "MUDDLE2", "SCORCH2":
 				if unit.team != shade.team:
 					targets.append(unit)
-			"SHIELD", "BOOST":
+			"SHIELD", "BOOST", "SHIELD2", "BOOST2":
 				if unit.team == shade.team:
 					targets.append(unit)
 	ability_targets_shown.emit(targets)

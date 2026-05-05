@@ -59,3 +59,5 @@ func start_multiplayer_game() -> void:
 	if multiplayer_manager.player_id == 1:
 		turn_manager.start_game()
 		fog_system.recalculate(1)
+		await get_tree().create_timer(0.1).timeout
+		multiplayer_manager.send_initial_state_to_all()

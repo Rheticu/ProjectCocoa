@@ -33,6 +33,9 @@ var shield_turns: int = 0
 var muddle_turns: int = 0
 var boost_turns: int = 0
 var is_in_overwatch: bool = false
+var aura_muddle_source: Unit = null
+var aura_boost_source: Unit = null
+var aura_shield_source: Unit = null
 
 signal moved(new_position: Vector2i)
 

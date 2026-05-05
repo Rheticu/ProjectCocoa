@@ -12,6 +12,7 @@ var _turn_tween: Tween
 
 # Labels de fondos
 var funds_label: Label
+var funds_label2: Label
 var income_label: Label
 var turn_label: Label
 var element_label: Label
