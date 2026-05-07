@@ -32,27 +32,39 @@ func register_unit(unit: Unit) -> void:
 		unit.moved.connect(_on_unit_moved)
 		unit_registered.emit(unit)
 
-func _on_unit_moved(_new_position: Vector2i) -> void:
-	print("_on_unit_moved llamado")
+func _recalculate_all_auras() -> void:
 	for unit in all_units:
-		if unit.aura_muddle_source != null:
-			if _is_adjacent(unit, unit.aura_muddle_source):
-				unit.muddle_turns = unit.aura_muddle_source.muddle_turns
-			else:
-				unit.muddle_turns = 0
-				unit.aura_muddle_source = null
-		if unit.aura_boost_source != null:
-			if _is_adjacent(unit, unit.aura_boost_source):
-				unit.boost_turns = unit.aura_boost_source.boost_turns
-			else:
-				unit.boost_turns = 0
-				unit.aura_boost_source = null
-		if unit.aura_shield_source != null:
-			if _is_adjacent(unit, unit.aura_shield_source):
-				unit.shield_turns = unit.aura_shield_source.shield_turns
-			else:
-				unit.shield_turns = 0
-				unit.aura_shield_source = null
+		unit.aura_muddled = false
+		unit.aura_boosted = false
+		unit.aura_shielded = false
+	for source in all_units:
+		if source.muddle2_source_turns > 0:
+			for other in all_units:
+				if other == source or other.is_shade() != source.is_shade():
+					continue
+				if other.team != source.team:
+					continue
+				if _is_adjacent(other, source):
+					other.aura_muddled = true
+		if source.boost2_source_turns > 0:
+			for other in all_units:
+				if other == source or other.is_shade() != source.is_shade():
+					continue
+				if other.team != source.team:
+					continue
+				if _is_adjacent(other, source):
+					other.aura_boosted = true
+		if source.shield2_source_turns > 0:
+			for other in all_units:
+				if other == source or other.is_shade() != source.is_shade():
+					continue
+				if other.team != source.team:
+					continue
+				if _is_adjacent(other, source):
+					other.aura_shielded = true
+
+func _on_unit_moved(_new_position: Vector2i) -> void:
+	_recalculate_all_auras()
 
 func _is_adjacent(a: Unit, b: Unit) -> bool:
 	var diff = (a.grid_position - b.grid_position).abs()

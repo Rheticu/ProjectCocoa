@@ -46,6 +46,11 @@ func recalculate(viewing_team: int) -> void:
 		for unit in game_manager.all_units:
 			if unit.team != team and unit.marked_turns > 0:
 				tiles[unit.grid_position] = true
+				if unit.marked2_turns > 0:
+					for dir in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+						var adj = unit.grid_position + dir
+						if grid_system.is_in_bounds(adj):
+							tiles[adj] = true
 		_visible_tiles[team] = tiles
 		var shade_tiles: Dictionary = {}
 		for unit in game_manager.all_units:

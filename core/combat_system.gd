@@ -27,14 +27,12 @@ func execute_attack(attacker: Unit, target: Unit) -> void:
 	if attacker.check_death():
 		_handle_death(attacker)
 
-func _get_aura_targets(source: Unit, caster: Shade) -> Array[Unit]:
+func _get_aura_targets(source: Unit) -> Array[Unit]:
 	var result: Array[Unit] = []
 	var dirs = [Vector2i(0,-1), Vector2i(0,1), Vector2i(-1,0), Vector2i(1,0)]
-	print("Buscando adyacentes a: ", source.grid_position, " caster.is_shade=", caster.is_shade())
 	for dir in dirs:
 		var adjacent_pos = source.grid_position + dir
 		for unit in game_manager.all_units:
-			print("  chequeando unit en ", unit.grid_position, " is_shade=", unit.is_shade())
 			if unit == source:
 				continue
 			if unit.grid_position != adjacent_pos:
@@ -45,7 +43,6 @@ func _get_aura_targets(source: Unit, caster: Shade) -> Array[Unit]:
 	return result
 
 func execute_ability(shade: Shade, ability: String, target: Unit, current_element: GameManager.Element) -> void:
-	print("execute_ability llamado con: ", ability)
 	match ability:
 		"MARK":
 			shade.mana -= 2
@@ -63,31 +60,49 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 			target.shield_turns = 4 if current_element == GameManager.Element.METAL else 2
 		"MUDDLE":
 			shade.mana -= 2
-			print("Muddle1")
 			target.muddle_turns = 4 if current_element == GameManager.Element.EARTH else 2
 		"BOOST":
 			shade.mana -= 2
 			target.boost_turns = 4 if current_element == GameManager.Element.WOOD else 2
 		"MUDDLE2":
-			print("Entró al caso MUDDLE2")
+			shade.mana -= 3
 			target.muddle_turns = 4 if current_element == GameManager.Element.EARTH else 2
-			target.aura_muddle_source = null
-			for adj in _get_aura_targets(target, shade):
-				print("Adyacente encontrado: ", adj.unit_type)
-				adj.aura_muddle_source = target
-				adj.muddle_turns = target.muddle_turns
+			target.muddle2_source_turns = 4 if current_element == GameManager.Element.EARTH else 2
+			for adj in _get_aura_targets(target):
+				if adj.team == target.team:
+					adj.aura_muddled = true
 		"BOOST2":
+			shade.mana -= 3
 			target.boost_turns = 4 if current_element == GameManager.Element.WOOD else 2
-			target.aura_boost_source = null
-			for adj in _get_aura_targets(target, shade):
-				adj.aura_boost_source = target
-				adj.boost_turns = target.boost_turns
+			target.boost2_source_turns = 4 if current_element == GameManager.Element.WOOD else 2
+			for adj in _get_aura_targets(target):
+				if adj.team == target.team:
+					adj.aura_boosted = true
 		"SHIELD2":
+			shade.mana -= 3
 			target.shield_turns = 4 if current_element == GameManager.Element.METAL else 2
-			target.aura_shield_source = null
-			for adj in _get_aura_targets(target, shade):
-				adj.aura_shield_source = target
-				adj.shield_turns = target.shield_turns
+			target.shield2_source_turns = 4 if current_element == GameManager.Element.METAL else 2
+			for adj in _get_aura_targets(target):
+				if adj.team == target.team:
+					adj.aura_shielded = true
+		"SCORCH2":
+			shade.mana -= 3
+			var multiplier = 2.5 if current_element == GameManager.Element.FIRE else 1.0
+			var dirs = [Vector2i.ZERO, Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]
+			for dir in dirs:
+				var pos = target.grid_position + dir
+				for unit in game_manager.all_units:
+					if unit.grid_position == pos and unit.team != shade.team and unit.is_shade() == target.is_shade():
+						var dmg = int(max(0.0, multiplier * shade.health/5 - unit.get_total_defense(0)))
+						unit.health -= dmg
+						unit.update_visual()
+						if unit.check_death():
+							_handle_death(unit)
+		"MARK2":
+			shade.mana -= 3
+			target.marked_turns = 4 if current_element == GameManager.Element.WATER else 2
+			target.marked2_turns = 4 if current_element == GameManager.Element.WATER else 2
+
 
 	shade.state = Unit.State.MOVED
 	shade.update_visual()
@@ -138,9 +153,9 @@ func execute_volley(attacker: Unit, targets: Array[Unit]) -> void:
 func calculate_damage(attacker: Unit, target: Unit) -> int:
 	var multiplier = _get_type_multiplier(attacker.get_effective_type(), target.get_effective_type())
 	var attack_mod = 1.0
-	if attacker.muddle_turns > 0:
+	if attacker.muddle_turns > 0 or attacker.aura_muddled:
 		attack_mod = 1.0 / 3.0
-	elif attacker.boost_turns > 0:
+	elif attacker.boost_turns > 0 or attacker.aura_boosted:
 		attack_mod = 2.0
 	var terrain = grid_system.get_terrain_type(target.grid_position)
 	var terrain_bonus = _get_defense_bonus(terrain)

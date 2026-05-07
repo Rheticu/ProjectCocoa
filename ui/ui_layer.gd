@@ -165,10 +165,13 @@ func _on_unit_deselected() -> void:
 
 func _draw_attack_range(unit: Unit) -> void:
 	attack_range_overlay.clear()
-	var tiles = grid_system.get_tiles_in_range(unit.grid_position, unit.attack_range, unit.is_shade())
+	var tiles: Array[Vector2i] = []
+	if unit.unit_type == "Cannon":
+		tiles = grid_system.get_tiles_in_range(unit.grid_position, unit.attack_range, false)
+	else:
+		tiles = selection_system.get_attackable_tiles(unit)
 	for pos in tiles:
-		if pos != unit.grid_position:
-			attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
+		attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
 
 func _clear_target_highlights() -> void:
 	for unit in game_manager.all_units:
@@ -423,7 +426,7 @@ func _process(_delta: float) -> void:
 				else:
 					target.update_visual()
 		if input_controller.mode == InputController.Mode.SHADE_ABILITY:
-			var is_hostile = input_controller._pending_ability in ["MARK", "SCORCH", "MUDDLE"]
+			var is_hostile = input_controller._pending_ability in ["MARK", "SCORCH", "MUDDLE", "MARK2", "SCORCH2", "MUDDLE2"]
 			for target in selection_system.attack_targets:
 				if target.grid_position == grid_pos:
 					target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5) if is_hostile else Color(0.5, 2, 0.5)

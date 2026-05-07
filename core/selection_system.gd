@@ -117,6 +117,7 @@ func show_ability_options(shade: Shade, ability: String) -> void:
 			"SHIELD", "BOOST", "SHIELD2", "BOOST2":
 				if unit.team == shade.team:
 					targets.append(unit)
+	attack_targets = targets
 	ability_targets_shown.emit(targets)
 
 func has_ability_targets(shade: Shade, ability: String) -> bool:
@@ -145,3 +146,13 @@ func calculate_path_cost(path: Array[Vector2i], unit: Unit) -> int:
 		var terrain = grid_system.get_terrain_type(path[i])
 		total += movement_system._get_movement_cost(unit, terrain)
 	return total
+
+func get_attackable_tiles(unit: Unit) -> Array[Vector2i]:
+	var attackable: Array[Vector2i] = []
+	var reachable = movement_system.get_reachable_cells(unit)
+	for move_pos in reachable:
+		var attack_tiles = grid_system.get_tiles_in_range(move_pos, unit.attack_range, unit.is_shade())
+		for tile in attack_tiles:
+			if tile not in attackable:
+				attackable.append(tile)
+	return attackable

@@ -282,13 +282,12 @@ func on_ability_pressed(ability: String) -> void:
 			selection_system.deselect()
 			return
 		_:
+			_pending_ability = ability
 			var shade = selection_system.selected_unit as Shade
 			if shade:
 				selection_system.show_ability_options(shade, ability)
-			_pending_ability = ability
 			mode = Mode.SHADE_ABILITY
 			return
-	_pending_ability = ability
 	mode = Mode.TARGETING
 
 func on_move_confirmed() -> void:

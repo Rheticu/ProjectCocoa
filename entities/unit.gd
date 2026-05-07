@@ -33,9 +33,13 @@ var shield_turns: int = 0
 var muddle_turns: int = 0
 var boost_turns: int = 0
 var is_in_overwatch: bool = false
-var aura_muddle_source: Unit = null
-var aura_boost_source: Unit = null
-var aura_shield_source: Unit = null
+var muddle2_source_turns: int = 0
+var boost2_source_turns: int = 0
+var shield2_source_turns: int = 0
+var marked2_turns: int = 0
+var aura_muddled: bool = false
+var aura_boosted: bool = false
+var aura_shielded: bool = false
 
 signal moved(new_position: Vector2i)
 
@@ -63,7 +67,7 @@ func get_effective_type() -> String:
 
 func get_total_defense(terrain_bonus: int) -> int:
 	var base = defense + terrain_bonus
-	if shield_turns > 0:
+	if shield_turns > 0 or aura_shielded:
 		return (defense * 3) + terrain_bonus
 	return base
 
@@ -71,10 +75,13 @@ func tick_buffs(current_team) -> void:
 	if team == current_team:
 		if boost_turns > 0:  boost_turns -= 1
 		if shield_turns > 0: shield_turns -= 1
+		if boost2_source_turns > 0:  boost2_source_turns -= 1
+		if shield2_source_turns > 0: shield2_source_turns -= 1
 	else:
 		if marked_turns > 0: marked_turns -= 1
+		if marked2_turns > 0: marked2_turns -= 1
 		if muddle_turns > 0: muddle_turns -= 1
-
+		if muddle2_source_turns > 0: muddle2_source_turns -= 1
 
 func check_death() -> bool:
 	return health <= 0

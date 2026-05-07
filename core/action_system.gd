@@ -166,7 +166,6 @@ func _execute_produce(action: ProduceAction) -> void:
 	unit.unit_id = action.unit_id
 	unit.grid_position = action.building.building_position
 	unit.state = Unit.State.MOVED
-	print("EXECUTE produce: element=", action.unit_data.shade_element, " is_shade=", action.unit_data.is_shade)
 	game_manager.current_map.get_node("Units").add_child(unit)
 	game_manager.register_unit(unit)
 
