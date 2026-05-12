@@ -62,6 +62,8 @@ func _recalculate_all_auras() -> void:
 					continue
 				if _is_adjacent(other, source):
 					other.aura_shielded = true
+	for unit in all_units:
+		unit.update_visual()
 
 func _on_unit_moved(_new_position: Vector2i) -> void:
 	_recalculate_all_auras()

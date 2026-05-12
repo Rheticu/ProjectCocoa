@@ -71,6 +71,7 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 			for adj in _get_aura_targets(target):
 				if adj.team == target.team:
 					adj.aura_muddled = true
+			game_manager._recalculate_all_auras()
 		"BOOST2":
 			shade.mana -= 3
 			target.boost_turns = 4 if current_element == GameManager.Element.WOOD else 2
@@ -78,6 +79,7 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 			for adj in _get_aura_targets(target):
 				if adj.team == target.team:
 					adj.aura_boosted = true
+			game_manager._recalculate_all_auras()
 		"SHIELD2":
 			shade.mana -= 3
 			target.shield_turns = 4 if current_element == GameManager.Element.METAL else 2
@@ -85,6 +87,7 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 			for adj in _get_aura_targets(target):
 				if adj.team == target.team:
 					adj.aura_shielded = true
+			game_manager._recalculate_all_auras()
 		"SCORCH2":
 			shade.mana -= 3
 			var multiplier = 2.5 if current_element == GameManager.Element.FIRE else 1.0
@@ -102,6 +105,7 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 			shade.mana -= 3
 			target.marked_turns = 4 if current_element == GameManager.Element.WATER else 2
 			target.marked2_turns = 4 if current_element == GameManager.Element.WATER else 2
+			game_manager._recalculate_all_auras()
 
 
 	shade.state = Unit.State.MOVED

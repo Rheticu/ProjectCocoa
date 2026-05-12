@@ -92,3 +92,34 @@ func update_visual() -> void:
 		State.SELECTED: $Sprite2D.modulate = Color(1.5, 1.5, 0.536, 1.0)
 		State.MOVED:    $Sprite2D.modulate = Color(0.5, 0.5, 0.5)
 		_:              $Sprite2D.modulate = Color(1.0, 1.0, 1.0)
+	update_status_label()
+
+func update_status_label() -> void:
+	var status_label = get_node_or_null("StatusLabel")
+	if not status_label:
+		return
+	var has_positive = (boost_turns > 0 
+		or aura_boosted 
+		or boost2_source_turns > 0 
+		or shield_turns > 0 
+		or aura_shielded 
+		or shield2_source_turns > 0)
+	var has_negative = (muddle_turns > 0 
+		or aura_muddled
+		or muddle2_source_turns > 0
+		or marked_turns > 0
+		or marked2_turns > 0)
+	if has_positive and has_negative:
+		status_label.bbcode_enabled = true
+		status_label.text = "[color=#00ff4d]▲[/color][color=#ff1a1a]▼[/color]"
+		status_label.visible = true
+	elif has_positive:
+		status_label.bbcode_enabled = true
+		status_label.text = "[color=#00ff4d]▲[/color]"
+		status_label.visible = true
+	elif has_negative:
+		status_label.bbcode_enabled = true
+		status_label.text = "[color=#ff1a1a]▼[/color]"
+		status_label.visible = true
+	else:
+		status_label.visible = false

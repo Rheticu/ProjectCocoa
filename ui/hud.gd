@@ -6,16 +6,18 @@ extends CanvasLayer
 
 var funds_panel: PanelContainer
 var unit_info_panel: PanelContainer
-var size_font = 10
+var size_font = 8
 var turn_message_label: Label
 var _turn_tween: Tween
 
-# Labels de fondos
+# Labels de game panel
 var funds_label: Label
 var funds_label2: Label
 var income_label: Label
 var turn_label: Label
 var element_label: Label
+var _border_tween: Tween
+var _current_border_color: Color = Color(0.905, 0.0, 0.213)
 
 # Labels de unidad
 var unit_hp_label: Label
@@ -26,9 +28,8 @@ var unit_type_label: Label
 var unit_mana_label: Label
 var unit_status_label: Label
 
-
 func _ready() -> void:
-	_build_funds_panel()
+	_build_game_panel()
 	_build_unit_info_panel()
 	turn_message_label = Label.new()
 	turn_message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -39,7 +40,7 @@ func _ready() -> void:
 	turn_message_label.visible = false
 	add_child(turn_message_label)
 
-func _build_funds_panel() -> void:
+func _build_game_panel() -> void:
 	funds_panel = PanelContainer.new()
 	var style = _make_panel_style()
 	funds_panel.visible = true
@@ -47,14 +48,14 @@ func _build_funds_panel() -> void:
 	add_child(funds_panel)
 
 	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 10)
-	margin.add_theme_constant_override("margin_right", 10)
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_bottom", 8)
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_top", 2)
+	margin.add_theme_constant_override("margin_bottom", 2)
 	funds_panel.add_child(margin)
 
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
+	vbox.add_theme_constant_override("separation", 1)
 	margin.add_child(vbox)
 
 	turn_label = _make_label("Turn 1", size_font + 1, Color(0.961, 0.961, 1.0))
@@ -71,6 +72,39 @@ func _build_funds_panel() -> void:
 
 	funds_panel.position = Vector2(16, 16)
 	funds_panel.mouse_entered.connect(_on_funds_panel_mouse_entered)
+
+func _start_panel_pulse() -> void:
+	if _border_tween:
+		_border_tween.kill()
+	var style = funds_panel.get_theme_stylebox("panel") as StyleBoxFlat
+	if not style:
+		return
+	_border_tween = create_tween().set_loops()
+	style.border_width_left = 3
+	style.border_width_top = 3
+	style.border_width_right = 3
+	style.border_width_bottom = 3
+	_border_tween.tween_method(func(a: float):
+		style.border_color = _current_border_color.lerp(Color.WHITE, a)
+		turn_label.add_theme_color_override("font_color", _current_border_color.lerp(Color.WHITE, a)),
+		0.0, 1.0, 1)
+	_border_tween.tween_method(func(a: float):
+		style.border_color = _current_border_color.lerp(Color.WHITE, a)
+		turn_label.add_theme_color_override("font_color", _current_border_color.lerp(Color.WHITE, a)),
+		1.0, 0.0, 1)
+
+func _stop_panel_pulse() -> void:
+	turn_label.add_theme_color_override("font_color", Color(0.961, 0.961, 1.0))
+	if _border_tween:
+		_border_tween.kill()
+		_border_tween = null
+	var style = funds_panel.get_theme_stylebox("panel") as StyleBoxFlat
+	if style:
+		style.border_width_left = 2
+		style.border_width_top = 2
+		style.border_width_right = 2
+		style.border_width_bottom = 2
+		style.border_color = _current_border_color
 
 func _build_unit_info_panel() -> void:
 	unit_info_panel = PanelContainer.new()
@@ -142,12 +176,13 @@ func update_game_panel() -> void:
 	var income = game_manager.team1_income if local_team == 1 else game_manager.team2_income
 	funds_label.text = "$: %dk" % (funds / 1000)
 	income_label.text = "+$: %dk" % (income / 1000)
-	#turn_label.text = "hola"
 	if local_team == current_team:
 		turn_label.visible = true
 		turn_label.text = "Tu Turno"
+		_start_panel_pulse()
 	else:
 		turn_label.visible = false
+		_stop_panel_pulse()
 
 func show_unit_info(unit: Unit) -> void:
 	if unit.is_shade():
@@ -163,14 +198,28 @@ func show_unit_info(unit: Unit) -> void:
 	unit_defense_label.text = "Def: %d" % unit.defense
 	unit_movement_label.text = "Mov: %d" % unit.movement_range
 	var status_parts = []
-	if unit.marked_turns > 0:
+	if unit.marked_turns > 0 and unit.marked2_turns == 0:
 		status_parts.append("Marked %d" % unit.marked_turns)
-	if unit.shield_turns > 0:
+	if unit.marked2_turns > 0:
+		status_parts.append("++Marked %d" % unit.marked2_turns)
+	if unit.shield_turns > 0 and unit.shield2_source_turns == 0:
 		status_parts.append("Shield %d" % unit.shield_turns)
-	if unit.boost_turns > 0:
+	if unit.boost_turns > 0 and unit.boost2_source_turns == 0:
 		status_parts.append("Boost %d" % unit.boost_turns)
-	if unit.muddle_turns > 0:
+	if unit.muddle_turns > 0 and unit.muddle2_source_turns == 0:
 		status_parts.append("Muddle %d" % unit.muddle_turns)
+	if unit.boost2_source_turns > 0:
+		status_parts.append("Boost Source")
+	if unit.shield2_source_turns > 0:
+		status_parts.append("Shield Source")
+	if unit.muddle2_source_turns > 0:
+		status_parts.append("Muddle Source")
+	if unit.aura_boosted:
+		status_parts.append("Aura Boost")
+	if unit.aura_shielded:
+		status_parts.append("Aura Shield")
+	if unit.aura_muddled:
+		status_parts.append("Aura Muddle")
 	if status_parts.is_empty():
 		unit_status_label.visible = false
 	else:
@@ -203,6 +252,7 @@ func _on_unit_info_panel_mouse_entered() -> void:
 func update_element() -> void:
 	var element_names = ["EARTH", "METAL", "WATER", "WOOD", "FIRE"]
 	var style = funds_panel.get_theme_stylebox("panel") as StyleBoxFlat
+	var unit_style = unit_info_panel.get_theme_stylebox("panel") as StyleBoxFlat
 	var element_colors = [
 		Color(0.513, 0.338, 0.162),
 		Color(0.968, 0.862, 0.106),
@@ -213,8 +263,11 @@ func update_element() -> void:
 	var idx = game_manager.current_element
 	element_label.text = element_names[idx]
 	element_label.add_theme_color_override("font_color", element_colors[idx])
+	_current_border_color = element_colors[idx]
 	if style:
-		style.border_color = element_colors[idx]
+		style.border_color = _current_border_color
+	if unit_style:
+		unit_style.border_color = _current_border_color
 
 func show_turn_message(message: String) -> void:
 	turn_message_label.text = message
