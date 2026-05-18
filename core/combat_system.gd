@@ -166,7 +166,8 @@ func calculate_damage(attacker: Unit, target: Unit) -> int:
 	if target.is_shade():
 		terrain_bonus = 0
 	var base = multiplier * attacker.attack * attacker.health / 100.0
-	return int(max(0.0, base * attack_mod - target.get_total_defense(terrain_bonus)))
+	var final = int(max(0.0, base * attack_mod - target.get_total_defense(terrain_bonus)))
+	return final
 
 func can_attack(attacker: Unit, target: Unit) -> bool:
 	if attacker.team == target.team:
@@ -202,11 +203,12 @@ func _get_type_multiplier(attacker_type: String, defender_type: String) -> float
 		"Spear:Sword":1.8,"Spear:Archer":1.5,"Spear:Spear":1.0,"Spear:Cannon":1.2,"Spear:Junker":0.5,
 		"Cannon:Sword":1,"Cannon:Archer":1,"Cannon:Spear":1,"Cannon:Cannon":1,"Cannon:Junker":1,
 		"Junker:Sword":1.0,"Junker:Archer":1.0,"Junker:Spear":1.0,"Junker:Cannon":1.0,"Junker:Junker":1.0,
-		"Shade_FIRE:Shade_FIRE":1.0,"Shade_FIRE:Shade_WATER":0.66,"Shade_FIRE:Shade_EARTH":1.0,"Shade_FIRE:Shade_WOOD":1.0,"Shade_FIRE:Shade_METAL":1.5,
-		"Shade_WATER:Shade_FIRE":1.5,"Shade_WATER:Shade_WATER":1.0,"Shade_WATER:Shade_EARTH":0.66,"Shade_WATER:Shade_WOOD":1.0,"Shade_WATER:Shade_METAL":1.0,
-		"Shade_EARTH:Shade_FIRE":0.66,"Shade_EARTH:Shade_WATER":1.5,"Shade_EARTH:Shade_EARTH":1.0,"Shade_EARTH:Shade_WOOD":1.0,"Shade_EARTH:Shade_METAL":1.0,
-		"Shade_WOOD:Shade_FIRE":1.0,"Shade_WOOD:Shade_WATER":1.0,"Shade_WOOD:Shade_EARTH":1.5,"Shade_WOOD:Shade_WOOD":1.0,"Shade_WOOD:Shade_METAL":0.66,
-		"Shade_METAL:Shade_FIRE":0.66,"Shade_METAL:Shade_WATER":1.0,"Shade_METAL:Shade_EARTH":1.0,"Shade_METAL:Shade_WOOD":1.5,"Shade_METAL:Shade_METAL":1.0,
+		"Shade_FIRE:Shade_FIRE":1.0,"Shade_FIRE:Shade_WATER":0.66,"Shade_FIRE:Shade_EARTH":1.0,"Shade_FIRE:Shade_WOOD":1.0,"Shade_FIRE:Shade_METAL":1.5, "Shade_FIRE:Drone":1.0,
+		"Shade_WATER:Shade_FIRE":1.5,"Shade_WATER:Shade_WATER":1.0,"Shade_WATER:Shade_EARTH":0.66,"Shade_WATER:Shade_WOOD":1.0,"Shade_WATER:Shade_METAL":1.0, "Shade_WATER:Drone":1.0,
+		"Shade_EARTH:Shade_FIRE":0.66,"Shade_EARTH:Shade_WATER":1.5,"Shade_EARTH:Shade_EARTH":1.0,"Shade_EARTH:Shade_WOOD":1.0,"Shade_EARTH:Shade_METAL":1.0, "Shade_EARTH:Drone":1.0,
+		"Shade_WOOD:Shade_FIRE":1.0,"Shade_WOOD:Shade_WATER":1.0,"Shade_WOOD:Shade_EARTH":1.5,"Shade_WOOD:Shade_WOOD":1.0,"Shade_WOOD:Shade_METAL":0.66, "Shade_WOOD:Drone":1.0,
+		"Shade_METAL:Shade_FIRE":0.66,"Shade_METAL:Shade_WATER":1.0,"Shade_METAL:Shade_EARTH":1.0,"Shade_METAL:Shade_WOOD":1.5,"Shade_METAL:Shade_METAL":1.0, "Shade_METAL:Drone":1.0,
+		"Drone:Drone":1.0, "Drone:Shade_FIRE":1.0,"Drone:Shade_WATER":1.0,"Drone:Shade_EARTH":1.0,"Drone:Shade_WOOD":1.0,"Drone:Shade_METAL":1.0,
 	}
 	return matrix.get(attacker_type + ":" + defender_type, 0.0)
 

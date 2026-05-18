@@ -1,0 +1,10 @@
+[gd_scene load_steps=4 format=3 uid="uid://c041fih0urhca"]
+
+[ext_resource type="PackedScene" uid="uid://cph1iqfjco8q" path="res://scenes/units/Shade.tscn" id="1_2sj4x"]
+[ext_resource type="Script" uid="uid://cgiwdai3np1nb" path="res://entities/drone.gd" id="2_tvm6v"]
+[ext_resource type="Resource" uid="uid://d2op5qmkfy6do" path="res://data/units/drone_data.tres" id="3_tvm6v"]
+
+[node name="Drone" instance=ExtResource("1_2sj4x")]
+script = ExtResource("2_tvm6v")
+team = 0
+data = ExtResource("3_tvm6v")

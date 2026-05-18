@@ -233,6 +233,8 @@ func _deserialize_action(d: Dictionary) -> BaseAction:
 			if d.get("is_shade", false) and d.get("shade_element", "") != "":
 				var element = d["shade_element"].to_lower()
 				unit_data = load("res://data/units/shade_%s_data.tres" % element)
+			elif d.get("unit_type", "") == "Drone":
+				unit_data = load("res://data/units/drone_data.tres")
 			else:
 				if building.data:
 					for ud in building.data.producible_units:

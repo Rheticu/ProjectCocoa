@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=4 format=3 uid="uid://d2op5qmkfy6do"]
+
+[ext_resource type="Script" uid="uid://vguawhqk205m" path="res://entities/unit_data.gd" id="1_28gc8"]
+[ext_resource type="Texture2D" uid="uid://qt1ocsifbwf5" path="res://art/units/Raider/Raider_Blue.png" id="2_lhcfp"]
+[ext_resource type="Texture2D" uid="uid://cnq2565gy0vtn" path="res://art/units/icon.svg" id="3_de26s"]
+
+[resource]
+script = ExtResource("1_28gc8")
+unit_type = "Drone"
+attack = 25
+is_shade = true
+cost = 1000
+sprite_team1 = ExtResource("2_lhcfp")
+sprite_team2 = ExtResource("3_de26s")

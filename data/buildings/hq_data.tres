@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BuildingData" load_steps=10 format=3 uid="uid://b415o307sl51"]
+[gd_resource type="Resource" script_class="BuildingData" load_steps=11 format=3 uid="uid://b415o307sl51"]
 
 [ext_resource type="Script" uid="uid://vguawhqk205m" path="res://entities/unit_data.gd" id="1_a7066"]
 [ext_resource type="Resource" uid="uid://10axnlfjc535" path="res://data/units/shade_metal_data.tres" id="2_dn1yi"]
@@ -7,6 +7,7 @@
 [ext_resource type="Resource" uid="uid://dlwa7ab07pq1a" path="res://data/units/shade_wood_data.tres" id="4_5upub"]
 [ext_resource type="Resource" uid="uid://4co3aue3mle4" path="res://data/units/shade_water_data.tres" id="5_ny2nu"]
 [ext_resource type="Resource" uid="uid://diho7r0p1gxsj" path="res://data/units/shade_earth_data.tres" id="6_qu80g"]
+[ext_resource type="Resource" uid="uid://d2op5qmkfy6do" path="res://data/units/drone_data.tres" id="7_ny2nu"]
 [ext_resource type="Texture2D" uid="uid://c286ap667yxkj" path="res://art/buildings/HQ/HQ_Blue.png" id="8_5upub"]
 [ext_resource type="Texture2D" uid="uid://ci0w1pppy5wlf" path="res://art/buildings/HQ/HQ_Red.png" id="9_ny2nu"]
 
@@ -15,6 +16,6 @@ script = ExtResource("2_knbex")
 building_type = "HQ"
 income_per_turn = 1000
 can_produce_units = true
-producible_units = Array[ExtResource("1_a7066")]([ExtResource("2_dn1yi"), ExtResource("3_oyk8e"), ExtResource("4_5upub"), ExtResource("5_ny2nu"), ExtResource("6_qu80g")])
+producible_units = Array[ExtResource("1_a7066")]([ExtResource("2_dn1yi"), ExtResource("3_oyk8e"), ExtResource("4_5upub"), ExtResource("5_ny2nu"), ExtResource("6_qu80g"), ExtResource("7_ny2nu")])
 sprite_team1 = ExtResource("8_5upub")
 sprite_team2 = ExtResource("9_ny2nu")

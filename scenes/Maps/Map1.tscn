@@ -1,4 +1,4 @@
-[gd_scene load_steps=48 format=4 uid="uid://bpb111flh0snl"]
+[gd_scene load_steps=50 format=4 uid="uid://bpb111flh0snl"]
 
 [ext_resource type="Texture2D" uid="uid://00f5seoj7dpb" path="res://art/maps/PlainsSheet1.png" id="1_pd3xk"]
 [ext_resource type="PackedScene" uid="uid://cbst1oom7mdbi" path="res://scenes/units/Unit.tscn" id="2_fp56n"]
@@ -35,6 +35,8 @@
 [ext_resource type="Texture2D" uid="uid://dvc6oxqd66i62" path="res://art/buildings/City/City_Neutral.png" id="21_v6s0w"]
 [ext_resource type="Resource" uid="uid://cjqu3u4b2iwnt" path="res://data/buildings/barracks_data.tres" id="22_qkj4u"]
 [ext_resource type="Texture2D" uid="uid://ddipgcrb6qt7k" path="res://art/buildings/Barracks/Barracks_Blue.png" id="23_djjkr"]
+[ext_resource type="PackedScene" uid="uid://c041fih0urhca" path="res://scenes/units/Drone.tscn" id="24_1tjnf"]
+[ext_resource type="Texture2D" uid="uid://qt1ocsifbwf5" path="res://art/units/Raider/Raider_Blue.png" id="25_h05hs"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hyr6f"]
 texture = ExtResource("1_pd3xk")
@@ -347,7 +349,7 @@ data = ExtResource("16_oahdw")
 texture = ExtResource("17_0afsb")
 
 [node name="Shade4" parent="Units" instance=ExtResource("10_g7utu")]
-position = Vector2(432, 144)
+position = Vector2(368, 208)
 team = 2
 data = ExtResource("14_md4sb")
 
@@ -362,6 +364,20 @@ data = ExtResource("11_s4aev")
 [node name="Sprite2D" parent="Units/Shade5" index="0"]
 texture = ExtResource("21_1tjnf")
 
+[node name="Drone" parent="Units" instance=ExtResource("24_1tjnf")]
+position = Vector2(336, 208)
+team = 1
+
+[node name="Sprite2D" parent="Units/Drone" index="0"]
+texture = ExtResource("25_h05hs")
+
+[node name="Drone2" parent="Units" instance=ExtResource("24_1tjnf")]
+position = Vector2(304, 208)
+team = 2
+
+[node name="Sprite2D" parent="Units/Drone2" index="0"]
+texture = ExtResource("25_h05hs")
+
 [node name="Buildings" type="Node2D" parent="."]
 metadata/_edit_lock_ = true
 
@@ -374,7 +390,7 @@ data = ExtResource("8_jck17")
 texture = ExtResource("9_wlibu")
 
 [node name="Building2" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(176, 80)
+position = Vector2(560, 48)
 team = 2
 data = ExtResource("8_jck17")
 
@@ -659,6 +675,8 @@ texture = ExtResource("21_qkj4u")
 [editable path="Units/Shade3"]
 [editable path="Units/Shade4"]
 [editable path="Units/Shade5"]
+[editable path="Units/Drone"]
+[editable path="Units/Drone2"]
 [editable path="Buildings/Building"]
 [editable path="Buildings/Building2"]
 [editable path="Buildings/Building3"]
