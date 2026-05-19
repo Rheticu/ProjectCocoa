@@ -9,7 +9,8 @@ enum Type {
 	PRODUCE,
 	END_TURN,
 	SPECIAL,
-	OVERWATCH
+	OVERWATCH,
+	DIVIDE
 }
 
 var type: Type

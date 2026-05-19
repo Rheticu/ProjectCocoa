@@ -195,6 +195,16 @@ func _handle_left_click() -> void:
 					_pending_ability = ""
 				mode = Mode.IDLE
 				selection_system.deselect()
+			if _pending_ability == "DIVIDE":
+				if grid_pos in ui_layer._divide_tiles:
+					var drone = selection_system.selected_unit as Drone
+					var path = _pending_move_path.duplicate()
+					_pending_move_path.clear()
+					_pending_ability = ""
+					action_system.queue_action(DivideAction.new(drone, grid_pos, path))
+					mode = Mode.IDLE
+					selection_system.deselect()
+				return
 
 		Mode.SHADE_ABILITY:
 			var target = game_manager.get_any_unit_at(grid_pos)
@@ -280,6 +290,13 @@ func on_ability_pressed(ability: String) -> void:
 			action_system.queue_action(OverwatchAction.new(selection_system.selected_unit))
 			mode = Mode.IDLE
 			selection_system.deselect()
+			return
+		"DIVIDE":
+			var drone = selection_system.selected_unit as Drone
+			if drone:
+				ui_layer.show_divide_options(drone)
+			_pending_ability = "DIVIDE"
+			mode = Mode.TARGETING
 			return
 		_:
 			_pending_ability = ability

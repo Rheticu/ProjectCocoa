@@ -26,6 +26,7 @@ signal end_turn_pressed()
 @onready var shield2_btn = $Shield2
 @onready var muddle2_btn = $Muddle2
 @onready var boost2_btn = $Boost2
+@onready var divide_btn = $Divide
 @onready var options_btn = $Options
 @onready var end_turn_btn = $EndTurn
 
@@ -49,6 +50,7 @@ func _ready() -> void:
 	shield2_btn.pressed.connect(func(): ability_pressed.emit("SHIELD2"))
 	muddle2_btn.pressed.connect(func(): ability_pressed.emit("MUDDLE2"))
 	boost2_btn.pressed.connect(func(): ability_pressed.emit("BOOST2"))
+	divide_btn.pressed.connect(func(): ability_pressed.emit("DIVIDE"))
 	end_turn_btn.pressed.connect(func(): end_turn_pressed.emit())
 
 func show_for_unit(
@@ -82,6 +84,7 @@ func show_for_unit(
 	shield2_btn.visible = false
 	muddle2_btn.visible = false
 	boost2_btn.visible = false
+	divide_btn.visible = unit is Drone and unit.health >= 40
 	options_btn.visible = false
 	end_turn_btn.visible = false
 
@@ -117,6 +120,7 @@ func show_for_unit(
 				boost_btn.visible = has_boost_targets and shade.mana >= 2
 				boost2_btn.visible = has_boost_targets and shade.mana >= 3
 
+
 	# Captura
 	if building != null and building.team != unit.team:
 		if unit.unit_type in ["Sword", "Archer", "Spear"]:
@@ -139,6 +143,7 @@ func show_for_empty_tile() -> void:
 	shield2_btn.visible = false
 	muddle2_btn.visible = false
 	boost2_btn.visible = false
+	divide_btn.visible = false
 	move_btn.visible = false
 	options_btn.visible = true
 	cancel_btn.visible = true

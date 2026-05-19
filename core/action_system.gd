@@ -42,6 +42,7 @@ func _validate(action: BaseAction) -> bool:
 		BaseAction.Type.CAPTURE:  return _validate_capture(action as CaptureAction)
 		BaseAction.Type.PRODUCE:  return _validate_produce(action as ProduceAction)
 		BaseAction.Type.SPECIAL: return _validate_special(action as SpecialAction)
+		BaseAction.Type.DIVIDE: return _validate_divide(action as DivideAction)
 		BaseAction.Type.END_TURN: return true
 		BaseAction.Type.OVERWATCH: return _validate_overwatch(action as OverwatchAction)
 	return false
@@ -106,6 +107,7 @@ func _execute(action: BaseAction) -> void:
 		BaseAction.Type.END_TURN: _execute_end_turn(action as EndTurnAction)
 		BaseAction.Type.SPECIAL: await _execute_special(action as SpecialAction)
 		BaseAction.Type.OVERWATCH: _execute_overwatch(action as OverwatchAction)
+		BaseAction.Type.DIVIDE: await _execute_divide(action as DivideAction)
 	_is_executing = false
 	action_executed.emit(action)
 	if action.type != BaseAction.Type.MOVE:
@@ -255,3 +257,39 @@ func execute_remote(action: BaseAction) -> void:
 	_executing_remote = false
 	var viewing_team = game_manager.local_player_id if game_manager.local_player_id > 0 else 1
 	fog_system.recalculate(viewing_team)
+
+func _validate_divide(action: DivideAction) -> bool:
+	var drone = action.actor as Drone
+	if not drone:
+		return false
+	if drone.state == Unit.State.MOVED:
+		action_rejected.emit("Unidad ya actuó")
+		return false
+	if game_manager.get_unit_at(action.target_pos, true) != null:
+		action_rejected.emit("Tile ocupado")
+		return false
+	return true
+
+func _execute_divide(action: DivideAction) -> void:
+	if not action.move_path.is_empty():
+		var destination = action.move_path.back()
+		if action.actor.grid_position != destination:
+			var move = MoveAction.new(action.actor, action.move_path)
+			await _execute_move(move)
+	var drone = action.actor as Drone
+	var new_hp = int(drone.health * 0.4)
+	drone.health = new_hp
+	drone.state = Unit.State.MOVED
+	drone.update_visual()
+	var new_drone_scene = load("res://scenes/units/Drone.tscn")
+	if not _executing_remote:
+		action.new_unit_id = randi_range(1, 999999)
+	var new_drone = new_drone_scene.instantiate()
+	new_drone.data = drone.data
+	new_drone.team = drone.team
+	new_drone.unit_id = action.new_unit_id
+	new_drone.grid_position = action.target_pos
+	new_drone.health = new_hp
+	new_drone.state = Unit.State.MOVED
+	game_manager.current_map.get_node("Units").add_child(new_drone)
+	game_manager.register_unit(new_drone)

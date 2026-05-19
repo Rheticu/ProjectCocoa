@@ -12,6 +12,7 @@ var _current_thrust_direction: Vector2i = Vector2i.ZERO
 var _bash_overlays: Dictionary = {}
 var _current_bash_direction: Vector2i = Vector2i.ZERO
 var _volley_center: Vector2i = Vector2i(-1,-1)
+var _divide_tiles: Array[Vector2i] = []
 var _cursor_path: Array[Vector2i] = []
 var _is_tracing: bool = false
 
@@ -263,6 +264,16 @@ func _on_shade_view_toggled(enabled: bool) -> void:
 		show_ability_range(_current_ability_shade, _current_ability_is_hostile)
 
 	fog_system.update_shade_view(enabled, game_manager.local_player_id)
+
+func show_divide_options(drone: Drone) -> void:
+	attack_range_overlay.clear()
+	_divide_tiles.clear()
+	var dirs = [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]
+	for dir in dirs:
+		var pos = drone.grid_position + dir
+		if grid_system.is_in_bounds(pos) and game_manager.get_unit_at(pos, true) == null:
+			attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
+			_divide_tiles.append(pos)
 
 # ── Animación de movimiento ───────────────────────────────────────────────────
 

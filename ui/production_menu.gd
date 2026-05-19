@@ -58,7 +58,7 @@ func setup(building: Building, funds: int, shade_count: int) -> void:
 	for unit_data in building.data.producible_units:
 		var cost = unit_data.cost
 		var can_afford = funds >= cost
-		var shade_limit = unit_data.is_shade and shade_count >= 5
+		var shade_limit = unit_data.is_shade and unit_data.unit_type != "Drone" and shade_count >= 5
 		var can_build = can_afford and not shade_limit
 		
 		var row = HBoxContainer.new()

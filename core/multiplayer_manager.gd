@@ -160,7 +160,7 @@ func receive_building_state(bdata: Dictionary) -> void:
 
 @rpc("authority", "reliable")
 func receive_initial_state_done(_data: Dictionary) -> void:
-	#print("INITIAL STATE [player %d]:\n" % game_manager.local_player_id, state_hasher.compute_state_string())
+	print("INITIAL STATE [player %d]:\n" % game_manager.local_player_id, state_hasher.compute_state_string())
 	fog_system.recalculate(player_id)
 	game_ready.emit()
 
@@ -265,6 +265,13 @@ func _deserialize_action(d: Dictionary) -> BaseAction:
 			if not actor: return null
 			return OverwatchAction.new(actor)
 
+		BaseAction.Type.DIVIDE:
+			var actor = game_manager.get_unit_by_id(d["actor_id"])
+			if not actor: return null
+			var div_action = DivideAction.new(actor as Drone, Vector2i(d["target_x"], d["target_y"]), _unpack_path(d))
+			div_action.new_unit_id = d.get("new_unit_id", -1)
+			return div_action
+
 		BaseAction.Type.END_TURN:
 			return EndTurnAction.new(d["team"])
 
@@ -310,7 +317,7 @@ func send_checksum(action_name: String) -> void:
 	if not is_multiplayer_active():
 		return
 	var checksum = state_hasher.compute_checksum()
-	#print("LOCAL STATE después de '%s':\n" % action_name, state_hasher.compute_state_string())
+	print("LOCAL STATE después de '%s':\n" % action_name, state_hasher.compute_state_string())
 	rpc("receive_checksum", checksum, action_name)
 
 @rpc("any_peer", "reliable")

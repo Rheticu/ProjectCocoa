@@ -1,4 +1,4 @@
-[gd_scene load_steps=50 format=4 uid="uid://bpb111flh0snl"]
+[gd_scene load_steps=48 format=4 uid="uid://bpb111flh0snl"]
 
 [ext_resource type="Texture2D" uid="uid://00f5seoj7dpb" path="res://art/maps/PlainsSheet1.png" id="1_pd3xk"]
 [ext_resource type="PackedScene" uid="uid://cbst1oom7mdbi" path="res://scenes/units/Unit.tscn" id="2_fp56n"]
@@ -13,9 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://c286ap667yxkj" path="res://art/buildings/HQ/HQ_Blue.png" id="9_wlibu"]
 [ext_resource type="PackedScene" uid="uid://cph1iqfjco8q" path="res://scenes/units/Shade.tscn" id="10_g7utu"]
 [ext_resource type="Texture2D" uid="uid://ci0w1pppy5wlf" path="res://art/buildings/HQ/HQ_Red.png" id="10_iw16c"]
-[ext_resource type="Resource" uid="uid://kc6p0ij8gsd8" path="res://data/units/cannon_data.tres" id="10_oahdw"]
 [ext_resource type="Texture2D" uid="uid://dltmmbypolan6" path="res://art/units/Sword/Sword1_Blue.png" id="10_s4aev"]
-[ext_resource type="Texture2D" uid="uid://b20wkocvnb7xi" path="res://art/units/Cannon/Cannon1_Red.png" id="11_0afsb"]
 [ext_resource type="Resource" uid="uid://pu4shykaiycb" path="res://data/units/shade_fire_data.tres" id="11_s4aev"]
 [ext_resource type="Resource" uid="uid://dlwa7ab07pq1a" path="res://data/units/shade_wood_data.tres" id="12_md4sb"]
 [ext_resource type="Texture2D" uid="uid://b317sv37nyvo" path="res://art/buildings/Barracks/Barracks_Red.png" id="13_83t8w"]
@@ -198,62 +196,6 @@ metadata/_edit_lock_ = true
 [node name="Units" type="Node2D" parent="."]
 metadata/_edit_lock_ = true
 
-[node name="Unit" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(368, 112)
-team = 2
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit" index="0"]
-texture = ExtResource("9_83t8w")
-
-[node name="Unit7" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(432, 240)
-team = 2
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit7" index="0"]
-texture = ExtResource("9_83t8w")
-
-[node name="Unit8" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(304, 144)
-team = 2
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit8" index="0"]
-texture = ExtResource("9_83t8w")
-
-[node name="Unit11" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(304, 48)
-team = 2
-data = ExtResource("10_oahdw")
-
-[node name="Sprite2D" parent="Units/Unit11" index="0"]
-texture = ExtResource("11_0afsb")
-
-[node name="Unit10" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(432, 48)
-team = 2
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit10" index="0"]
-texture = ExtResource("9_83t8w")
-
-[node name="Unit12" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(528, 80)
-team = 2
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit12" index="0"]
-texture = ExtResource("9_83t8w")
-
-[node name="Unit14" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(432, 368)
-team = 2
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit14" index="0"]
-texture = ExtResource("9_83t8w")
-
 [node name="Unit15" parent="Units" instance=ExtResource("2_fp56n")]
 position = Vector2(528, 112)
 team = 2
@@ -262,69 +204,11 @@ data = ExtResource("8_k24gi")
 [node name="Sprite2D" parent="Units/Unit15" index="0"]
 texture = ExtResource("9_83t8w")
 
-[node name="Unit13" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(496, 80)
-team = 2
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit13" index="0"]
-texture = ExtResource("9_83t8w")
-
-[node name="Unit9" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(336, 112)
-team = 2
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit9" index="0"]
-texture = ExtResource("9_83t8w")
-
 [node name="Unit2" parent="Units" instance=ExtResource("2_fp56n")]
 position = Vector2(464, 112)
 data = ExtResource("8_k24gi")
 
 [node name="Sprite2D" parent="Units/Unit2" index="0"]
-texture = ExtResource("10_s4aev")
-
-[node name="Unit3" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(432, 208)
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit3" index="0"]
-texture = ExtResource("10_s4aev")
-
-[node name="Unit4" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(496, 112)
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit4" index="0"]
-texture = ExtResource("10_s4aev")
-
-[node name="Unit16" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(496, 144)
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit16" index="0"]
-texture = ExtResource("10_s4aev")
-
-[node name="Unit17" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(272, 304)
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit17" index="0"]
-texture = ExtResource("10_s4aev")
-
-[node name="Unit5" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(464, 80)
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit5" index="0"]
-texture = ExtResource("10_s4aev")
-
-[node name="Unit6" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(464, 144)
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit6" index="0"]
 texture = ExtResource("10_s4aev")
 
 [node name="Shade" parent="Units" instance=ExtResource("10_g7utu")]
@@ -369,13 +253,6 @@ position = Vector2(336, 208)
 team = 1
 
 [node name="Sprite2D" parent="Units/Drone" index="0"]
-texture = ExtResource("25_h05hs")
-
-[node name="Drone2" parent="Units" instance=ExtResource("24_1tjnf")]
-position = Vector2(304, 208)
-team = 2
-
-[node name="Sprite2D" parent="Units/Drone2" index="0"]
 texture = ExtResource("25_h05hs")
 
 [node name="Buildings" type="Node2D" parent="."]
@@ -488,13 +365,6 @@ data = ExtResource("20_v6s0w")
 [node name="Sprite2D" parent="Buildings/Building28" index="0"]
 texture = ExtResource("21_v6s0w")
 
-[node name="Building11" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(528, 112)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building11" index="0"]
-texture = ExtResource("21_v6s0w")
-
 [node name="Building4" parent="Buildings" instance=ExtResource("19_ew753")]
 position = Vector2(560, 496)
 data = ExtResource("20_v6s0w")
@@ -603,14 +473,6 @@ data = ExtResource("22_qkj4u")
 [node name="Sprite2D" parent="Buildings/Building20" index="0"]
 texture = ExtResource("23_djjkr")
 
-[node name="Building40" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(496, 80)
-team = 1
-data = ExtResource("22_qkj4u")
-
-[node name="Sprite2D" parent="Buildings/Building40" index="0"]
-texture = ExtResource("23_djjkr")
-
 [node name="Building29" parent="Buildings" instance=ExtResource("19_ew753")]
 position = Vector2(112, 48)
 data = ExtResource("20_i64x8")
@@ -653,30 +515,14 @@ data = ExtResource("20_i64x8")
 [node name="Sprite2D" parent="Buildings/Building34" index="0"]
 texture = ExtResource("21_qkj4u")
 
-[editable path="Units/Unit"]
-[editable path="Units/Unit7"]
-[editable path="Units/Unit8"]
-[editable path="Units/Unit11"]
-[editable path="Units/Unit10"]
-[editable path="Units/Unit12"]
-[editable path="Units/Unit14"]
 [editable path="Units/Unit15"]
-[editable path="Units/Unit13"]
-[editable path="Units/Unit9"]
 [editable path="Units/Unit2"]
-[editable path="Units/Unit3"]
-[editable path="Units/Unit4"]
-[editable path="Units/Unit16"]
-[editable path="Units/Unit17"]
-[editable path="Units/Unit5"]
-[editable path="Units/Unit6"]
 [editable path="Units/Shade"]
 [editable path="Units/Shade2"]
 [editable path="Units/Shade3"]
 [editable path="Units/Shade4"]
 [editable path="Units/Shade5"]
 [editable path="Units/Drone"]
-[editable path="Units/Drone2"]
 [editable path="Buildings/Building"]
 [editable path="Buildings/Building2"]
 [editable path="Buildings/Building3"]
@@ -692,7 +538,6 @@ texture = ExtResource("21_qkj4u")
 [editable path="Buildings/Building26"]
 [editable path="Buildings/Building27"]
 [editable path="Buildings/Building28"]
-[editable path="Buildings/Building11"]
 [editable path="Buildings/Building4"]
 [editable path="Buildings/Building5"]
 [editable path="Buildings/Building14"]
@@ -708,7 +553,6 @@ texture = ExtResource("21_qkj4u")
 [editable path="Buildings/Building19"]
 [editable path="Buildings/Building39"]
 [editable path="Buildings/Building20"]
-[editable path="Buildings/Building40"]
 [editable path="Buildings/Building29"]
 [editable path="Buildings/Building30"]
 [editable path="Buildings/Building31"]
