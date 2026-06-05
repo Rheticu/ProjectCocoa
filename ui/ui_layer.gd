@@ -13,8 +13,10 @@ var _bash_overlays: Dictionary = {}
 var _current_bash_direction: Vector2i = Vector2i.ZERO
 var _volley_center: Vector2i = Vector2i(-1,-1)
 var _divide_tiles: Array[Vector2i] = []
+var _divide_hover_tile: Vector2i = Vector2i(-999, -999)
 var _cursor_path: Array[Vector2i] = []
 var _is_tracing: bool = false
+var _saved_move_path: Array[Vector2i] = []
 
 # Sistemas — sin cambios
 @onready var game_manager      = $"../GameManager"
@@ -268,7 +270,10 @@ func _on_shade_view_toggled(enabled: bool) -> void:
 func show_divide_options(drone: Drone) -> void:
 	attack_range_overlay.clear()
 	_divide_tiles.clear()
+	_divide_hover_tile = Vector2i(-999, -999)
+
 	var dirs = [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]
+
 	for dir in dirs:
 		var pos = drone.grid_position + dir
 		if grid_system.is_in_bounds(pos) and game_manager.get_unit_at(pos, true) == null:
@@ -281,6 +286,7 @@ func _on_move_started(unit: Unit, path: Array[Vector2i], is_remote: bool) -> voi
 	input_controller.lock()
 	move_range_overlay.clear()
 	var saved_path = path.duplicate()
+	_saved_move_path = saved_path
 	if is_remote and unit.team != game_manager.local_player_id:
 		if unit.marked_turns > 0:
 			if unit.is_shade():
@@ -313,7 +319,6 @@ func _on_move_started(unit: Unit, path: Array[Vector2i], is_remote: bool) -> voi
 		if multiplayer_manager.is_network_connected and not is_remote:
 			var action = MoveAction.new(unit, saved_path)
 			var dict = multiplayer_manager.serialize_action(action)
-			dict["triggered_by_overwatch"] = true
 			multiplayer_manager.send_action(dict)
 		return
 	action_system.move_confirmed.emit(unit)
@@ -385,7 +390,7 @@ func _on_overwatch_triggered(_attacker: Unit, target: Unit, _tile: Vector2i, _pr
 	target.update_visual()
 	_overwatch_resolved.emit()
 
-func _on_ambush_triggered(moving_unit: Unit, hidden_unit: Unit, _tile: Vector2i) -> void:
+func _on_ambush_triggered(moving_unit: Unit, _hidden_unit: Unit, _tile: Vector2i) -> void:
 	_ambush_activated = true
 	if _movement_tween:
 		_movement_tween.kill()
@@ -396,12 +401,16 @@ func _on_ambush_triggered(moving_unit: Unit, hidden_unit: Unit, _tile: Vector2i)
 	input_controller.mode = InputController.Mode.IDLE
 	selection_system.deselect()
 	fog_system.recalculate(game_manager.local_player_id)
-	if multiplayer_manager.is_network_connected:
-		multiplayer_manager.sync_ambush(
-			moving_unit.unit_id,
-			moving_unit.grid_position,
-			hidden_unit.unit_id
-		)
+	if multiplayer_manager.is_network_connected and not action_system._executing_remote:
+		var truncated_path: Array[Vector2i] = []
+		for p in _saved_move_path:
+			truncated_path.append(p)
+			if p == moving_unit.grid_position:
+				break
+		var action = MoveAction.new(moving_unit, truncated_path)
+		var dict = multiplayer_manager.serialize_action(action)
+		multiplayer_manager.send_action(dict)
+		_saved_move_path.clear()
 
 func _show_ambush_effect(world_pos: Vector2) -> void:
 	var exclaim = Sprite2D.new()
@@ -514,6 +523,19 @@ func _process(_delta: float) -> void:
 					var t = game_manager.get_unit_at(pos)
 					if t and t.team != selection_system.selected_unit.team and t.visible:
 						t.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+
+	if input_controller.mode == InputController.Mode.TARGETING and input_controller._pending_ability == "DIVIDE":
+		if grid_pos != _divide_hover_tile:
+			_divide_hover_tile = grid_pos
+
+			# Restaurar overlay base
+			attack_range_overlay.clear()
+			for pos in _divide_tiles:
+				attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
+
+			# Pintar tile hover en amarillo
+			if grid_pos in _divide_tiles:
+				attack_range_overlay.set_cell(grid_pos, 1, Vector2i(0, 0))
 
 func _update_movement_arrow(cursor_pos: Vector2i) -> void:
 	if input_controller._locked:

@@ -279,32 +279,40 @@ func on_attack_pressed() -> void:
 
 func on_ability_pressed(ability: String) -> void:
 	ui_layer.move_range_overlay.clear()
+	_pending_ability = ability
+
 	match ability:
 		"THRUST":
 			ui_layer.show_thrust_options(selection_system.selected_unit)
+
 		"BASH":
 			ui_layer.show_bash_options(selection_system.selected_unit)
+
 		"VOLLEY":
 			ui_layer.show_volley_options(selection_system.selected_unit)
+
 		"OVERWATCH":
-			action_system.queue_action(OverwatchAction.new(selection_system.selected_unit))
+			action_system.queue_action(
+				OverwatchAction.new(selection_system.selected_unit)
+			)
 			mode = Mode.IDLE
 			selection_system.deselect()
 			return
+
 		"DIVIDE":
 			var drone = selection_system.selected_unit as Drone
 			if drone:
 				ui_layer.show_divide_options(drone)
-			_pending_ability = "DIVIDE"
 			mode = Mode.TARGETING
 			return
+
 		_:
-			_pending_ability = ability
 			var shade = selection_system.selected_unit as Shade
 			if shade:
 				selection_system.show_ability_options(shade, ability)
 			mode = Mode.SHADE_ABILITY
 			return
+
 	mode = Mode.TARGETING
 
 func on_move_confirmed() -> void:

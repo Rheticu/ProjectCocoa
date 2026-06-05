@@ -160,7 +160,7 @@ func receive_building_state(bdata: Dictionary) -> void:
 
 @rpc("authority", "reliable")
 func receive_initial_state_done(_data: Dictionary) -> void:
-	print("INITIAL STATE [player %d]:\n" % game_manager.local_player_id, state_hasher.compute_state_string())
+	#print("INITIAL STATE [player %d]:\n" % game_manager.local_player_id, state_hasher.compute_state_string())
 	fog_system.recalculate(player_id)
 	game_ready.emit()
 
@@ -203,7 +203,6 @@ func _deserialize_action(d: Dictionary) -> BaseAction:
 			var actor = game_manager.get_unit_by_id(d["actor_id"])
 			if not actor: return null
 			var action = MoveAction.new(actor, _unpack_path(d), d.get("is_wrapped", false))
-			action.skip_animation = d.get("triggered_by_overwatch", false)
 			return action
 
 		BaseAction.Type.ATTACK:
@@ -297,27 +296,11 @@ func receive_new_unit_id(new_id: int, gx: int, gy: int, team: int) -> void:
 			unit.unit_id = new_id
 			return
 
-func sync_ambush(moving_unit_id: int, stopped_pos: Vector2i, revealed_unit_id: int) -> void:
-	rpc("receive_ambush", moving_unit_id, stopped_pos.x, stopped_pos.y, revealed_unit_id)
-
-@rpc("any_peer", "reliable")
-func receive_ambush(moving_unit_id: int, stopped_x: int, stopped_y: int, revealed_unit_id: int) -> void:
-	var moving_unit = game_manager.get_unit_by_id(moving_unit_id)
-	var revealed_unit = game_manager.get_unit_by_id(revealed_unit_id)
-	if moving_unit:
-		moving_unit.grid_position = Vector2i(stopped_x, stopped_y)
-		moving_unit.state = Unit.State.MOVED
-		moving_unit.update_visual()
-	if revealed_unit:
-		revealed_unit.visible = true
-		revealed_unit.update_visual()
-	fog_system.recalculate(player_id)
-
 func send_checksum(action_name: String) -> void:
 	if not is_multiplayer_active():
 		return
 	var checksum = state_hasher.compute_checksum()
-	print("LOCAL STATE después de '%s':\n" % action_name, state_hasher.compute_state_string())
+	#print("LOCAL STATE después de '%s':\n" % action_name, state_hasher.compute_state_string())
 	rpc("receive_checksum", checksum, action_name)
 
 @rpc("any_peer", "reliable")
@@ -329,7 +312,7 @@ func receive_checksum(remote_checksum: int, action_name: String) -> void:
 	var local_checksum = state_hasher.compute_checksum()
 	if local_checksum != remote_checksum:
 		push_error("DESYNC después de '%s': local=%d remote=%d" % [action_name, local_checksum, remote_checksum])
-		print("DESYNC STATE:\n", state_hasher.compute_state_string())
+		#print("DESYNC STATE:\n", state_hasher.compute_state_string())
 	else:
 		return
 		#print("OK checksum después de '%s'" % action_name)
