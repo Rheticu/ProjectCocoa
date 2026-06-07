@@ -182,10 +182,13 @@ func receive_action(action_dict: Dictionary) -> void:
 	var action = _deserialize_action(action_dict)
 	if action:
 		await action_system.execute_remote(action)
+		if action_dict.get("show_ambush_effect", false):
+			var unit = (action as MoveAction).actor
+			if is_instance_valid(unit):
+				get_node("../UILayer")._show_ambush_effect(unit.global_position)
 		send_checksum(action_dict.get("type", "unknown"))
 	else:
 		push_error("MultiplayerManager: no se pudo deserializar la acción: " + str(action_dict))
-
 # ══════════════════════════════════════════════════════════════════════════════
 # SERIALIZACIÓN / DESERIALIZACIÓN
 # ══════════════════════════════════════════════════════════════════════════════

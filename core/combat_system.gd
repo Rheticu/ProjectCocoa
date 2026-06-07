@@ -6,6 +6,7 @@ extends Node
 
 signal combat_happened(attacker: Unit, target: Unit, damage_dealt: int, counter_damage: int)
 signal unit_died(unit: Unit)
+signal unit_damaged(unit: Unit)
 
 func execute_attack(attacker: Unit, target: Unit) -> void:
 	var damage = calculate_damage(attacker, target)
@@ -19,10 +20,10 @@ func execute_attack(attacker: Unit, target: Unit) -> void:
 	attacker.state = Unit.State.MOVED
 	attacker.update_visual()
 	target.update_visual()
-
 	combat_happened.emit(attacker, target, damage, counter)
-
-	if target.check_death():
+	if not target.check_death():
+		unit_damaged.emit.call_deferred(target)
+	else:
 		_handle_death(target)
 	if attacker.check_death():
 		_handle_death(attacker)
@@ -53,7 +54,9 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 			var dmg = int(max(0.0, multiplier * shade.health/5 - target.get_total_defense(0)))
 			target.health -= dmg
 			target.update_visual()
-			if target.check_death():
+			if not target.check_death():
+				unit_damaged.emit.call_deferred(target)
+			else:
 				_handle_death(target)
 		"SHIELD":
 			shade.mana -= 2
@@ -99,7 +102,9 @@ func execute_ability(shade: Shade, ability: String, target: Unit, current_elemen
 						var dmg = int(max(0.0, multiplier * shade.health/5 - unit.get_total_defense(0)))
 						unit.health -= dmg
 						unit.update_visual()
-						if unit.check_death():
+						if not unit.check_death():
+							unit_damaged.emit.call_deferred(unit)
+						else:
 							_handle_death(unit)
 		"MARK2":
 			shade.mana -= 3
@@ -121,7 +126,9 @@ func execute_thrust(attacker: Unit, targets: Array[Unit]) -> void:
 		var damage = int(calculate_damage(attacker, target) * 0.8)
 		target.health -= damage
 		target.update_visual()
-		if target.check_death():
+		if not target.check_death():
+			unit_damaged.emit.call_deferred(target)
+		else:
 			_handle_death(target)
 	attacker.state = Unit.State.MOVED
 	attacker.update_visual()
@@ -135,7 +142,9 @@ func execute_bash(attacker: Unit, targets: Array[Unit]) -> void:
 		var damage = int(calculate_damage(attacker, target) * 0.7)
 		target.health -= damage
 		target.update_visual()
-		if target.check_death():
+		if not target.check_death():
+			unit_damaged.emit.call_deferred(target)
+		else:
 			_handle_death(target)
 	attacker.state = Unit.State.MOVED
 	attacker.update_visual()
@@ -149,7 +158,9 @@ func execute_volley(attacker: Unit, targets: Array[Unit]) -> void:
 		var damage = int(calculate_damage(attacker, target) * 0.6)
 		target.health -= damage
 		target.update_visual()
-		if target.check_death():
+		if not target.check_death():
+			unit_damaged.emit.call_deferred(target)
+		else:
 			_handle_death(target)
 	attacker.state = Unit.State.MOVED
 	attacker.update_visual()
@@ -222,7 +233,9 @@ func execute_overwatch_attack(attacker: Unit, target: Unit) -> void:
 	var damage = calculate_damage(attacker, target)
 	target.health -= damage
 	target.update_visual()
-	if target.check_death():
+	if not target.check_death():
+		unit_damaged.emit.call_deferred(target)
+	else:
 		_handle_death(target)
 	attacker.state = Unit.State.MOVED
 	attacker.update_visual()

@@ -88,6 +88,10 @@ func check_death() -> bool:
 
 func update_visual() -> void:
 	$HealthLabel.text = str(health)
+	if health > 99:
+		$HealthLabel.visible = false
+	else:
+		$HealthLabel.visible = true
 	match state:
 		State.SELECTED: $Sprite2D.modulate = Color(1.5, 1.5, 0.536, 1.0)
 		State.MOVED:    $Sprite2D.modulate = Color(0.5, 0.5, 0.5)

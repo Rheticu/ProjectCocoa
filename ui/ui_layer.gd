@@ -28,6 +28,7 @@ var _saved_move_path: Array[Vector2i] = []
 @onready var fog_system = $"../FogSystem"
 @onready var hud = $"../HUD"
 @onready var multiplayer_manager = $"../MultiplayerManager"
+@onready var combat_system = $"../CombatSystem"
 
 var _current_building: Building = null
 var _overwatch_activated: bool = false
@@ -60,6 +61,7 @@ func _ready() -> void:
 	action_system.ambush_triggered.connect(_on_ambush_triggered)
 	game_manager.shade_view_toggled.connect(_on_shade_view_toggled)
 	selection_system.ability_targets_shown.connect(_on_ability_targets_shown)
+	combat_system.unit_damaged.connect(_on_unit_damaged)
 
 # ── Action Menu ───────────────────────────────────────────────────────────────
 
@@ -148,6 +150,16 @@ func hide_ability_range() -> void:
 	attack_range_overlay.clear()
 	_current_ability_shade = null
 
+func _on_unit_damaged(unit: Unit) -> void:
+	if not is_instance_valid(unit):
+		return
+	var sprite = unit.get_node_or_null("Sprite2D")
+	if not sprite:
+		return
+	sprite.modulate = Color(2, 0.5, 0.5)
+	await get_tree().create_timer(0.6).timeout
+	if is_instance_valid(unit):
+		unit.update_visual()
 # ── Overlays ─────────────────────────────────────────────────────────
 
 func _on_unit_selected(unit: Unit, reachable: Array[Vector2i]) -> void:
@@ -402,15 +414,16 @@ func _on_ambush_triggered(moving_unit: Unit, _hidden_unit: Unit, _tile: Vector2i
 	selection_system.deselect()
 	fog_system.recalculate(game_manager.local_player_id)
 	if multiplayer_manager.is_network_connected and not action_system._executing_remote:
-		var truncated_path: Array[Vector2i] = []
-		for p in _saved_move_path:
-			truncated_path.append(p)
-			if p == moving_unit.grid_position:
-				break
-		var action = MoveAction.new(moving_unit, truncated_path)
-		var dict = multiplayer_manager.serialize_action(action)
-		multiplayer_manager.send_action(dict)
-		_saved_move_path.clear()
+			var truncated_path: Array[Vector2i] = []
+			for p in _saved_move_path:
+				truncated_path.append(p)
+				if p == moving_unit.grid_position:
+					break
+			var action = MoveAction.new(moving_unit, truncated_path)
+			var dict = multiplayer_manager.serialize_action(action)
+			dict["show_ambush_effect"] = true
+			multiplayer_manager.send_action(dict)
+			_saved_move_path.clear()
 
 func _show_ambush_effect(world_pos: Vector2) -> void:
 	var exclaim = Sprite2D.new()
