@@ -186,10 +186,14 @@ func update_game_panel() -> void:
 
 func show_unit_info(unit: Unit) -> void:
 	if unit.is_shade():
-		var shade = unit as Shade
-		unit_type_label.text = shade.shade_element
-		unit_mana_label.text = "Mana: %d/%d" % [shade.mana, shade.max_mana]
-		unit_mana_label.visible = true
+		if unit.unit_type == "Shade":
+			var shade = unit as Shade
+			unit_type_label.text = shade.shade_element
+			unit_mana_label.text = "Mana: %d/%d" % [shade.mana, shade.max_mana]
+			unit_mana_label.visible = true
+		else:
+			unit_type_label.text = unit.unit_type
+			unit_mana_label.visible = false
 	else:
 		unit_type_label.text = unit.unit_type
 		unit_mana_label.visible = false

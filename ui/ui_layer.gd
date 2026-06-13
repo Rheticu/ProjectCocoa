@@ -619,14 +619,16 @@ func show_production_menu(building: Building) -> void:
 	for unit in game_manager.all_units:
 		if unit.is_shade():
 			shades_pos.append(unit.grid_position)
-			if unit.team == building.team :
+			if unit.team == building.team:
 				shade_count += 1
 	_current_building = building
 	if building.building_type == "HQ" and building.building_position in shades_pos:
 		return
 	production_menu.setup(building, funds, shade_count)
-	production_menu.position = Vector2(get_viewport().get_visible_rect().size / 2) - Vector2(160, 170)
 	production_menu.visible = true
+	await get_tree().process_frame
+	var viewport_size = get_viewport().get_visible_rect().size
+	production_menu.position = (viewport_size / 2) - (production_menu.size / 2)
 
 func hide_production_menu() -> void:
 	production_menu.visible = false

@@ -7,8 +7,9 @@ signal closed()
 func setup(building: Building, funds: int, shade_count: int) -> void:
 	# Limpiar contenido previo
 	for child in get_children():
-		child.queue_free()
-	
+		child.free()
+	reset_size()
+
 	# Estilo del panel
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.08, 0.08, 0.12, 0.95)
@@ -24,36 +25,36 @@ func setup(building: Building, funds: int, shade_count: int) -> void:
 	panel_style.shadow_color = Color(0, 0, 0, 0.5)
 	panel_style.shadow_size = 8
 	add_theme_stylebox_override("panel", panel_style)
-	
+
 	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 10)
 	margin.add_theme_constant_override("margin_right", 10)
 	margin.add_theme_constant_override("margin_top", 10)
 	margin.add_theme_constant_override("margin_bottom", 10)
 	add_child(margin)
-	
+
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
+	vbox.add_theme_constant_override("separation", 5)
 	margin.add_child(vbox)
-	
-	# Título
-	var title = Label.new()
-	title.text = "PRODUCTION"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 18)
-	title.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
-	vbox.add_child(title)
-	
+
+	## Título
+	#var title = Label.new()
+	#title.text = "PRODUCTION"
+	#title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	#title.add_theme_font_size_override("font_size", 14)
+	#title.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+	#vbox.add_child(title)
+
 	# Subtítulo
 	var subtitle = Label.new()
 	subtitle.text = building.building_type
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_font_size_override("font_size", 14)
-	subtitle.add_theme_color_override("font_color", Color(0.7, 0.7, 0.9))
+	subtitle.add_theme_font_size_override("font_size", 16)
+	subtitle.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
 	vbox.add_child(subtitle)
-	
+
 	vbox.add_child(HSeparator.new())
-	
+
 	# Lista de unidades
 	for unit_data in building.data.producible_units:
 		var cost = unit_data.cost
@@ -63,9 +64,9 @@ func setup(building: Building, funds: int, shade_count: int) -> void:
 		
 		var row = HBoxContainer.new()
 		row.add_theme_constant_override("separation", 15)
-		row.custom_minimum_size = Vector2(0, 36)
+		row.custom_minimum_size = Vector2(0, 1)
 		vbox.add_child(row)
-		
+
 		var name_label = Label.new()
 		if unit_data.is_shade and unit_data.shade_element != "":
 			name_label.text = unit_data.shade_element + " Shade"
@@ -76,14 +77,14 @@ func setup(building: Building, funds: int, shade_count: int) -> void:
 		if not can_build:
 			name_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 		row.add_child(name_label)
-		
+
 		var cost_label = Label.new()
 		cost_label.text = "$" + str(cost)
 		cost_label.add_theme_font_size_override("font_size", 16)
 		if not can_build:
 			cost_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 		row.add_child(cost_label)
-		
+
 		var btn = Button.new()
 		btn.text = "BUILD"
 		btn.custom_minimum_size = Vector2(80, 32)
@@ -103,7 +104,7 @@ func setup(building: Building, funds: int, shade_count: int) -> void:
 			btn.add_theme_stylebox_override("normal", style)
 		btn.pressed.connect(func(): unit_selected.emit(unit_data, cost))
 		row.add_child(btn)
-	
+
 	# Fondos disponibles
 	var funds_label = Label.new()
 	funds_label.text = "Available: $" + str(funds)
@@ -111,10 +112,10 @@ func setup(building: Building, funds: int, shade_count: int) -> void:
 	funds_label.add_theme_font_size_override("font_size", 14)
 	funds_label.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
 	vbox.add_child(funds_label)
-	
+
 	# Botón cerrar
 	var close_btn = Button.new()
 	close_btn.text = "CLOSE"
-	close_btn.custom_minimum_size = Vector2(0, 35)
+	close_btn.custom_minimum_size = Vector2(0, 28)
 	close_btn.pressed.connect(func(): closed.emit())
 	vbox.add_child(close_btn)
