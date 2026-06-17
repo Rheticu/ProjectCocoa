@@ -171,9 +171,15 @@ func _on_unit_damaged(unit: Unit) -> void:
 
 func _on_unit_selected(unit: Unit, reachable: Array[Vector2i]) -> void:
 	move_range_overlay.clear()
+	attack_range_overlay.clear()
 	for pos in reachable:
 		if pos != unit.grid_position:
 			move_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
+	var attackable = selection_system.get_attackable_tiles(unit)
+	for unit2 in game_manager.all_units:
+		if unit2.team != unit.team and unit2.visible and unit2.is_shade() == unit.is_shade():
+			if unit2.grid_position in attackable:
+				attack_range_overlay.set_cell(unit2.grid_position, 0, Vector2i(0, 0))
 	hud.show_unit_info(unit)
 
 func _on_unit_deselected() -> void:
