@@ -63,7 +63,6 @@ func show_attack_options(unit: Unit) -> void:
 	for target in game_manager.all_units:
 		if target.visible and combat_system.can_attack(unit, target):
 			attack_targets.append(target)
-	attack_range_shown.emit(unit)
 
 func has_attack_targets(unit: Unit) -> bool:
 	for target in game_manager.all_units:

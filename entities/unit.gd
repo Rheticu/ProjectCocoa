@@ -40,6 +40,7 @@ var marked2_turns: int = 0
 var aura_muddled: bool = false
 var aura_boosted: bool = false
 var aura_shielded: bool = false
+var _hp_preview_tween: Tween = null
 
 signal moved(new_position: Vector2i)
 
@@ -127,3 +128,22 @@ func update_status_label() -> void:
 		status_label.visible = true
 	else:
 		status_label.visible = false
+
+func show_hp_preview(preview_hp: int) -> void:
+	$HealthLabel.text = str(max(0, preview_hp))
+	$HealthLabel.visible = true
+	$HealthLabel.add_theme_color_override("font_color", Color(1.0, 0.1, 0.1))
+	if _hp_preview_tween:
+		_hp_preview_tween.kill()
+	_hp_preview_tween = create_tween().set_loops()
+	_hp_preview_tween.tween_property($HealthLabel, "scale", Vector2(1.4, 1.4), 0.5)
+	_hp_preview_tween.tween_property($HealthLabel, "scale", Vector2(1.0, 1.0), 0.5)
+
+func hide_hp_preview() -> void:
+	if _hp_preview_tween:
+		_hp_preview_tween.kill()
+		_hp_preview_tween = null
+	$HealthLabel.scale = Vector2(1.0, 1.0)
+	$HealthLabel.modulate.a = 1.0
+	$HealthLabel.remove_theme_color_override("font_color")
+	update_visual()

@@ -12,11 +12,16 @@ var _current_thrust_direction: Vector2i = Vector2i.ZERO
 var _bash_overlays: Dictionary = {}
 var _current_bash_direction: Vector2i = Vector2i.ZERO
 var _volley_center: Vector2i = Vector2i(-1,-1)
+var _scorch2_center: Vector2i = Vector2i(-1, -1)
 var _divide_tiles: Array[Vector2i] = []
 var _divide_hover_tile: Vector2i = Vector2i(-999, -999)
 var _cursor_path: Array[Vector2i] = []
 var _is_tracing: bool = false
 var _saved_move_path: Array[Vector2i] = []
+var _preview_target: Unit = null
+var _preview_attacker: Unit = null
+var _current_preview_target: Unit = null
+var _preview_targets: Array[Unit] = []
 
 # Sistemas — sin cambios
 @onready var game_manager      = $"../GameManager"
@@ -66,6 +71,8 @@ func _ready() -> void:
 # ── Action Menu ───────────────────────────────────────────────────────────────
 
 func show_action_menu(unit: Unit) -> void:
+	hide_damage_preview()
+	_current_preview_target = null
 	var building = game_manager.get_building_at(unit.grid_position)
 	var has_targets = selection_system.has_attack_targets(unit)
 	if unit.unit_type == "Cannon":
@@ -170,6 +177,8 @@ func _on_unit_selected(unit: Unit, reachable: Array[Vector2i]) -> void:
 	hud.show_unit_info(unit)
 
 func _on_unit_deselected() -> void:
+	hide_damage_preview()
+	_current_preview_target = null
 	move_range_overlay.clear()
 	attack_range_overlay.clear()
 	movement_arrow.clear_points()
@@ -178,11 +187,11 @@ func _on_unit_deselected() -> void:
 	_is_tracing = false
 	hud.hide_unit_info()
 
-func _draw_attack_range(unit: Unit) -> void:
+func _draw_attack_range(unit: Unit, immediate_only: bool = false) -> void:
 	attack_range_overlay.clear()
 	var tiles: Array[Vector2i] = []
-	if unit.unit_type == "Cannon":
-		tiles = grid_system.get_tiles_in_range(unit.grid_position, unit.attack_range, false)
+	if immediate_only or unit.unit_type == "Cannon":
+		tiles = grid_system.get_tiles_in_range(unit.grid_position, unit.attack_range, unit.is_shade())
 	else:
 		tiles = selection_system.get_attackable_tiles(unit)
 	for pos in tiles:
@@ -440,8 +449,6 @@ func _show_ambush_effect(world_pos: Vector2) -> void:
 # ── Cursor y flecha de movimiento ─────────────────────────────────────────────
 
 func _process(_delta: float) -> void:
-	# get_viewport().get_mouse_position() devuelve coordenadas de pantalla.
-	# Como los overlays ya están en el mundo, necesitamos convertir a mundo.
 	var screen_pos  = get_viewport().get_mouse_position()
 	var world_pos   = get_viewport().get_canvas_transform().affine_inverse() * screen_pos
 	var grid_pos    = grid_system.world_to_grid(world_pos)
@@ -452,31 +459,114 @@ func _process(_delta: float) -> void:
 	if grid_system.is_in_bounds(grid_pos):
 		cursor_highlight.set_cell(grid_pos, 0, Vector2i(0, 0))
 		_update_movement_arrow(grid_pos)
-		if input_controller.mode == InputController.Mode.TARGETING:
-			for target in selection_system.attack_targets:
-				if target.grid_position == grid_pos:
-					target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+
+		if input_controller.mode == InputController.Mode.UNIT_SELECTED:
+			var attacker = selection_system.selected_unit
+			if attacker:
+				var hovered_enemy: Unit = null
+				for unit in game_manager.all_units:
+					if unit.team != attacker.team and unit.visible and unit.grid_position == grid_pos:
+						if unit.is_shade() == attacker.is_shade():
+							hovered_enemy = unit
+							break
+				var attackable_tiles = selection_system.get_attackable_tiles(attacker)
+				if hovered_enemy and grid_pos in attackable_tiles:
+					if hovered_enemy != _current_preview_target:
+						_current_preview_target = hovered_enemy
+						show_damage_preview(attacker, hovered_enemy)
 				else:
-					target.update_visual()
+					if _current_preview_target != null:
+						_current_preview_target = null
+						hide_damage_preview()
+			else:
+				if _current_preview_target != null:
+					_current_preview_target = null
+					hide_damage_preview()
+
+		if input_controller.mode == InputController.Mode.TARGETING:
+			var ability = input_controller._pending_ability
+			if ability not in ["THRUST", "BASH", "VOLLEY"]:
+				var hovered_target: Unit = null
+				for target in selection_system.attack_targets:
+					if target.grid_position == grid_pos:
+						target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+						hovered_target = target
+					else:
+						target.update_visual()
+				var attacker = selection_system.selected_unit
+				if hovered_target and attacker:
+					if hovered_target != _current_preview_target:
+						_current_preview_target = hovered_target
+						show_damage_preview(attacker, hovered_target)
+				else:
+					if _current_preview_target != null:
+						_current_preview_target = null
+						hide_damage_preview()
+
 		if input_controller.mode == InputController.Mode.SHADE_ABILITY:
 			var is_hostile = input_controller._pending_ability in ["MARK", "SCORCH", "MUDDLE", "MARK2", "SCORCH2", "MUDDLE2"]
-			for target in selection_system.attack_targets:
-				if target.grid_position == grid_pos:
-					target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5) if is_hostile else Color(0.5, 2, 0.5)
+			var ability = input_controller._pending_ability
+			var attacker = selection_system.selected_unit
+			if ability == "SCORCH2":
+				if grid_pos != _scorch2_center:
+					_scorch2_center = grid_pos
+					hide_damage_preview()
+					_current_preview_target = null
+					for unit in game_manager.all_units:
+						unit.update_visual()
+					attack_range_overlay.clear()
+					var range_tiles = grid_system.get_tiles_in_range(attacker.grid_position, attacker.ability_range, true)
+					for pos in range_tiles:
+						attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
+					if grid_pos in range_tiles:
+						var area_tiles = [grid_pos, grid_pos + Vector2i.UP, grid_pos + Vector2i.DOWN, grid_pos + Vector2i.LEFT, grid_pos + Vector2i.RIGHT]
+						for pos in area_tiles:
+							attack_range_overlay.set_cell(pos, 1, Vector2i(0, 0))
+						var mult = 2.5 if game_manager.current_element == GameManager.Element.FIRE else 1.0
+						var first_target: Unit = null
+						for pos in area_tiles:
+							var t = game_manager.get_unit_at(pos, game_manager.shade_view_enabled)
+							if t and t.team != attacker.team and t.visible and t.is_shade() == game_manager.shade_view_enabled:
+								t.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+								var scorch_dmg = int(max(0.0, mult * attacker.health / 5.0 - t.get_total_defense(0)))
+								show_damage_preview(attacker, t, 1.0, true, scorch_dmg)
+								if first_target == null:
+									first_target = t
+						_current_preview_target = first_target
+			else:
+				var hovered_target: Unit = null
+				for target in selection_system.attack_targets:
+					if target.grid_position == grid_pos:
+						target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5) if is_hostile else Color(0.5, 2, 0.5)
+						hovered_target = target
+					else:
+						target.update_visual()
+				if hovered_target and attacker and ability == "SCORCH":
+					var correct_view = hovered_target.is_shade() == game_manager.shade_view_enabled
+					if correct_view and hovered_target != _current_preview_target:
+						_current_preview_target = hovered_target
+						var mult = 2.5 if game_manager.current_element == GameManager.Element.FIRE else 1.0
+						var scorch_dmg = int(max(0.0, mult * attacker.health / 5.0 - hovered_target.get_total_defense(0)))
+						show_damage_preview(attacker, hovered_target, 1.0, true, scorch_dmg)
+					elif not correct_view and _current_preview_target != null:
+						_current_preview_target = null
+						hide_damage_preview()
 				else:
-					target.update_visual()
+					if _current_preview_target != null:
+						_current_preview_target = null
+						hide_damage_preview()
 
 	if input_controller.mode == InputController.Mode.TARGETING and input_controller._pending_ability == "THRUST":
 		var dir = get_thrust_direction_at(grid_pos)
 		if dir != _current_thrust_direction:
 			_current_thrust_direction = dir
+			hide_damage_preview()
+			_current_preview_target = null
 			for unit in game_manager.all_units:
 				unit.update_visual()
-			# Restaurar todos los tiles a rojo
 			for d in _thrust_overlays:
 				for pos in _thrust_overlays[d]:
 					attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
-			# Pintar dirección hover en amarillo
 			if dir != Vector2i.ZERO:
 				for pos in _thrust_overlays[dir]:
 					attack_range_overlay.set_cell(pos, 1, Vector2i(0, 0))
@@ -486,18 +576,19 @@ func _process(_delta: float) -> void:
 						var t = game_manager.get_unit_at(actor.grid_position + dir * i)
 						if t and t.team != actor.team:
 							t.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+							show_damage_preview(actor, t, 0.8, true)
 
 	if input_controller.mode == InputController.Mode.TARGETING and input_controller._pending_ability == "BASH":
 		var dir = get_bash_direction_at(grid_pos)
 		if dir != _current_bash_direction:
 			_current_bash_direction = dir
+			hide_damage_preview()
+			_current_preview_target = null
 			for unit in game_manager.all_units:
 				unit.update_visual()
-			# Restaurar todos los tiles a rojo
 			for d in _bash_overlays:
 				for pos in _bash_overlays[d]:
 					attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
-			# Pintar dirección hover en amarillo
 			if dir != Vector2i.ZERO:
 				for pos in _bash_overlays[dir]:
 					attack_range_overlay.set_cell(pos, 1, Vector2i(0, 0))
@@ -512,11 +603,13 @@ func _process(_delta: float) -> void:
 						var t = game_manager.get_unit_at(pos)
 						if t and t.team != actor.team:
 							t.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+							show_damage_preview(actor, t, 0.7, true)
 
 	if input_controller.mode == InputController.Mode.TARGETING and input_controller._pending_ability == "VOLLEY":
 		if grid_pos != _volley_center:
 			_volley_center = grid_pos
-			# Restaurar overlay base
+			hide_damage_preview()
+			_current_preview_target = null
 			var unit = selection_system.selected_unit
 			if unit:
 				attack_range_overlay.clear()
@@ -524,11 +617,9 @@ func _process(_delta: float) -> void:
 				for pos in range_tiles:
 					if pos != unit.grid_position:
 						attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
-				# Pintar hover tiles en amarillo si el cursor está en rango
 				if grid_pos in range_tiles:
 					for pos in get_volley_tiles(grid_pos):
 						attack_range_overlay.set_cell(pos, 1, Vector2i(0, 0))
-				# Colorear unidades enemigas en hover tiles
 			for unit2 in game_manager.all_units:
 				unit2.update_visual()
 			if grid_pos in grid_system.get_tiles_in_range(selection_system.selected_unit.grid_position, selection_system.selected_unit.attack_range, false):
@@ -536,17 +627,14 @@ func _process(_delta: float) -> void:
 					var t = game_manager.get_unit_at(pos)
 					if t and t.team != selection_system.selected_unit.team and t.visible:
 						t.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
+						show_damage_preview(selection_system.selected_unit, t, 0.6, true)
 
 	if input_controller.mode == InputController.Mode.TARGETING and input_controller._pending_ability == "DIVIDE":
 		if grid_pos != _divide_hover_tile:
 			_divide_hover_tile = grid_pos
-
-			# Restaurar overlay base
 			attack_range_overlay.clear()
 			for pos in _divide_tiles:
 				attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
-
-			# Pintar tile hover en amarillo
 			if grid_pos in _divide_tiles:
 				attack_range_overlay.set_cell(grid_pos, 1, Vector2i(0, 0))
 
@@ -636,3 +724,24 @@ func hide_production_menu() -> void:
 func _on_unit_produced(unit_data: UnitData, cost: int) -> void:
 	hide_production_menu()
 	action_system.queue_action(ProduceAction.new(_current_building, unit_data, cost, _current_building.team))
+
+func show_damage_preview(attacker: Unit, target: Unit, multiplier: float = 1.0, no_counter: bool = false, custom_dmg: int = -1) -> void:
+	_preview_attacker = attacker
+	if not (_preview_target == target):
+		_preview_targets.append(target)
+	_preview_target = target
+	var preview = combat_system.preview_damage(attacker, target, multiplier)
+	var dmg = custom_dmg if custom_dmg >= 0 else preview["damage"]
+	target.show_hp_preview(target.health - dmg)
+	if not no_counter and preview["has_counter"]:
+		attacker.show_hp_preview(attacker.health - preview["counter"])
+
+func hide_damage_preview() -> void:
+	if is_instance_valid(_preview_attacker):
+		_preview_attacker.hide_hp_preview()
+	for t in _preview_targets:
+		if is_instance_valid(t):
+			t.hide_hp_preview()
+	_preview_targets.clear()
+	_preview_target = null
+	_preview_attacker = null

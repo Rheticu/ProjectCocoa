@@ -107,6 +107,7 @@ func _send_initial_state(client_id: int) -> void:
 			"health": unit.health,
 			"state":  unit.state,
 			"mana":   mana_val,
+			"is_shade": unit.is_shade(),
 		}
 		rpc_id(client_id, "receive_unit_state", udata)
 
@@ -139,8 +140,10 @@ func receive_unit_state(udata: Dictionary) -> void:
 	var unit: Unit = null
 	for u in game_manager.all_units:
 		if u.grid_position == pos and u.team == udata["team"]:
-			unit = u
-			break
+			var is_shade_data = udata.get("is_shade", false)
+			if u.is_shade() == is_shade_data:
+				unit = u
+				break
 	if not unit:
 		return
 	unit.unit_id = udata["id"]  # ← adoptar el ID del host
@@ -303,7 +306,7 @@ func send_checksum(action_name: String) -> void:
 	if not is_multiplayer_active():
 		return
 	var checksum = state_hasher.compute_checksum()
-	#print("LOCAL STATE después de '%s':\n" % action_name, state_hasher.compute_state_string())
+	print("LOCAL STATE después de '%s':\n" % action_name, state_hasher.compute_state_string())
 	rpc("receive_checksum", checksum, action_name)
 
 @rpc("any_peer", "reliable")
@@ -315,7 +318,6 @@ func receive_checksum(remote_checksum: int, action_name: String) -> void:
 	var local_checksum = state_hasher.compute_checksum()
 	if local_checksum != remote_checksum:
 		push_error("DESYNC después de '%s': local=%d remote=%d" % [action_name, local_checksum, remote_checksum])
-		#print("DESYNC STATE:\n", state_hasher.compute_state_string())
+		print("DESYNC STATE:\n", state_hasher.compute_state_string())
 	else:
-		return
-		#print("OK checksum después de '%s'" % action_name)
+		print("OK checksum después de '%s'" % action_name)

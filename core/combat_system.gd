@@ -239,3 +239,30 @@ func execute_overwatch_attack(attacker: Unit, target: Unit) -> void:
 		_handle_death(target)
 	attacker.state = Unit.State.MOVED
 	attacker.update_visual()
+
+func preview_damage(attacker: Unit, target: Unit, multiplier: float = 1.0) -> Dictionary:
+	var dmg_to_target = int(calculate_damage(attacker, target) * multiplier)
+	var remaining_hp = target.health - dmg_to_target
+	var has_counter = _can_counterattack(target, attacker) and remaining_hp > 0
+	var dmg_to_attacker = 0
+	if has_counter:
+		dmg_to_attacker = calculate_damage_with_hp(target, attacker, remaining_hp)
+	return {
+		"damage": dmg_to_target,
+		"counter": dmg_to_attacker,
+		"has_counter": has_counter
+	}
+
+func calculate_damage_with_hp(attacker: Unit, target: Unit, attacker_hp: int) -> int:
+	var multiplier = _get_type_multiplier(attacker.get_effective_type(), target.get_effective_type())
+	var attack_mod = 1.0
+	if attacker.muddle_turns > 0 or attacker.aura_muddled:
+		attack_mod = 1.0 / 3.0
+	elif attacker.boost_turns > 0 or attacker.aura_boosted:
+		attack_mod = 2.0
+	var terrain = grid_system.get_terrain_type(target.grid_position)
+	var terrain_bonus = _get_defense_bonus(terrain)
+	if target.is_shade():
+		terrain_bonus = 0
+	var base = multiplier * attacker.attack * attacker_hp / 100.0
+	return int(max(0.0, base * attack_mod - target.get_total_defense(terrain_bonus)))

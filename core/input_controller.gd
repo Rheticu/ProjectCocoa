@@ -275,6 +275,7 @@ func on_attack_pressed() -> void:
 	if selection_system.selected_unit:
 		ui_layer.move_range_overlay.clear()
 		selection_system.show_attack_options(selection_system.selected_unit)
+		ui_layer._draw_attack_range(selection_system.selected_unit, true)
 		mode = Mode.TARGETING
 
 func on_ability_pressed(ability: String) -> void:
