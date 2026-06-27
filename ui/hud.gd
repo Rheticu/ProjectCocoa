@@ -230,6 +230,7 @@ func show_unit_info(unit: Unit) -> void:
 		unit_status_label.text = " | ".join(status_parts)
 		unit_status_label.visible = true
 	unit_info_panel.visible = true
+	unit_info_panel.reset_size()
 	call_deferred("_reposition_unit_panel")
 
 func _reposition_unit_panel() -> void:

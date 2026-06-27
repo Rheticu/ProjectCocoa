@@ -7,6 +7,7 @@ extends CanvasLayer
 @onready var attack_range_overlay: TileMapLayer = $"../AttackRangeOverlay"
 @onready var cursor_highlight: TileMapLayer    = $"../CursorHighlight"
 @onready var movement_arrow: Line2D            = $"../MovementArrow"
+var arrow_head: Line2D
 var _thrust_overlays: Dictionary = {}
 var _current_thrust_direction: Vector2i = Vector2i.ZERO
 var _bash_overlays: Dictionary = {}
@@ -67,6 +68,11 @@ func _ready() -> void:
 	game_manager.shade_view_toggled.connect(_on_shade_view_toggled)
 	selection_system.ability_targets_shown.connect(_on_ability_targets_shown)
 	combat_system.unit_damaged.connect(_on_unit_damaged)
+	arrow_head = Line2D.new()
+	arrow_head.width = movement_arrow.width
+	arrow_head.default_color = movement_arrow.default_color
+	arrow_head.z_index = movement_arrow.z_index
+	movement_arrow.get_parent().call_deferred("add_child", arrow_head)
 
 # ── Action Menu ───────────────────────────────────────────────────────────────
 
@@ -175,7 +181,11 @@ func _on_unit_selected(unit: Unit, reachable: Array[Vector2i]) -> void:
 	for pos in reachable:
 		if pos != unit.grid_position:
 			move_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
-	var attackable = selection_system.get_attackable_tiles(unit)
+	var attackable: Array[Vector2i] = []
+	if unit.unit_type == "Cannon":
+		attackable = grid_system.get_tiles_in_range(unit.grid_position, unit.attack_range, unit.is_shade())
+	else:
+		attackable = selection_system.get_attackable_tiles(unit)
 	for unit2 in game_manager.all_units:
 		if unit2.team != unit.team and unit2.visible and unit2.is_shade() == unit.is_shade():
 			if unit2.grid_position in attackable:
@@ -188,6 +198,7 @@ func _on_unit_deselected() -> void:
 	move_range_overlay.clear()
 	attack_range_overlay.clear()
 	movement_arrow.clear_points()
+	arrow_head.clear_points()
 	_clear_target_highlights()
 	_cursor_path.clear()
 	_is_tracing = false
@@ -352,6 +363,10 @@ func _on_move_started(unit: Unit, path: Array[Vector2i], is_remote: bool) -> voi
 	input_controller.unlock()
 	if not is_remote:
 		show_action_menu(unit)
+	else:
+		if is_instance_valid(unit):
+			unit.state = Unit.State.MOVED
+			unit.update_visual()
 
 func _animate_movement(unit: Unit, path: Array[Vector2i], _is_remote: bool = false) -> void:
 	_overwatch_activated = false
@@ -386,12 +401,14 @@ func _on_action_executed(action: BaseAction) -> void:
 		BaseAction.Type.MOVE:
 			move_range_overlay.clear()
 			movement_arrow.clear_points()
+			arrow_head.clear_points()
 		BaseAction.Type.ATTACK:
 			_clear_target_highlights()
 		BaseAction.Type.END_TURN:
 			move_range_overlay.clear()
 			attack_range_overlay.clear()
 			movement_arrow.clear_points()
+			arrow_head.clear_points()
 			_clear_target_highlights()
 			selection_system.deselect()
 			hud.hide_unit_info()
@@ -405,6 +422,8 @@ func _on_overwatch_triggered(_attacker: Unit, target: Unit, _tile: Vector2i, _pr
 		return
 	target.get_node("Sprite2D").modulate = Color(2, 0.5, 0.5)
 	movement_arrow.clear_points()
+	arrow_head.clear_points()
+	attack_range_overlay.clear()
 	await get_tree().create_timer(0.5).timeout
 	if not is_instance_valid(target):
 		input_controller.unlock()
@@ -455,6 +474,8 @@ func _show_ambush_effect(world_pos: Vector2) -> void:
 # ── Cursor y flecha de movimiento ─────────────────────────────────────────────
 
 func _process(_delta: float) -> void:
+	#if Engine.get_process_frames() % 60 == 0:
+		#print("FPS: ", Engine.get_frames_per_second())
 	var screen_pos  = get_viewport().get_mouse_position()
 	var world_pos   = get_viewport().get_canvas_transform().affine_inverse() * screen_pos
 	var grid_pos    = grid_system.world_to_grid(world_pos)
@@ -478,6 +499,7 @@ func _process(_delta: float) -> void:
 				var attackable_tiles = selection_system.get_attackable_tiles(attacker)
 				if hovered_enemy and grid_pos in attackable_tiles:
 					if hovered_enemy != _current_preview_target:
+						hide_damage_preview()
 						_current_preview_target = hovered_enemy
 						show_damage_preview(attacker, hovered_enemy)
 				else:
@@ -502,6 +524,7 @@ func _process(_delta: float) -> void:
 				var attacker = selection_system.selected_unit
 				if hovered_target and attacker:
 					if hovered_target != _current_preview_target:
+						hide_damage_preview()
 						_current_preview_target = hovered_target
 						show_damage_preview(attacker, hovered_target)
 				else:
@@ -647,19 +670,24 @@ func _process(_delta: float) -> void:
 func _update_movement_arrow(cursor_pos: Vector2i) -> void:
 	if input_controller._locked:
 		movement_arrow.clear_points()
+		arrow_head.clear_points()
 		return
 	if action_menu.visible:
 		movement_arrow.clear_points()
+		arrow_head.clear_points()
 		return
 	if input_controller.mode == InputController.Mode.TARGETING or input_controller.mode == InputController.Mode.SHADE_ABILITY:
 		movement_arrow.clear_points()
+		arrow_head.clear_points()
 		return
 	var unit = selection_system.selected_unit
 	if not unit or unit.state != Unit.State.SELECTED:
 		movement_arrow.clear_points()
+		arrow_head.clear_points()
 		return
 	if cursor_pos not in selection_system.reachable_cells:
 		movement_arrow.clear_points()
+		arrow_head.clear_points()
 		_is_tracing = false
 		_cursor_path.clear()
 		return
@@ -690,8 +718,21 @@ func _update_movement_arrow(cursor_pos: Vector2i) -> void:
 			_cursor_path = selection_system.get_movement_path_to(cursor_pos)
 
 	movement_arrow.clear_points()
+	arrow_head.clear_points()
 	for tile in _cursor_path:
 		movement_arrow.add_point(grid_system.grid_to_world_center(tile))
+
+	if arrow_head:
+		arrow_head.clear_points()
+		if _cursor_path.size() >= 2:
+			var tip = grid_system.grid_to_world_center(_cursor_path.back())
+			var prev = grid_system.grid_to_world_center(_cursor_path[_cursor_path.size() - 2])
+			var dir = (tip - prev).normalized()
+			var perp = Vector2(-dir.y, dir.x)
+			var size = 6.0
+			arrow_head.add_point(tip - dir * size + perp * size)
+			arrow_head.add_point(tip)
+			arrow_head.add_point(tip - dir * size - perp * size)
 
 func _on_action_menu_end_turn() -> void:
 	hide_action_menu()

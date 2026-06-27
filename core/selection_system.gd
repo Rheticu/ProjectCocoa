@@ -147,11 +147,14 @@ func calculate_path_cost(path: Array[Vector2i], unit: Unit) -> int:
 	return total
 
 func get_attackable_tiles(unit: Unit) -> Array[Vector2i]:
+	var seen: Dictionary = {}
 	var attackable: Array[Vector2i] = []
 	var reachable = movement_system.get_reachable_cells(unit)
 	for move_pos in reachable:
 		var attack_tiles = grid_system.get_tiles_in_range(move_pos, unit.attack_range, unit.is_shade())
 		for tile in attack_tiles:
-			if tile not in attackable:
+			var key = tile.x * 10000 + tile.y
+			if not seen.has(key):
+				seen[key] = true
 				attackable.append(tile)
 	return attackable

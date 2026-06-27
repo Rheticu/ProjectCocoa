@@ -46,6 +46,10 @@ func _begin_turn(team: int) -> void:
 func end_turn(team: int) -> void:
 	if team != current_team:
 		return
+	for unit in game_manager.all_units:
+		if unit.team == team and unit.state == Unit.State.MOVED:
+			unit.state = Unit.State.IDLE
+			unit.update_visual()
 	turn_ended.emit(team)
 	if current_team == 2:
 		game_manager.advance_element()

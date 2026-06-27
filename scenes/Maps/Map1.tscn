@@ -315,7 +315,7 @@ data = ExtResource("16_oahdw")
 texture = ExtResource("17_0afsb")
 
 [node name="Shade4" parent="Units" instance=ExtResource("10_g7utu")]
-position = Vector2(464, 80)
+position = Vector2(208, 80)
 team = 2
 data = ExtResource("14_md4sb")
 
@@ -323,7 +323,7 @@ data = ExtResource("14_md4sb")
 texture = ExtResource("15_mg4i6")
 
 [node name="Shade5" parent="Units" instance=ExtResource("10_g7utu")]
-position = Vector2(400, 240)
+position = Vector2(336, 80)
 team = 2
 data = ExtResource("11_s4aev")
 
