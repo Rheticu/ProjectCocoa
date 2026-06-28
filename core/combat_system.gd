@@ -203,17 +203,23 @@ func _can_counterattack(counterattacker: Unit, original_attacker: Unit) -> bool:
 	return dist <= counterattacker.attack_range
 
 func _handle_death(unit: Unit) -> void:
+	if unit is TransportUnit:
+		var transport = unit as TransportUnit
+		if transport.carried_unit != null:
+			game_manager.remove_unit(transport.carried_unit)
+			transport.carried_unit.queue_free()
+			transport.carried_unit = null
 	unit_died.emit(unit)
 	game_manager.remove_unit(unit)
 	unit.queue_free()
 
 func _get_type_multiplier(attacker_type: String, defender_type: String) -> float:
 	var matrix = {
-		"Sword:Sword":1.0,"Sword:Archer":1,"Sword:Spear":0.6,"Sword:Cannon":2.0,"Sword:Junker":0.2,
-		"Archer:Sword":1,"Archer:Archer":1.0,"Archer:Spear":1.8,"Archer:Cannon":1.0,"Archer:Junker":0.5,
-		"Spear:Sword":1.8,"Spear:Archer":1.5,"Spear:Spear":1.0,"Spear:Cannon":1.2,"Spear:Junker":0.5,
-		"Cannon:Sword":1,"Cannon:Archer":1,"Cannon:Spear":1,"Cannon:Cannon":1,"Cannon:Junker":1,
-		"Junker:Sword":1.0,"Junker:Archer":1.0,"Junker:Spear":1.0,"Junker:Cannon":1.0,"Junker:Junker":1.0,
+		"Sword:Sword":1.0,"Sword:Archer":1,"Sword:Spear":0.6,"Sword:Cannon":2.0,"Sword:Junker":0.2, "Sword:Transport":1,
+		"Archer:Sword":1,"Archer:Archer":1.0,"Archer:Spear":1.8,"Archer:Cannon":1.0,"Archer:Junker":0.5, "Archer:Transport":1,
+		"Spear:Sword":1.8,"Spear:Archer":1.5,"Spear:Spear":1.0,"Spear:Cannon":1.2,"Spear:Junker":0.5, "Spear:Transport":1,
+		"Cannon:Sword":1,"Cannon:Archer":1,"Cannon:Spear":1,"Cannon:Cannon":1,"Cannon:Junker":1, "Cannon:Transport":1,
+		"Junker:Sword":1.0,"Junker:Archer":1.0,"Junker:Spear":1.0,"Junker:Cannon":1.0,"Junker:Junker":1.0, "Junker:Transport":1,
 		"Shade_FIRE:Shade_FIRE":1.0,"Shade_FIRE:Shade_WATER":0.66,"Shade_FIRE:Shade_EARTH":1.0,"Shade_FIRE:Shade_WOOD":1.0,"Shade_FIRE:Shade_METAL":1.5, "Shade_FIRE:Drone":1.0,
 		"Shade_WATER:Shade_FIRE":1.5,"Shade_WATER:Shade_WATER":1.0,"Shade_WATER:Shade_EARTH":0.66,"Shade_WATER:Shade_WOOD":1.0,"Shade_WATER:Shade_METAL":1.0, "Shade_WATER:Drone":1.0,
 		"Shade_EARTH:Shade_FIRE":0.66,"Shade_EARTH:Shade_WATER":1.5,"Shade_EARTH:Shade_EARTH":1.0,"Shade_EARTH:Shade_WOOD":1.0,"Shade_EARTH:Shade_METAL":1.0, "Shade_EARTH:Drone":1.0,

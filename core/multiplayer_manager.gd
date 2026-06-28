@@ -280,6 +280,17 @@ func _deserialize_action(d: Dictionary) -> BaseAction:
 		BaseAction.Type.END_TURN:
 			return EndTurnAction.new(d["team"])
 
+		BaseAction.Type.LOAD:
+			var actor = game_manager.get_unit_by_id(d["actor_id"])
+			var transport = game_manager.get_unit_by_id(d["transport_id"]) as TransportUnit
+			if not actor or not transport: return null
+			return LoadAction.new(actor, transport)
+
+		BaseAction.Type.UNLOAD:
+			var transport = game_manager.get_unit_by_id(d["actor_id"]) as TransportUnit
+			if not transport: return null
+			return UnloadAction.new(transport, Vector2i(d["tile_x"], d["tile_y"]))
+
 	push_error("MultiplayerManager: tipo desconocido type_int=%d" % type_int)
 	return null
 

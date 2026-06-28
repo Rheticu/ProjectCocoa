@@ -88,7 +88,7 @@ func get_unit_by_id(id: int) -> Unit:
 
 func get_unit_at(pos: Vector2i, shade_view: bool = false) -> Unit:
 	for u in all_units:
-		if u.grid_position == pos and u.is_shade() == shade_view:
+		if u.grid_position == pos and u.is_shade() == shade_view and not u.is_loaded:
 			return u
 	return null
 
@@ -138,6 +138,6 @@ func clear_overwatch(unit: Unit) -> void:
 
 func get_any_unit_at(pos: Vector2i) -> Unit:
 	for u in all_units:
-		if u.grid_position == pos and u.visible and u.is_shade() == shade_view_enabled:
+		if u.grid_position == pos and u.visible and u.is_shade() == shade_view_enabled and not u.is_loaded:
 			return u
 	return null

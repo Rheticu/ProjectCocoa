@@ -5,6 +5,7 @@ extends Node
 @onready var turn_manager = $"../TurnManager"
 @onready var movement_system = $"../MovementSystem"
 @onready var combat_system = $"../CombatSystem"
+@onready var selection_system = $"../SelectionSystem"
 @onready var fog_system = $"../FogSystem"
 @onready var grid_system = $"../GridSystem"
 @onready var multiplayer_manager = $"../MultiplayerManager"
@@ -20,6 +21,7 @@ var _is_executing: bool = false
 var _executing_remote: bool = false
 
 func queue_action(action: BaseAction) -> void:
+	print("QUEUE_ACTION: type=", action.type, " is_executing=", _is_executing)
 	if _is_executing:
 		action_rejected.emit("Acción en curso")
 		return
@@ -45,6 +47,8 @@ func _validate(action: BaseAction) -> bool:
 		BaseAction.Type.DIVIDE: return _validate_divide(action as DivideAction)
 		BaseAction.Type.END_TURN: return true
 		BaseAction.Type.OVERWATCH: return _validate_overwatch(action as OverwatchAction)
+		BaseAction.Type.LOAD:   return _validate_load(action as LoadAction)
+		BaseAction.Type.UNLOAD: return _validate_unload(action as UnloadAction)
 	return false
 
 func _validate_move(action: MoveAction) -> bool:
@@ -108,6 +112,8 @@ func _execute(action: BaseAction) -> void:
 		BaseAction.Type.SPECIAL: await _execute_special(action as SpecialAction)
 		BaseAction.Type.OVERWATCH: _execute_overwatch(action as OverwatchAction)
 		BaseAction.Type.DIVIDE: await _execute_divide(action as DivideAction)
+		BaseAction.Type.LOAD:   _execute_load(action as LoadAction)
+		BaseAction.Type.UNLOAD: _execute_unload(action as UnloadAction)
 	_is_executing = false
 	action_executed.emit(action)
 	if action.type != BaseAction.Type.MOVE:
@@ -293,3 +299,30 @@ func _execute_divide(action: DivideAction) -> void:
 	new_drone.state = Unit.State.MOVED
 	game_manager.current_map.get_node("Units").add_child(new_drone)
 	game_manager.register_unit(new_drone)
+
+func _validate_load(action: LoadAction) -> bool:
+	if not action.transport.can_load(action.actor):
+		action_rejected.emit("No se puede cargar")
+		return false
+	return true
+
+func _validate_unload(action: UnloadAction) -> bool:
+	var transport = action.actor as TransportUnit
+	if not transport or not transport.carried_unit:
+		action_rejected.emit("No hay unidad que descargar")
+		return false
+	if action.unload_tile not in selection_system.get_valid_unload_tiles(transport):
+		action_rejected.emit("Tile inválido para descargar")
+		return false
+	return true
+
+func _execute_load(action: LoadAction) -> void:
+	print("LOAD: actor=", action.actor.unit_type, " transport=", action.transport.unit_type, " can_load=", action.transport.can_load(action.actor))
+	action.transport.load_unit(action.actor)
+	fog_system.recalculate(game_manager.local_player_id)
+
+func _execute_unload(action: UnloadAction) -> void:
+	var transport = action.actor as TransportUnit
+	transport.unload_unit(action.unload_tile)
+	transport.state = Unit.State.MOVED
+	transport.update_visual()

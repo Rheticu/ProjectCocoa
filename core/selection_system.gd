@@ -20,15 +20,17 @@ signal attack_range_shown(unit: Unit)
 func select_unit(unit: Unit) -> void:
 	if not turn_manager.is_my_turn(unit.team):
 		return
-	if unit.state == Unit.State.MOVED:
+	var is_transport_with_cargo = unit is TransportUnit and (unit as TransportUnit).carried_unit != null
+	if unit.state == Unit.State.MOVED and not is_transport_with_cargo:
 		return
 	if unit.is_shade() != game_manager.shade_view_enabled:
 		return
 	deselect()
 	selected_unit = unit
 	unit.original_position = unit.grid_position
-	unit.state = Unit.State.SELECTED
-	unit.update_visual()
+	if unit.state != Unit.State.MOVED:
+		unit.state = Unit.State.SELECTED
+		unit.update_visual()
 	reachable_cells = movement_system.get_reachable_cells(unit)
 	unit_selected.emit(unit, reachable_cells)
 
@@ -158,3 +160,17 @@ func get_attackable_tiles(unit: Unit) -> Array[Vector2i]:
 				seen[key] = true
 				attackable.append(tile)
 	return attackable
+
+func get_valid_unload_tiles(transport: TransportUnit) -> Array[Vector2i]:
+	var tiles: Array[Vector2i] = []
+	for dir in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+		var pos = transport.grid_position + dir
+		if not grid_system.is_in_bounds(pos):
+			continue
+		if game_manager.get_unit_at(pos, false) != null:
+			continue
+		var terrain = grid_system.get_terrain_type(pos)
+		var cost = movement_system._get_movement_cost(transport.carried_unit, terrain)
+		if cost < 99:
+			tiles.append(pos)
+	return tiles

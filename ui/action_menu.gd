@@ -7,6 +7,8 @@ signal cancel_pressed()
 signal capture_pressed()
 signal ability_pressed(ability: String)
 signal end_turn_pressed()
+signal load_pressed()
+signal unload_pressed()
 
 @onready var move_btn = $Move
 @onready var attack_btn = $Attack
@@ -29,6 +31,8 @@ signal end_turn_pressed()
 @onready var divide_btn = $Divide
 @onready var options_btn = $Options
 @onready var end_turn_btn = $EndTurn
+@onready var load_btn = $Load
+@onready var unload_btn = $Unload
 
 
 func _ready() -> void:
@@ -52,6 +56,8 @@ func _ready() -> void:
 	boost2_btn.pressed.connect(func(): ability_pressed.emit("BOOST2"))
 	divide_btn.pressed.connect(func(): ability_pressed.emit("DIVIDE"))
 	end_turn_btn.pressed.connect(func(): end_turn_pressed.emit())
+	load_btn.pressed.connect(func(): load_pressed.emit())
+	unload_btn.pressed.connect(func(): unload_pressed.emit())
 
 func show_for_unit(
 	unit: Unit,
@@ -65,7 +71,9 @@ func show_for_unit(
 	has_scorch_targets: bool = false,
 	has_shield_targets: bool = false,
 	has_muddle_targets: bool = false,
-	has_boost_targets: bool = false
+	has_boost_targets: bool = false,
+	can_load: bool = false,
+	can_unload: bool = false
 ) -> void:
 	# Por defecto ocultar todo
 	attack_btn.visible = has_targets
@@ -87,9 +95,11 @@ func show_for_unit(
 	divide_btn.visible = unit is Drone and unit.health >= 40
 	options_btn.visible = false
 	end_turn_btn.visible = false
+	load_btn.visible = can_load
+	unload_btn.visible = can_unload
 
 	# Siempre visibles
-	move_btn.visible = true
+	move_btn.visible = not can_load
 	cancel_btn.visible = true
 
 	# Según tipo de unidad
@@ -148,3 +158,5 @@ func show_for_empty_tile() -> void:
 	options_btn.visible = true
 	cancel_btn.visible = true
 	end_turn_btn.visible = true
+	load_btn.visible = false
+	unload_btn.visible = false

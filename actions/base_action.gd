@@ -10,7 +10,9 @@ enum Type {
 	END_TURN,
 	SPECIAL,
 	OVERWATCH,
-	DIVIDE
+	DIVIDE,
+	LOAD,
+	UNLOAD
 }
 
 var type: Type

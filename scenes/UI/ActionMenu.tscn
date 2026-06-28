@@ -179,6 +179,22 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
 theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
 text = "Options"
 
+[node name="Load" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Load"
+
+[node name="Unload" type="Button" parent="."]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_br2v5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4eb4q")
+text = "Unload"
+
 [node name="Cancel" type="Button" parent="."]
 layout_mode = 2
 theme_override_colors/font_hover_color = Color(0.972549, 0.06666667, 0, 0.84313726)

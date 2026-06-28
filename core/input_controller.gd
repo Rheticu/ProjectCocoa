@@ -17,6 +17,7 @@ enum Mode {
 	SHADE_ABILITY,
 	INSPECTING_A,
 	INSPECTING_B,
+	UNLOAD,
 }	
 
 var mode: Mode = Mode.IDLE
@@ -73,7 +74,9 @@ func _handle_left_click() -> void:
 		Mode.IDLE:
 			var unit = game_manager.get_unit_at(grid_pos, game_manager.shade_view_enabled)
 			if unit and unit.visible:
-				if unit.team == game_manager.local_player_id and turn_manager.is_my_turn(unit.team) and unit.state != Unit.State.MOVED:
+				var can_select = unit.team == game_manager.local_player_id and turn_manager.is_my_turn(unit.team)
+				var is_transport_with_cargo = unit is TransportUnit and (unit as TransportUnit).carried_unit != null
+				if can_select and (unit.state != Unit.State.MOVED or is_transport_with_cargo):
 					selection_system.select_unit(unit)
 					mode = Mode.UNIT_SELECTED
 				else:
@@ -218,6 +221,17 @@ func _handle_left_click() -> void:
 				mode = Mode.IDLE
 				selection_system.deselect()
 
+		Mode.UNLOAD:
+			var transport = selection_system.selected_unit as TransportUnit
+			if transport:
+				var valid_tiles = selection_system.get_valid_unload_tiles(transport)
+				if grid_pos in valid_tiles:
+					action_system.queue_action(UnloadAction.new(transport, grid_pos))
+					selection_system.deselect()
+					mode = Mode.IDLE
+				else:
+					_cancel()
+
 func _handle_right_click() -> void:
 	var mouse_pos = get_viewport().get_canvas_transform().affine_inverse() * get_viewport().get_mouse_position()
 	var grid_pos = grid_system.world_to_grid(mouse_pos)
@@ -256,6 +270,11 @@ func _handle_right_click() -> void:
 			mode = Mode.ACTION_MENU
 			if not game_manager.shade_view_enabled:
 				game_manager.toggle_shade_view()
+			ui_layer.show_action_menu(selection_system.selected_unit)
+
+		Mode.UNLOAD:
+			ui_layer.hide_unload_options()
+			mode = Mode.ACTION_MENU
 			ui_layer.show_action_menu(selection_system.selected_unit)
 
 		_:
@@ -351,3 +370,18 @@ func on_cancel_from_menu() -> void:
 	selection_system.deselect()
 	_pending_move_path.clear()
 	mode = Mode.IDLE
+
+func on_load_pressed(transport: TransportUnit) -> void:
+	var unit = selection_system.selected_unit
+	if unit:
+		_pending_move_path.clear()
+		action_system.queue_action(LoadAction.new(unit, transport))
+		selection_system.deselect()
+		mode = Mode.IDLE
+
+func on_unload_pressed() -> void:
+	var transport = selection_system.selected_unit as TransportUnit
+	if transport:
+		_pending_move_path.clear()
+		mode = Mode.UNLOAD
+		ui_layer.show_unload_options(transport)

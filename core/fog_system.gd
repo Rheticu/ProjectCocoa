@@ -110,18 +110,15 @@ func _apply_fog(viewing_team: int) -> void:
 func _update_unit_visibility(viewing_team: int) -> void:
 	var shade_view = game_manager.shade_view_enabled
 	for unit in game_manager.all_units:
+		if unit.is_loaded:
+			unit.visible = false
+			continue
 		if unit.team == viewing_team:
 			if unit.is_shade():
 				unit.visible = shade_view
 			else:
 				unit.visible = true
 			continue
-		if unit.marked_turns > 0:
-					if unit.is_shade():
-						unit.visible = shade_view
-					else:
-						unit.visible = true
-					continue
 		if unit.is_shade():
 			unit.visible = shade_view and _shade_visible_tiles.get(viewing_team, {}).has(unit.grid_position)
 		else:

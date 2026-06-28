@@ -41,6 +41,7 @@ var aura_muddled: bool = false
 var aura_boosted: bool = false
 var aura_shielded: bool = false
 var _hp_preview_tween: Tween = null
+var is_loaded: bool = false
 
 signal moved(new_position: Vector2i)
 

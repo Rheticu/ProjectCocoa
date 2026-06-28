@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=3 format=3 uid="uid://jcfm7cnx35lp"]
+
+[ext_resource type="Script" uid="uid://vguawhqk205m" path="res://entities/unit_data.gd" id="1_u12du"]
+[ext_resource type="Texture2D" uid="uid://cg5md2l4obda7" path="res://art/units/Transport/ChatGPT Image Jun 26, 2026, 08_19_34 PM.png" id="2_hyhnm"]
+
+[resource]
+script = ExtResource("1_u12du")
+unit_type = "Transport"
+attack_range = 0
+attack = 0
+sprite_team1 = ExtResource("2_hyhnm")
+sprite_team2 = ExtResource("2_hyhnm")
+metadata/_custom_type_script = "uid://vguawhqk205m"

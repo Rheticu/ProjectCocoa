@@ -73,6 +73,8 @@ func _ready() -> void:
 	arrow_head.default_color = movement_arrow.default_color
 	arrow_head.z_index = movement_arrow.z_index
 	movement_arrow.get_parent().call_deferred("add_child", arrow_head)
+	action_menu.load_pressed.connect(_on_action_menu_load)
+	action_menu.unload_pressed.connect(_on_action_menu_unload)
 
 # ── Action Menu ───────────────────────────────────────────────────────────────
 
@@ -92,6 +94,13 @@ func show_action_menu(unit: Unit) -> void:
 	var has_shield_targets = false
 	var has_muddle_targets = false
 	var has_boost_targets = false
+	var can_load = false
+	var can_unload = false
+	if unit is TransportUnit:
+		can_unload = unit.carried_unit != null
+	if unit.unit_type in ["Sword", "Archer", "Spear"]:
+		var transport = _get_adjacent_transport(unit)
+		can_load = transport != null
 	if unit.is_shade():
 		var shade = unit as Shade
 		if shade.mana >= 2:
@@ -103,7 +112,7 @@ func show_action_menu(unit: Unit) -> void:
 	action_menu.show_for_unit(
 		unit, building, has_targets, has_thrust_targets, has_bash_targets,
 		has_volley_targets, has_overwatch, has_mark_targets, has_scorch_targets,
-		has_shield_targets, has_muddle_targets, has_boost_targets
+		has_shield_targets, has_muddle_targets, has_boost_targets, can_load, can_unload
 	)
 	action_menu.visible = true
 	await get_tree().process_frame
@@ -173,6 +182,24 @@ func _on_unit_damaged(unit: Unit) -> void:
 	await get_tree().create_timer(0.6).timeout
 	if is_instance_valid(unit):
 		unit.update_visual()
+
+func _get_adjacent_transport(unit: Unit) -> TransportUnit:
+	for u in game_manager.all_units:
+		if u is TransportUnit and u.team == unit.team and u.grid_position == unit.grid_position:
+			return u
+	return null
+
+func _on_action_menu_load() -> void:
+	hide_action_menu()
+	var unit = selection_system.selected_unit
+	var transport = _get_adjacent_transport(unit)
+	if transport:
+		input_controller.on_load_pressed(transport)
+
+func _on_action_menu_unload() -> void:
+	hide_action_menu()
+	input_controller.on_unload_pressed()
+
 # ── Overlays ─────────────────────────────────────────────────────────
 
 func _on_unit_selected(unit: Unit, reachable: Array[Vector2i]) -> void:
@@ -317,6 +344,16 @@ func show_divide_options(drone: Drone) -> void:
 		if grid_system.is_in_bounds(pos) and game_manager.get_unit_at(pos, true) == null:
 			attack_range_overlay.set_cell(pos, 0, Vector2i(0, 0))
 			_divide_tiles.append(pos)
+
+func show_unload_options(transport: TransportUnit) -> void:
+	move_range_overlay.clear()
+	attack_range_overlay.clear()
+	var valid_tiles = selection_system.get_valid_unload_tiles(transport)
+	for pos in valid_tiles:
+		attack_range_overlay.set_cell(pos, 1, Vector2i(0, 0))
+
+func hide_unload_options() -> void:
+	attack_range_overlay.clear()
 
 # ── Animación de movimiento ───────────────────────────────────────────────────
 

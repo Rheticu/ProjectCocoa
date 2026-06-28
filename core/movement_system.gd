@@ -83,9 +83,12 @@ func _is_visibly_blocked(pos: Vector2i, mover: Unit, is_final_tile: bool = false
 			if unit.is_shade() != mover.is_shade():
 				continue
 			if unit.team != mover.team:
-				return true  # enemigo siempre bloquea
+				return true
 			if is_final_tile:
-				return true  # aliado bloquea solo el destino
+				# Permitir si hay un transport aliado que puede cargar al mover
+				if unit is TransportUnit and unit.can_load(mover):
+					return false
+				return true
 	return false
 
 func is_position_free(pos: Vector2i, mover: Unit, final_tile: bool = true) -> bool:
@@ -94,6 +97,8 @@ func is_position_free(pos: Vector2i, mover: Unit, final_tile: bool = true) -> bo
 			continue
 		if unit.grid_position == pos and unit.is_shade() == mover.is_shade():
 			if unit.team == mover.team:
+				if final_tile and unit is TransportUnit and unit.can_load(mover):
+					return true
 				return not final_tile
 			else:
 				return false
@@ -110,6 +115,7 @@ func _get_movement_cost(unit: Unit, terrain: String) -> int:
 		"Archer": {"PLAINS":1,"MOUNTAIN":3,"ROAD":1,"WALL":99,"RIVER":2,"FOREST":2,"OCEAN":99,"BUILDING":1},
 		"Spear":  {"PLAINS":1,"MOUNTAIN":3,"ROAD":1,"WALL":99,"RIVER":2,"FOREST":2,"OCEAN":99,"BUILDING":1},
 		"Cannon": {"PLAINS":2,"MOUNTAIN":99,"ROAD":1,"WALL":99,"RIVER":99,"FOREST":3,"OCEAN":99,"BUILDING":1},
+		"Transport":  {"PLAINS":1,"MOUNTAIN":3,"ROAD":1,"WALL":99,"RIVER":2,"FOREST":2,"OCEAN":99,"BUILDING":1},
 		"Junker": {"PLAINS":99,"MOUNTAIN":99,"ROAD":99,"WALL":99,"RIVER":99,"FOREST":99,"OCEAN":1,"BUILDING":99},
 	}
 	var unit_costs = costs.get(unit.get_effective_type(), {})
