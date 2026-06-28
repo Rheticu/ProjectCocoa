@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BuildingData" load_steps=10 format=3 uid="uid://cjqu3u4b2iwnt"]
+[gd_resource type="Resource" script_class="BuildingData" load_steps=11 format=3 uid="uid://cjqu3u4b2iwnt"]
 
 [ext_resource type="Script" uid="uid://vguawhqk205m" path="res://entities/unit_data.gd" id="1_2vlet"]
 [ext_resource type="Script" uid="uid://g13hdvb5mhph" path="res://entities/building_data.gd" id="2_apdl0"]
@@ -9,13 +9,14 @@
 [ext_resource type="Resource" uid="uid://kc6p0ij8gsd8" path="res://data/units/cannon_data.tres" id="4_k27w7"]
 [ext_resource type="Texture2D" uid="uid://b317sv37nyvo" path="res://art/buildings/Barracks/Barracks_Red.png" id="5_fyl58"]
 [ext_resource type="Resource" uid="uid://c8k1tlm0j5ocp" path="res://data/units/spear_data.tres" id="5_nabit"]
+[ext_resource type="Resource" uid="uid://jcfm7cnx35lp" path="res://data/units/transport_data.tres" id="6_k27w7"]
 
 [resource]
 script = ExtResource("2_apdl0")
 building_type = "Barracks"
 income_per_turn = 1000
 can_produce_units = true
-producible_units = Array[ExtResource("1_2vlet")]([ExtResource("2_ix133"), ExtResource("3_5vdov"), ExtResource("4_k27w7"), ExtResource("5_nabit")])
+producible_units = Array[ExtResource("1_2vlet")]([ExtResource("2_ix133"), ExtResource("3_5vdov"), ExtResource("4_k27w7"), ExtResource("5_nabit"), ExtResource("6_k27w7")])
 sprite_neutral = ExtResource("3_apdl0")
 sprite_team1 = ExtResource("4_ix133")
 sprite_team2 = ExtResource("5_fyl58")

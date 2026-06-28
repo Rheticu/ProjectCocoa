@@ -166,6 +166,8 @@ func _execute_produce(action: ProduceAction) -> void:
 	var unit_scene
 	if action.unit_data.unit_type == "Drone":
 		unit_scene = load("res://scenes/units/Drone.tscn")
+	elif action.unit_data.unit_type == "Transport":
+		unit_scene = load("res://scenes/units/Transport.tscn")
 	elif action.unit_data.is_shade:
 		unit_scene = load("res://scenes/units/Shade.tscn")
 	else:

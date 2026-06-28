@@ -1,4 +1,4 @@
-[gd_scene load_steps=57 format=4 uid="uid://bpb111flh0snl"]
+[gd_scene load_steps=54 format=4 uid="uid://bpb111flh0snl"]
 
 [ext_resource type="Texture2D" uid="uid://00f5seoj7dpb" path="res://art/maps/PlainsSheet1.png" id="1_pd3xk"]
 [ext_resource type="PackedScene" uid="uid://cbst1oom7mdbi" path="res://scenes/units/Unit.tscn" id="2_fp56n"]
@@ -41,9 +41,6 @@
 [ext_resource type="Texture2D" uid="uid://ddipgcrb6qt7k" path="res://art/buildings/Barracks/Barracks_Blue.png" id="23_djjkr"]
 [ext_resource type="PackedScene" uid="uid://c041fih0urhca" path="res://scenes/units/Drone.tscn" id="24_1tjnf"]
 [ext_resource type="Texture2D" uid="uid://qt1ocsifbwf5" path="res://art/units/Raider/Raider_Blue.png" id="25_h05hs"]
-[ext_resource type="Script" uid="uid://biie56y7mog5c" path="res://entities/transport_unit.gd" id="30_a7w4m"]
-[ext_resource type="Texture2D" uid="uid://cg5md2l4obda7" path="res://art/units/Transport/ChatGPT Image Jun 26, 2026, 08_19_34 PM.png" id="31_ebjn6"]
-[ext_resource type="Resource" uid="uid://jcfm7cnx35lp" path="res://data/units/transport_data.tres" id="31_nt5is"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hyr6f"]
 texture = ExtResource("1_pd3xk")
@@ -334,14 +331,6 @@ team = 1
 [node name="Sprite2D" parent="Units/Drone" index="0"]
 texture = ExtResource("25_h05hs")
 
-[node name="Unit" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(400, 144)
-script = ExtResource("30_a7w4m")
-data = ExtResource("31_nt5is")
-
-[node name="Sprite2D" parent="Units/Unit" index="0"]
-texture = ExtResource("31_ebjn6")
-
 [node name="Buildings" type="Node2D" parent="."]
 metadata/_edit_lock_ = true
 
@@ -524,10 +513,11 @@ texture = ExtResource("21_v6s0w")
 
 [node name="Building15" parent="Buildings" instance=ExtResource("19_ew753")]
 position = Vector2(240, 80)
+team = 1
 data = ExtResource("22_qkj4u")
 
 [node name="Sprite2D" parent="Buildings/Building15" index="0"]
-texture = ExtResource("14_ew753")
+texture = ExtResource("23_djjkr")
 
 [node name="Building16" parent="Buildings" instance=ExtResource("19_ew753")]
 position = Vector2(560, 528)
@@ -619,7 +609,6 @@ texture = ExtResource("21_qkj4u")
 [editable path="Units/Shade4"]
 [editable path="Units/Shade5"]
 [editable path="Units/Drone"]
-[editable path="Units/Unit"]
 [editable path="Buildings/Building"]
 [editable path="Buildings/Building2"]
 [editable path="Buildings/Building3"]
