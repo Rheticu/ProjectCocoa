@@ -1,33 +1,23 @@
-[gd_scene load_steps=38 format=4 uid="uid://bpb111flh0snl"]
+[gd_scene load_steps=28 format=4 uid="uid://bgbe4y5w7u2qp"]
 
-[ext_resource type="Texture2D" uid="uid://00f5seoj7dpb" path="res://art/maps/PlainsSheet1.png" id="1_pd3xk"]
-[ext_resource type="PackedScene" uid="uid://cbst1oom7mdbi" path="res://scenes/units/Unit.tscn" id="2_fp56n"]
-[ext_resource type="Texture2D" uid="uid://dlvuinec2gwnr" path="res://art/maps/RoadsSheet1.png" id="3_pd3xk"]
-[ext_resource type="Texture2D" uid="uid://b0ty2so8fq4v" path="res://art/maps/WaterSheet1.png" id="3_ro2cy"]
-[ext_resource type="Texture2D" uid="uid://b450pnrme861d" path="res://art/maps/Fog_Tile.png" id="4_djjkr"]
-[ext_resource type="Texture2D" uid="uid://cimgomiw77yli" path="res://art/ui/Grid.png" id="4_qxabq"]
-[ext_resource type="Texture2D" uid="uid://cuuupeastpfwi" path="res://art/maps/ShadeOverlay.png" id="5_md4sb"]
-[ext_resource type="Resource" uid="uid://b415o307sl51" path="res://data/buildings/hq_data.tres" id="8_jck17"]
-[ext_resource type="Resource" uid="uid://ck7ajhuvf0wl6" path="res://data/units/sword_data.tres" id="8_k24gi"]
-[ext_resource type="Texture2D" uid="uid://bqcg3j1i7wp6d" path="res://art/units/Sword/Sword1_Red.png" id="9_83t8w"]
-[ext_resource type="Texture2D" uid="uid://c286ap667yxkj" path="res://art/buildings/HQ/HQ_Blue.png" id="9_wlibu"]
-[ext_resource type="PackedScene" uid="uid://cph1iqfjco8q" path="res://scenes/units/Shade.tscn" id="10_g7utu"]
-[ext_resource type="Texture2D" uid="uid://ci0w1pppy5wlf" path="res://art/buildings/HQ/HQ_Red.png" id="10_iw16c"]
-[ext_resource type="Texture2D" uid="uid://dltmmbypolan6" path="res://art/units/Sword/Sword1_Blue.png" id="10_s4aev"]
-[ext_resource type="Resource" uid="uid://pu4shykaiycb" path="res://data/units/shade_fire_data.tres" id="11_s4aev"]
-[ext_resource type="Texture2D" uid="uid://b317sv37nyvo" path="res://art/buildings/Barracks/Barracks_Red.png" id="13_83t8w"]
-[ext_resource type="Texture2D" uid="uid://28e70ddmvhhy" path="res://art/buildings/Barracks/Barracks_Neutral.png" id="14_ew753"]
-[ext_resource type="PackedScene" uid="uid://p812134ba3to" path="res://scenes/buildings/Building.tscn" id="19_ew753"]
-[ext_resource type="Resource" uid="uid://dd8eq6muameue" path="res://data/buildings/port_data.tres" id="20_i64x8"]
-[ext_resource type="Resource" uid="uid://8dwvombq2dls" path="res://data/buildings/city_data.tres" id="20_v6s0w"]
-[ext_resource type="Texture2D" uid="uid://1cg2abbjwydh" path="res://art/units/Fire_Shade/fire_shade_red.png" id="21_1tjnf"]
-[ext_resource type="Texture2D" uid="uid://bnmh5h8itktdr" path="res://art/buildings/Port/Port_Neutral.png" id="21_qkj4u"]
-[ext_resource type="Texture2D" uid="uid://dvc6oxqd66i62" path="res://art/buildings/City/City_Neutral.png" id="21_v6s0w"]
-[ext_resource type="Resource" uid="uid://cjqu3u4b2iwnt" path="res://data/buildings/barracks_data.tres" id="22_qkj4u"]
-[ext_resource type="Texture2D" uid="uid://ddipgcrb6qt7k" path="res://art/buildings/Barracks/Barracks_Blue.png" id="23_djjkr"]
+[ext_resource type="Texture2D" uid="uid://00f5seoj7dpb" path="res://art/maps/PlainsSheet1.png" id="1_b6ttx"]
+[ext_resource type="Texture2D" uid="uid://dlvuinec2gwnr" path="res://art/maps/RoadsSheet1.png" id="2_j8oqt"]
+[ext_resource type="Texture2D" uid="uid://b0ty2so8fq4v" path="res://art/maps/WaterSheet1.png" id="3_1716a"]
+[ext_resource type="Texture2D" uid="uid://cimgomiw77yli" path="res://art/ui/Grid.png" id="4_d5j3j"]
+[ext_resource type="Texture2D" uid="uid://b450pnrme861d" path="res://art/maps/Fog_Tile.png" id="5_07pvw"]
+[ext_resource type="Texture2D" uid="uid://cuuupeastpfwi" path="res://art/maps/ShadeOverlay.png" id="6_ac4sa"]
+[ext_resource type="PackedScene" uid="uid://cbst1oom7mdbi" path="res://scenes/units/Unit.tscn" id="7_0aoq8"]
+[ext_resource type="Resource" uid="uid://ck7ajhuvf0wl6" path="res://data/units/sword_data.tres" id="8_tchv4"]
+[ext_resource type="Texture2D" uid="uid://bqcg3j1i7wp6d" path="res://art/units/Sword/Sword1_Red.png" id="9_n3cqq"]
+[ext_resource type="Texture2D" uid="uid://dltmmbypolan6" path="res://art/units/Sword/Sword1_Blue.png" id="10_eigp0"]
+[ext_resource type="PackedScene" uid="uid://cph1iqfjco8q" path="res://scenes/units/Shade.tscn" id="11_067xy"]
+[ext_resource type="Resource" uid="uid://pu4shykaiycb" path="res://data/units/shade_fire_data.tres" id="12_yql4v"]
+[ext_resource type="Texture2D" uid="uid://1cg2abbjwydh" path="res://art/units/Fire_Shade/fire_shade_red.png" id="13_ik020"]
+[ext_resource type="PackedScene" uid="uid://cnm1s21fjph1e" path="res://scenes/units/Transport.tscn" id="15_ajp1k"]
+[ext_resource type="Texture2D" uid="uid://bd2esgwqsrs1j" path="res://art/units/Transport/Transport_Blue.png" id="16_kvb6m"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hyr6f"]
-texture = ExtResource("1_pd3xk")
+texture = ExtResource("1_b6ttx")
 texture_region_size = Vector2i(32, 32)
 0:0/0 = 0
 0:0/0/custom_data_0 = &"PLAINS"
@@ -43,7 +33,7 @@ texture_region_size = Vector2i(32, 32)
 2:1/0/custom_data_0 = &"FOREST"
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8ln8j"]
-texture = ExtResource("3_pd3xk")
+texture = ExtResource("2_j8oqt")
 texture_region_size = Vector2i(32, 32)
 0:0/0 = 0
 0:0/0/custom_data_0 = &"ROAD"
@@ -73,7 +63,7 @@ texture_region_size = Vector2i(32, 32)
 0:3/0/custom_data_0 = &"ROAD"
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2e1b8"]
-texture = ExtResource("3_ro2cy")
+texture = ExtResource("3_1716a")
 texture_region_size = Vector2i(32, 32)
 1:0/0 = 0
 1:0/0/custom_data_0 = &"OCEAN"
@@ -115,7 +105,7 @@ sources/8 = SubResource("TileSetAtlasSource_8ln8j")
 sources/9 = SubResource("TileSetAtlasSource_2e1b8")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qxabq"]
-texture = ExtResource("4_qxabq")
+texture = ExtResource("4_d5j3j")
 texture_region_size = Vector2i(32, 32)
 0:0/0 = 0
 
@@ -124,7 +114,7 @@ tile_size = Vector2i(32, 32)
 sources/0 = SubResource("TileSetAtlasSource_qxabq")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_g7utu"]
-texture = ExtResource("4_djjkr")
+texture = ExtResource("5_07pvw")
 texture_region_size = Vector2i(32, 32)
 0:0/0 = 0
 
@@ -133,7 +123,7 @@ tile_size = Vector2i(32, 32)
 sources/0 = SubResource("TileSetAtlasSource_g7utu")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mg4i6"]
-texture = ExtResource("5_md4sb")
+texture = ExtResource("6_ac4sa")
 texture_region_size = Vector2i(32, 32)
 0:0/0 = 0
 
@@ -142,7 +132,7 @@ tile_size = Vector2i(32, 32)
 sources/0 = SubResource("TileSetAtlasSource_mg4i6")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_md4sb"]
-texture = ExtResource("4_djjkr")
+texture = ExtResource("5_07pvw")
 texture_region_size = Vector2i(32, 32)
 0:0/0 = 0
 
@@ -187,326 +177,39 @@ metadata/_edit_lock_ = true
 [node name="Units" type="Node2D" parent="."]
 metadata/_edit_lock_ = true
 
-[node name="Unit15" parent="Units" instance=ExtResource("2_fp56n")]
+[node name="Unit15" parent="Units" instance=ExtResource("7_0aoq8")]
 position = Vector2(496, 112)
 team = 2
-data = ExtResource("8_k24gi")
+data = ExtResource("8_tchv4")
 
 [node name="Sprite2D" parent="Units/Unit15" index="0"]
-texture = ExtResource("9_83t8w")
+texture = ExtResource("9_n3cqq")
 
-[node name="Unit19" parent="Units" instance=ExtResource("2_fp56n")]
-position = Vector2(560, 112)
-team = 2
-data = ExtResource("8_k24gi")
-
-[node name="Sprite2D" parent="Units/Unit19" index="0"]
-texture = ExtResource("9_83t8w")
-
-[node name="Unit2" parent="Units" instance=ExtResource("2_fp56n")]
+[node name="Unit2" parent="Units" instance=ExtResource("7_0aoq8")]
 position = Vector2(432, 112)
-data = ExtResource("8_k24gi")
+data = ExtResource("8_tchv4")
 
 [node name="Sprite2D" parent="Units/Unit2" index="0"]
-texture = ExtResource("10_s4aev")
+texture = ExtResource("10_eigp0")
 
-[node name="Shade5" parent="Units" instance=ExtResource("10_g7utu")]
-position = Vector2(336, 80)
+[node name="Transport" parent="Units" instance=ExtResource("15_ajp1k")]
+position = Vector2(464, 80)
+
+[node name="Sprite2D" parent="Units/Transport" index="0"]
+texture = ExtResource("16_kvb6m")
+
+[node name="Shade" parent="Units" instance=ExtResource("11_067xy")]
+position = Vector2(496, 80)
 team = 2
-data = ExtResource("11_s4aev")
+data = ExtResource("12_yql4v")
 
-[node name="Sprite2D" parent="Units/Shade5" index="0"]
-texture = ExtResource("21_1tjnf")
+[node name="Sprite2D" parent="Units/Shade" index="0"]
+texture = ExtResource("13_ik020")
 
 [node name="Buildings" type="Node2D" parent="."]
 metadata/_edit_lock_ = true
 
-[node name="Building" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(528, 48)
-team = 1
-data = ExtResource("8_jck17")
-
-[node name="Sprite2D" parent="Buildings/Building" index="0"]
-texture = ExtResource("9_wlibu")
-
-[node name="Building2" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(560, 48)
-team = 2
-data = ExtResource("8_jck17")
-
-[node name="Sprite2D" parent="Buildings/Building2" index="0"]
-texture = ExtResource("10_iw16c")
-
-[node name="Building3" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(304, 496)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building3" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building35" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(368, 496)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building35" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building36" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(624, 112)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building36" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building37" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(368, 48)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building37" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building38" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(464, 560)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building38" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building21" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(432, 304)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building21" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building22" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(400, 304)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building22" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building23" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(272, 272)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building23" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building24" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(560, 336)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building24" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building25" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(528, 272)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building25" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building26" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(304, 336)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building26" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building27" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(368, 272)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building27" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building28" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(464, 336)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building28" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building4" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(560, 496)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building4" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building5" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(336, 560)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building5" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building14" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(496, 48)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building14" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building6" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(144, 528)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building6" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building10" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(688, 80)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building10" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building7" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(560, 560)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building7" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building12" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(272, 48)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building12" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building13" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(240, 112)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building13" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building8" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(688, 464)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building8" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building9" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(144, 144)
-data = ExtResource("20_v6s0w")
-
-[node name="Sprite2D" parent="Buildings/Building9" index="0"]
-texture = ExtResource("21_v6s0w")
-
-[node name="Building15" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(240, 80)
-team = 1
-data = ExtResource("22_qkj4u")
-
-[node name="Sprite2D" parent="Buildings/Building15" index="0"]
-texture = ExtResource("23_djjkr")
-
-[node name="Building16" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(560, 528)
-data = ExtResource("22_qkj4u")
-
-[node name="Sprite2D" parent="Buildings/Building16" index="0"]
-texture = ExtResource("14_ew753")
-
-[node name="Building19" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(208, 112)
-team = 2
-data = ExtResource("22_qkj4u")
-
-[node name="Sprite2D" parent="Buildings/Building19" index="0"]
-texture = ExtResource("13_83t8w")
-
-[node name="Building39" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(624, 80)
-team = 2
-data = ExtResource("22_qkj4u")
-
-[node name="Sprite2D" parent="Buildings/Building39" index="0"]
-texture = ExtResource("13_83t8w")
-
-[node name="Building29" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(112, 48)
-data = ExtResource("20_i64x8")
-
-[node name="Sprite2D" parent="Buildings/Building29" index="0"]
-texture = ExtResource("21_qkj4u")
-
-[node name="Building30" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(720, 560)
-data = ExtResource("20_i64x8")
-
-[node name="Sprite2D" parent="Buildings/Building30" index="0"]
-texture = ExtResource("21_qkj4u")
-
-[node name="Building31" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(112, 496)
-data = ExtResource("20_i64x8")
-
-[node name="Sprite2D" parent="Buildings/Building31" index="0"]
-texture = ExtResource("21_qkj4u")
-
-[node name="Building32" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(720, 112)
-data = ExtResource("20_i64x8")
-
-[node name="Sprite2D" parent="Buildings/Building32" index="0"]
-texture = ExtResource("21_qkj4u")
-
-[node name="Building33" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(624, 304)
-data = ExtResource("20_i64x8")
-
-[node name="Sprite2D" parent="Buildings/Building33" index="0"]
-texture = ExtResource("21_qkj4u")
-
-[node name="Building34" parent="Buildings" instance=ExtResource("19_ew753")]
-position = Vector2(208, 304)
-data = ExtResource("20_i64x8")
-
-[node name="Sprite2D" parent="Buildings/Building34" index="0"]
-texture = ExtResource("21_qkj4u")
-
 [editable path="Units/Unit15"]
-[editable path="Units/Unit19"]
 [editable path="Units/Unit2"]
-[editable path="Units/Shade5"]
-[editable path="Buildings/Building"]
-[editable path="Buildings/Building2"]
-[editable path="Buildings/Building3"]
-[editable path="Buildings/Building35"]
-[editable path="Buildings/Building36"]
-[editable path="Buildings/Building37"]
-[editable path="Buildings/Building38"]
-[editable path="Buildings/Building21"]
-[editable path="Buildings/Building22"]
-[editable path="Buildings/Building23"]
-[editable path="Buildings/Building24"]
-[editable path="Buildings/Building25"]
-[editable path="Buildings/Building26"]
-[editable path="Buildings/Building27"]
-[editable path="Buildings/Building28"]
-[editable path="Buildings/Building4"]
-[editable path="Buildings/Building5"]
-[editable path="Buildings/Building14"]
-[editable path="Buildings/Building6"]
-[editable path="Buildings/Building10"]
-[editable path="Buildings/Building7"]
-[editable path="Buildings/Building12"]
-[editable path="Buildings/Building13"]
-[editable path="Buildings/Building8"]
-[editable path="Buildings/Building9"]
-[editable path="Buildings/Building15"]
-[editable path="Buildings/Building16"]
-[editable path="Buildings/Building19"]
-[editable path="Buildings/Building39"]
-[editable path="Buildings/Building29"]
-[editable path="Buildings/Building30"]
-[editable path="Buildings/Building31"]
-[editable path="Buildings/Building32"]
-[editable path="Buildings/Building33"]
-[editable path="Buildings/Building34"]
+[editable path="Units/Transport"]
+[editable path="Units/Shade"]

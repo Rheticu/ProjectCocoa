@@ -113,7 +113,7 @@ func _execute(action: BaseAction) -> void:
 		BaseAction.Type.OVERWATCH: _execute_overwatch(action as OverwatchAction)
 		BaseAction.Type.DIVIDE: await _execute_divide(action as DivideAction)
 		BaseAction.Type.LOAD:   _execute_load(action as LoadAction)
-		BaseAction.Type.UNLOAD: _execute_unload(action as UnloadAction)
+		BaseAction.Type.UNLOAD: await _execute_unload(action as UnloadAction)
 	_is_executing = false
 	action_executed.emit(action)
 	if action.type != BaseAction.Type.MOVE:
@@ -324,7 +324,29 @@ func _execute_load(action: LoadAction) -> void:
 	fog_system.recalculate(game_manager.local_player_id)
 
 func _execute_unload(action: UnloadAction) -> void:
+	if not action.move_path.is_empty():
+		var destination = action.move_path.back()
+		if action.actor.grid_position != destination:
+			var move = MoveAction.new(action.actor, action.move_path, action.is_wrapped)
+			await _execute_move(move)
 	var transport = action.actor as TransportUnit
+	# Chequear ambush en el tile de descarga
+	var enemy_in_tile = null
+	for unit in game_manager.all_units:
+		if unit.team == transport.team:
+			continue
+		if unit.grid_position != action.unload_tile:
+			continue
+		if unit.is_shade() == transport.carried_unit.is_shade() and not fog_system.is_visible(action.unload_tile, transport.team):
+			enemy_in_tile = unit
+			break
+	if enemy_in_tile:
+		enemy_in_tile.visible = true
+		enemy_in_tile.update_visual()
+		transport.state = Unit.State.MOVED
+		transport.update_visual()
+		ambush_triggered.emit(transport.carried_unit, enemy_in_tile, action.unload_tile)
+		return
 	transport.unload_unit(action.unload_tile)
 	transport.state = Unit.State.MOVED
 	transport.update_visual()

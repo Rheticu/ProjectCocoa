@@ -6,6 +6,7 @@ extends Node
 @onready var combat_system = $"../CombatSystem"
 @onready var turn_manager = $"../TurnManager"
 @onready var grid_system = $"../GridSystem"
+@onready var fog_system = $"../FogSystem"
 
 var selected_unit: Unit = null
 var inspected_unit: Unit = null
@@ -167,7 +168,8 @@ func get_valid_unload_tiles(transport: TransportUnit) -> Array[Vector2i]:
 		var pos = transport.grid_position + dir
 		if not grid_system.is_in_bounds(pos):
 			continue
-		if game_manager.get_unit_at(pos, false) != null:
+		var unit_at = game_manager.get_unit_at(pos, false)
+		if unit_at != null and not unit_at.is_shade() and fog_system.is_visible(pos, transport.team):
 			continue
 		var terrain = grid_system.get_terrain_type(pos)
 		var cost = movement_system._get_movement_cost(transport.carried_unit, terrain)

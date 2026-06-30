@@ -226,11 +226,12 @@ func _handle_left_click() -> void:
 			if transport:
 				var valid_tiles = selection_system.get_valid_unload_tiles(transport)
 				if grid_pos in valid_tiles:
-					action_system.queue_action(UnloadAction.new(transport, grid_pos))
+					var action = UnloadAction.new(transport, grid_pos)
+					action.move_path = _pending_move_path.duplicate()
+					_pending_move_path.clear()
+					action_system.queue_action(action)
 					selection_system.deselect()
 					mode = Mode.IDLE
-				else:
-					_cancel()
 
 func _handle_right_click() -> void:
 	var mouse_pos = get_viewport().get_canvas_transform().affine_inverse() * get_viewport().get_mouse_position()
@@ -382,6 +383,5 @@ func on_load_pressed(transport: TransportUnit) -> void:
 func on_unload_pressed() -> void:
 	var transport = selection_system.selected_unit as TransportUnit
 	if transport:
-		_pending_move_path.clear()
 		mode = Mode.UNLOAD
 		ui_layer.show_unload_options(transport)

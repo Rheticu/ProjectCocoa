@@ -713,7 +713,7 @@ func _update_movement_arrow(cursor_pos: Vector2i) -> void:
 		movement_arrow.clear_points()
 		arrow_head.clear_points()
 		return
-	if input_controller.mode == InputController.Mode.TARGETING or input_controller.mode == InputController.Mode.SHADE_ABILITY:
+	if input_controller.mode == InputController.Mode.TARGETING or input_controller.mode == InputController.Mode.SHADE_ABILITY or input_controller.mode == InputController.Mode.UNLOAD:
 		movement_arrow.clear_points()
 		arrow_head.clear_points()
 		return

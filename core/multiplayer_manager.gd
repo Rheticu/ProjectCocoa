@@ -289,7 +289,10 @@ func _deserialize_action(d: Dictionary) -> BaseAction:
 		BaseAction.Type.UNLOAD:
 			var transport = game_manager.get_unit_by_id(d["actor_id"]) as TransportUnit
 			if not transport: return null
-			return UnloadAction.new(transport, Vector2i(d["tile_x"], d["tile_y"]))
+			var action = UnloadAction.new(transport, Vector2i(d["tile_x"], d["tile_y"]))
+			action.move_path = _unpack_path(d)
+			action.is_wrapped = d.get("is_wrapped", false)
+			return action
 
 	push_error("MultiplayerManager: tipo desconocido type_int=%d" % type_int)
 	return null

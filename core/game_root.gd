@@ -11,9 +11,10 @@ extends Node2D
 @onready var multiplayer_manager = $MultiplayerManager
 @onready var lobby = $Lobby
 
+@export var map_scene: PackedScene
+
 func _ready() -> void:
-	var map_scene = load("res://scenes/maps/Map1.tscn")
-	var map = map_scene.instantiate()
+	var map = map_scene.instantiate()  # map_scene es la variable exportada
 	current_map_container.add_child(map)
 	game_manager.current_map = map
 	var terrain = map.get_node("Terrain")
