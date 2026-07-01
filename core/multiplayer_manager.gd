@@ -329,6 +329,8 @@ func receive_checksum(remote_checksum: int, action_name: String) -> void:
 	var sender_player = 1 if sender == 1 else 2
 	if sender_player == player_id:
 		return
+	await get_tree().process_frame
+	await get_tree().process_frame
 	var local_checksum = state_hasher.compute_checksum()
 	if local_checksum != remote_checksum:
 		push_error("DESYNC después de '%s': local=%d remote=%d" % [action_name, local_checksum, remote_checksum])

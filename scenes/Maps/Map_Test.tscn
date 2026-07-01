@@ -178,7 +178,7 @@ metadata/_edit_lock_ = true
 metadata/_edit_lock_ = true
 
 [node name="Unit15" parent="Units" instance=ExtResource("7_0aoq8")]
-position = Vector2(496, 112)
+position = Vector2(432, 112)
 team = 2
 data = ExtResource("8_tchv4")
 
@@ -186,14 +186,14 @@ data = ExtResource("8_tchv4")
 texture = ExtResource("9_n3cqq")
 
 [node name="Unit2" parent="Units" instance=ExtResource("7_0aoq8")]
-position = Vector2(432, 112)
+position = Vector2(368, 80)
 data = ExtResource("8_tchv4")
 
 [node name="Sprite2D" parent="Units/Unit2" index="0"]
 texture = ExtResource("10_eigp0")
 
 [node name="Transport" parent="Units" instance=ExtResource("15_ajp1k")]
-position = Vector2(464, 80)
+position = Vector2(432, 80)
 
 [node name="Sprite2D" parent="Units/Transport" index="0"]
 texture = ExtResource("16_kvb6m")

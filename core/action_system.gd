@@ -15,10 +15,13 @@ signal action_rejected(reason: String)
 signal move_animation_requested(unit: Unit, path: Array[Vector2i], is_remote: bool)
 signal move_confirmed(unit: Unit)
 signal overwatch_triggered(attacker: Unit, target: Unit, tile: Vector2i, previous_tile: Vector2i)
-signal ambush_triggered(moving_unit: Unit, hidden_unit: Unit, tile: Vector2i)
+signal ambush_triggered(moving_unit: Unit, hidden_unit: Unit, tile: Vector2i, from_unload: bool)
 
 var _is_executing: bool = false
 var _executing_remote: bool = false
+
+func is_executing() -> bool:
+	return _is_executing
 
 func queue_action(action: BaseAction) -> void:
 	print("QUEUE_ACTION: type=", action.type, " is_executing=", _is_executing)
@@ -255,7 +258,7 @@ func check_ambush_at(moving_unit: Unit, tile: Vector2i, previous_tile: Vector2i)
 		moving_unit.state = Unit.State.MOVED
 		moving_unit.grid_position = previous_tile
 		moving_unit.update_visual()
-		ambush_triggered.emit(moving_unit, unit, tile)
+		ambush_triggered.emit(moving_unit, unit, tile, false)
 		return true
 	return false
 
@@ -345,7 +348,7 @@ func _execute_unload(action: UnloadAction) -> void:
 		enemy_in_tile.update_visual()
 		transport.state = Unit.State.MOVED
 		transport.update_visual()
-		ambush_triggered.emit(transport.carried_unit, enemy_in_tile, action.unload_tile)
+		ambush_triggered.emit(transport.carried_unit, enemy_in_tile, action.unload_tile, true)
 		return
 	transport.unload_unit(action.unload_tile)
 	transport.state = Unit.State.MOVED

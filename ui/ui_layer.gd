@@ -473,7 +473,8 @@ func _on_overwatch_triggered(_attacker: Unit, target: Unit, _tile: Vector2i, _pr
 	target.update_visual()
 	_overwatch_resolved.emit()
 
-func _on_ambush_triggered(moving_unit: Unit, _hidden_unit: Unit, _tile: Vector2i) -> void:
+func _on_ambush_triggered(moving_unit: Unit, _hidden_unit: Unit, _tile: Vector2i, from_unload: bool) -> void:
+	print("AMBUSH TRIGGERED: _executing_remote=", action_system._executing_remote)
 	_ambush_activated = true
 	if _movement_tween:
 		_movement_tween.kill()
@@ -484,17 +485,17 @@ func _on_ambush_triggered(moving_unit: Unit, _hidden_unit: Unit, _tile: Vector2i
 	input_controller.mode = InputController.Mode.IDLE
 	selection_system.deselect()
 	fog_system.recalculate(game_manager.local_player_id)
-	if multiplayer_manager.is_network_connected and not action_system._executing_remote:
-			var truncated_path: Array[Vector2i] = []
-			for p in _saved_move_path:
-				truncated_path.append(p)
-				if p == moving_unit.grid_position:
-					break
-			var action = MoveAction.new(moving_unit, truncated_path)
-			var dict = multiplayer_manager.serialize_action(action)
-			dict["show_ambush_effect"] = true
-			multiplayer_manager.send_action(dict)
-			_saved_move_path.clear()
+	if multiplayer_manager.is_network_connected and not action_system._executing_remote and not from_unload:
+		var truncated_path: Array[Vector2i] = []
+		for p in _saved_move_path:
+			truncated_path.append(p)
+			if p == moving_unit.grid_position:
+				break
+		var action = MoveAction.new(moving_unit, truncated_path)
+		var dict = multiplayer_manager.serialize_action(action)
+		dict["show_ambush_effect"] = true
+		multiplayer_manager.send_action(dict)
+		_saved_move_path.clear()
 
 func _show_ambush_effect(world_pos: Vector2) -> void:
 	var exclaim = Sprite2D.new()

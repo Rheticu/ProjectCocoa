@@ -8,7 +8,7 @@
 script = ExtResource("1_qvghf")
 unit_type = "Sword"
 movement_range = 4
-vision_range = 1
+vision_range = 0
 attack = 50
 cost = 2000
 sprite_team1 = ExtResource("2_4r1ek")
