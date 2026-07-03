@@ -20,9 +20,11 @@ func compute_state_string() -> String:
 	var units = game_manager.all_units.duplicate()
 	units.sort_custom(func(a, b): return a.unit_id < b.unit_id)
 	for u in units:
+		var pos_x = u.grid_position.x if not u.is_loaded else -1
+		var pos_y = u.grid_position.y if not u.is_loaded else -1
 		var entry = "u:%d,pos:%d:%d,hp:%d,mk:%d,sh:%d,bo:%d,mu:%d,loaded:%d" % [
 			u.unit_id,
-			u.grid_position.x, u.grid_position.y,
+			pos_x, pos_y,
 			u.health,
 			u.marked_turns, u.shield_turns,
 			u.boost_turns, u.muddle_turns,

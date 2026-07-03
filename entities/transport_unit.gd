@@ -2,6 +2,7 @@ class_name TransportUnit
 extends Unit
 
 var carried_unit: Unit = null
+var ambushed: bool = false
 
 func can_load(unit: Unit) -> bool:
 	if carried_unit != null:
@@ -30,3 +31,7 @@ func unload_unit(tile: Vector2i) -> void:
 
 func is_transport() -> bool:
 	return true
+
+func update_carried_unit_position() -> void:
+	if carried_unit:
+		carried_unit.grid_position = grid_position

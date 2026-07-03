@@ -97,6 +97,8 @@ func show_action_menu(unit: Unit) -> void:
 	var can_load = false
 	var can_unload = false
 	if unit is TransportUnit:
+		if unit.ambushed == true:
+			return
 		can_unload = unit.carried_unit != null
 	if unit.unit_type in ["Sword", "Archer", "Spear"]:
 		var transport = _get_adjacent_transport(unit)
@@ -474,7 +476,6 @@ func _on_overwatch_triggered(_attacker: Unit, target: Unit, _tile: Vector2i, _pr
 	_overwatch_resolved.emit()
 
 func _on_ambush_triggered(moving_unit: Unit, _hidden_unit: Unit, _tile: Vector2i, from_unload: bool) -> void:
-	print("AMBUSH TRIGGERED: _executing_remote=", action_system._executing_remote)
 	_ambush_activated = true
 	if _movement_tween:
 		_movement_tween.kill()

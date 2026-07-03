@@ -37,6 +37,8 @@ func _begin_turn(team: int) -> void:
 		if unit.team == team:
 			unit.state = Unit.State.IDLE
 			unit.update_visual()
+		if unit is TransportUnit:
+			(unit as TransportUnit).ambushed = false
 
 	if not game_manager.is_network_game:
 		game_manager.local_player_id = team

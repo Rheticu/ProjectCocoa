@@ -75,6 +75,7 @@ func show_for_unit(
 	can_load: bool = false,
 	can_unload: bool = false
 ) -> void:
+
 	# Por defecto ocultar todo
 	attack_btn.visible = has_targets
 	capture_btn.visible = false
@@ -129,7 +130,6 @@ func show_for_unit(
 			"WOOD":
 				boost_btn.visible = has_boost_targets and shade.mana >= 2
 				boost2_btn.visible = has_boost_targets and shade.mana >= 3
-
 
 	# Captura
 	if building != null and building.team != unit.team:

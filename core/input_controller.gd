@@ -38,6 +38,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if game_manager.local_player_id == 0:
 		return
 
+	if event.is_action_pressed("RMClick"):
+		for unit in game_manager.all_units:
+			print(unit.unit_type, "team:", unit.team, unit.grid_position)
+
 	# Si el action menu está abierto, solo permitir cancelar con RMClick
 	if ui_layer.action_menu.visible:
 		if event.is_action_pressed("RMClick") or event.is_action_pressed("LMClick"):
@@ -240,6 +244,8 @@ func _handle_right_click() -> void:
 	match mode:
 		Mode.IDLE:
 			var unit = game_manager.get_unit_at(grid_pos, game_manager.shade_view_enabled)
+			if unit is TransportUnit:
+				return
 			if unit and unit.visible:
 				selection_system.inspect_unit_attack(unit)
 				mode = Mode.INSPECTING_B

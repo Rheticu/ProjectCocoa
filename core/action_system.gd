@@ -9,6 +9,7 @@ extends Node
 @onready var fog_system = $"../FogSystem"
 @onready var grid_system = $"../GridSystem"
 @onready var multiplayer_manager = $"../MultiplayerManager"
+@onready var input_controller = $"../InputController"
 
 signal action_executed(action: BaseAction)
 signal action_rejected(reason: String)
@@ -130,6 +131,8 @@ func _execute_move(action: MoveAction) -> void:
 	await move_confirmed
 	if is_instance_valid(action.actor) and action.actor.state != Unit.State.MOVED and not action.path.is_empty():
 		action.actor.grid_position = action.path.back()
+		if action.actor is TransportUnit:
+			(action.actor as TransportUnit).update_carried_unit_position()
 
 func confirm_move(unit: Unit, path: Array[Vector2i]) -> void:
 	if multiplayer_manager.is_network_connected:
@@ -258,6 +261,13 @@ func check_ambush_at(moving_unit: Unit, tile: Vector2i, previous_tile: Vector2i)
 		moving_unit.state = Unit.State.MOVED
 		moving_unit.grid_position = previous_tile
 		moving_unit.update_visual()
+		if moving_unit is TransportUnit:
+			var transport = moving_unit as TransportUnit
+			transport.ambushed = true
+			input_controller._pending_move_path.clear()
+			if transport.carried_unit:
+				transport.carried_unit.grid_position = previous_tile
+				transport.carried_unit.update_visual()
 		ambush_triggered.emit(moving_unit, unit, tile, false)
 		return true
 	return false
@@ -348,6 +358,7 @@ func _execute_unload(action: UnloadAction) -> void:
 		enemy_in_tile.update_visual()
 		transport.state = Unit.State.MOVED
 		transport.update_visual()
+		transport.ambushed = true
 		ambush_triggered.emit(transport.carried_unit, enemy_in_tile, action.unload_tile, true)
 		return
 	transport.unload_unit(action.unload_tile)
