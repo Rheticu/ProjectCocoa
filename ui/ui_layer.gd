@@ -514,7 +514,6 @@ func _show_ambush_effect(world_pos: Vector2) -> void:
 
 func _process(_delta: float) -> void:
 	#if Engine.get_process_frames() % 60 == 0:
-		#print("FPS: ", Engine.get_frames_per_second())
 	var screen_pos  = get_viewport().get_mouse_position()
 	var world_pos   = get_viewport().get_canvas_transform().affine_inverse() * screen_pos
 	var grid_pos    = grid_system.world_to_grid(world_pos)

@@ -36,7 +36,7 @@ func recalculate(viewing_team: int) -> void:
 	for team in [1, 2]:
 		var tiles: Dictionary = {}
 		for unit in game_manager.all_units:
-			if unit.team != team:
+			if unit.team != team or unit.is_loaded:
 				continue
 			for tile in grid_system.get_tiles_in_range(unit.grid_position, unit.vision_range, false):
 				tiles[tile] = true

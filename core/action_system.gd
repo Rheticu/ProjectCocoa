@@ -25,7 +25,6 @@ func is_executing() -> bool:
 	return _is_executing
 
 func queue_action(action: BaseAction) -> void:
-	print("QUEUE_ACTION: type=", action.type, " is_executing=", _is_executing)
 	if _is_executing:
 		action_rejected.emit("Acción en curso")
 		return
@@ -332,18 +331,25 @@ func _validate_unload(action: UnloadAction) -> bool:
 	return true
 
 func _execute_load(action: LoadAction) -> void:
-	print("LOAD: actor=", action.actor.unit_type, " transport=", action.transport.unit_type, " can_load=", action.transport.can_load(action.actor))
 	action.transport.load_unit(action.actor)
 	fog_system.recalculate(game_manager.local_player_id)
 
 func _execute_unload(action: UnloadAction) -> void:
+	var transport = action.actor as TransportUnit
+	if not transport:
+		return
+
+	if transport.ambushed:
+		return
+
 	if not action.move_path.is_empty():
 		var destination = action.move_path.back()
-		if action.actor.grid_position != destination:
-			var move = MoveAction.new(action.actor, action.move_path, action.is_wrapped)
+		if transport.grid_position != destination:
+			var move = MoveAction.new(transport, action.move_path, action.is_wrapped)
 			await _execute_move(move)
-	var transport = action.actor as TransportUnit
-	# Chequear ambush en el tile de descarga
+			if transport.ambushed:
+				return
+
 	var enemy_in_tile = null
 	for unit in game_manager.all_units:
 		if unit.team == transport.team:
@@ -353,6 +359,7 @@ func _execute_unload(action: UnloadAction) -> void:
 		if unit.is_shade() == transport.carried_unit.is_shade() and not fog_system.is_visible(action.unload_tile, transport.team):
 			enemy_in_tile = unit
 			break
+
 	if enemy_in_tile:
 		enemy_in_tile.visible = true
 		enemy_in_tile.update_visual()
@@ -361,6 +368,37 @@ func _execute_unload(action: UnloadAction) -> void:
 		transport.ambushed = true
 		ambush_triggered.emit(transport.carried_unit, enemy_in_tile, action.unload_tile, true)
 		return
+
+	# ✅ Guardar referencia ANTES de descargar
+	var unloaded_unit = transport.carried_unit
+
 	transport.unload_unit(action.unload_tile)
+
+	if unloaded_unit and _check_overwatch_after_unload(unloaded_unit, action.unload_tile):
+		unloaded_unit.state = Unit.State.MOVED
+		transport.state = Unit.State.MOVED
+		unloaded_unit.update_visual()
+		return
+
 	transport.state = Unit.State.MOVED
 	transport.update_visual()
+
+func _check_overwatch_after_unload(unit: Unit, tile: Vector2i) -> bool:
+	if not unit:  # ✅ Seguridad extra
+		return false
+	for cannon in game_manager.overwatch_units:
+		if not is_instance_valid(cannon) or not cannon.is_in_overwatch:
+			continue
+		if cannon.team == unit.team:
+			continue
+		if unit.is_shade():
+			continue
+		if not fog_system.is_visible(tile, cannon.team):
+			continue
+		var dist = grid_system.manhattan_distance(cannon.grid_position, tile, false)
+		if dist <= cannon.attack_range:
+			combat_system.execute_overwatch_attack(cannon, unit)
+			overwatch_triggered.emit(cannon, unit, tile, tile)
+			game_manager.clear_overwatch(cannon)
+			return true
+	return false

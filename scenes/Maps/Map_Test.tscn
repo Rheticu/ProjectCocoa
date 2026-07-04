@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=4 uid="uid://bgbe4y5w7u2qp"]
+[gd_scene load_steps=31 format=4 uid="uid://bgbe4y5w7u2qp"]
 
 [ext_resource type="Texture2D" uid="uid://00f5seoj7dpb" path="res://art/maps/PlainsSheet1.png" id="1_b6ttx"]
 [ext_resource type="Texture2D" uid="uid://dlvuinec2gwnr" path="res://art/maps/RoadsSheet1.png" id="2_j8oqt"]
@@ -11,10 +11,13 @@
 [ext_resource type="Texture2D" uid="uid://bqcg3j1i7wp6d" path="res://art/units/Sword/Sword1_Red.png" id="9_n3cqq"]
 [ext_resource type="Texture2D" uid="uid://dltmmbypolan6" path="res://art/units/Sword/Sword1_Blue.png" id="10_eigp0"]
 [ext_resource type="PackedScene" uid="uid://cph1iqfjco8q" path="res://scenes/units/Shade.tscn" id="11_067xy"]
+[ext_resource type="Resource" uid="uid://kc6p0ij8gsd8" path="res://data/units/cannon_data.tres" id="11_o0smn"]
+[ext_resource type="Texture2D" uid="uid://deg6jkglk5g2o" path="res://art/units/Cannon/Cannon1_Blue.png" id="12_ajp1k"]
 [ext_resource type="Resource" uid="uid://pu4shykaiycb" path="res://data/units/shade_fire_data.tres" id="12_yql4v"]
 [ext_resource type="Texture2D" uid="uid://1cg2abbjwydh" path="res://art/units/Fire_Shade/fire_shade_red.png" id="13_ik020"]
+[ext_resource type="Texture2D" uid="uid://s7iht3ylqgwn" path="res://art/units/Transport/Transport_Red.png" id="14_kvb6m"]
 [ext_resource type="PackedScene" uid="uid://cnm1s21fjph1e" path="res://scenes/units/Transport.tscn" id="15_ajp1k"]
-[ext_resource type="Texture2D" uid="uid://bd2esgwqsrs1j" path="res://art/units/Transport/Transport_Blue.png" id="16_kvb6m"]
+[ext_resource type="Texture2D" uid="uid://bg8pvsshb5mfm" path="res://art/units/Fire_Shade/fire_shade_blue.png" id="16_khhay"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hyr6f"]
 texture = ExtResource("1_b6ttx")
@@ -179,23 +182,32 @@ metadata/_edit_lock_ = true
 
 [node name="Unit15" parent="Units" instance=ExtResource("7_0aoq8")]
 position = Vector2(432, 112)
+team = 2
 data = ExtResource("8_tchv4")
 
 [node name="Sprite2D" parent="Units/Unit15" index="0"]
 texture = ExtResource("9_n3cqq")
 
 [node name="Unit2" parent="Units" instance=ExtResource("7_0aoq8")]
-position = Vector2(368, 80)
+position = Vector2(400, 80)
 data = ExtResource("8_tchv4")
 
 [node name="Sprite2D" parent="Units/Unit2" index="0"]
 texture = ExtResource("10_eigp0")
 
+[node name="Unit3" parent="Units" instance=ExtResource("7_0aoq8")]
+position = Vector2(272, 80)
+data = ExtResource("11_o0smn")
+
+[node name="Sprite2D" parent="Units/Unit3" index="0"]
+texture = ExtResource("12_ajp1k")
+
 [node name="Transport" parent="Units" instance=ExtResource("15_ajp1k")]
 position = Vector2(432, 80)
+team = 2
 
 [node name="Sprite2D" parent="Units/Transport" index="0"]
-texture = ExtResource("16_kvb6m")
+texture = ExtResource("14_kvb6m")
 
 [node name="Shade" parent="Units" instance=ExtResource("11_067xy")]
 position = Vector2(496, 80)
@@ -205,10 +217,19 @@ data = ExtResource("12_yql4v")
 [node name="Sprite2D" parent="Units/Shade" index="0"]
 texture = ExtResource("13_ik020")
 
+[node name="Shade2" parent="Units" instance=ExtResource("11_067xy")]
+position = Vector2(400, 48)
+data = ExtResource("12_yql4v")
+
+[node name="Sprite2D" parent="Units/Shade2" index="0"]
+texture = ExtResource("16_khhay")
+
 [node name="Buildings" type="Node2D" parent="."]
 metadata/_edit_lock_ = true
 
 [editable path="Units/Unit15"]
 [editable path="Units/Unit2"]
+[editable path="Units/Unit3"]
 [editable path="Units/Transport"]
 [editable path="Units/Shade"]
+[editable path="Units/Shade2"]

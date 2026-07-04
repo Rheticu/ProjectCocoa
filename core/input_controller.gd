@@ -38,9 +38,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if game_manager.local_player_id == 0:
 		return
 
-	if event.is_action_pressed("RMClick"):
-		for unit in game_manager.all_units:
-			print(unit.unit_type, "team:", unit.team, unit.grid_position)
+	#if event.is_action_pressed("RMClick"):
+		#for unit in game_manager.all_units:
+			#print(unit.unit_type, "team:", unit.team, unit.grid_position)
 
 	# Si el action menu está abierto, solo permitir cancelar con RMClick
 	if ui_layer.action_menu.visible:
