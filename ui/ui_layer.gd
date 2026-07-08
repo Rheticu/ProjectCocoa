@@ -412,10 +412,16 @@ func _animate_movement(unit: Unit, path: Array[Vector2i], _is_remote: bool = fal
 	_ambush_activated = false
 	var previous_tile = unit.grid_position
 	for tile in path:
-		var tween = create_tween()
-		tween.tween_property(unit, "position", grid_system.grid_to_world_center(tile), 0.1)
-		tween.tween_interval(0.04)
-		await tween.finished
+		var next_world = grid_system.grid_to_world_center(tile)
+		var dx = abs(tile.x - previous_tile.x)
+		if dx > 1:
+			# Wrap: teleportar sin tween
+			unit.position = next_world
+		else:
+			var tween = create_tween()
+			tween.tween_property(unit, "position", next_world, 0.1)
+			tween.tween_interval(0.04)
+			await tween.finished
 		if unit.team != game_manager.local_player_id:
 			if unit.marked_turns > 0:
 				if unit.is_shade():
@@ -754,6 +760,13 @@ func _update_movement_arrow(cursor_pos: Vector2i) -> void:
 		else:
 			# No adyacente — salto del mouse, usar A*
 			_cursor_path = selection_system.get_movement_path_to(cursor_pos)
+
+
+	for i in range(1, _cursor_path.size()):
+		if abs(_cursor_path[i].x - _cursor_path[i-1].x) > 1:
+			movement_arrow.clear_points()
+			arrow_head.clear_points()
+			return
 
 	movement_arrow.clear_points()
 	arrow_head.clear_points()

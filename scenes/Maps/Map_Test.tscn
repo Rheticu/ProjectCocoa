@@ -189,7 +189,7 @@ data = ExtResource("8_tchv4")
 texture = ExtResource("9_n3cqq")
 
 [node name="Unit2" parent="Units" instance=ExtResource("7_0aoq8")]
-position = Vector2(400, 80)
+position = Vector2(304, 144)
 data = ExtResource("8_tchv4")
 
 [node name="Sprite2D" parent="Units/Unit2" index="0"]
@@ -210,7 +210,7 @@ team = 2
 texture = ExtResource("14_kvb6m")
 
 [node name="Shade" parent="Units" instance=ExtResource("11_067xy")]
-position = Vector2(496, 80)
+position = Vector2(784, 304)
 team = 2
 data = ExtResource("12_yql4v")
 
@@ -218,10 +218,17 @@ data = ExtResource("12_yql4v")
 texture = ExtResource("13_ik020")
 
 [node name="Shade2" parent="Units" instance=ExtResource("11_067xy")]
-position = Vector2(400, 48)
+position = Vector2(400, 112)
 data = ExtResource("12_yql4v")
 
 [node name="Sprite2D" parent="Units/Shade2" index="0"]
+texture = ExtResource("16_khhay")
+
+[node name="Shade3" parent="Units" instance=ExtResource("11_067xy")]
+position = Vector2(720, 272)
+data = ExtResource("12_yql4v")
+
+[node name="Sprite2D" parent="Units/Shade3" index="0"]
 texture = ExtResource("16_khhay")
 
 [node name="Buildings" type="Node2D" parent="."]
@@ -233,3 +240,4 @@ metadata/_edit_lock_ = true
 [editable path="Units/Transport"]
 [editable path="Units/Shade"]
 [editable path="Units/Shade2"]
+[editable path="Units/Shade3"]
