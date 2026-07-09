@@ -64,13 +64,13 @@ func _build_ui() -> void:
 
 	# Campo IP
 	var ip_label = Label.new()
-	ip_label.text = "IP del host:"
+	ip_label.text = "Código de sala:"
 	ip_label.add_theme_font_size_override("font_size", 11)
 	vbox.add_child(ip_label)
 
 	_ip_field = LineEdit.new()
-	_ip_field.placeholder_text = "127.0.0.1"
-	_ip_field.text = "127.0.0.1"
+	_ip_field.placeholder_text = "Ingresa el código"
+	_ip_field.text = ""
 	_ip_field.custom_minimum_size = Vector2(0, 28)
 	vbox.add_child(_ip_field)
 
@@ -123,11 +123,9 @@ func _on_host_pressed() -> void:
 func _on_join_pressed() -> void:
 	_host_btn.disabled = true
 	_join_btn.disabled = true
-	var ip = _ip_field.text.strip_edges()
-	if ip.is_empty():
-		ip = "127.0.0.1"
-	var ok = multiplayer_manager.join_game(ip)
-	_set_status("Conectando a %s..." % ip if ok else "Error de conexión")
+	# No uses IP, solo conecta al servidor de señalización
+	var ok = multiplayer_manager.join_game("")
+	_set_status("Conectando al servidor de señalización..." if ok else "Error de conexión")
 	if not ok:
 		_host_btn.disabled = false
 		_join_btn.disabled = false

@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3 uid="uid://mscq8xb55cqc"]
+[gd_scene load_steps=35 format=3 uid="uid://mscq8xb55cqc"]
 
 [ext_resource type="Script" uid="uid://mcejuc7m0x7b" path="res://core/game_root.gd" id="1_fx2fv"]
 [ext_resource type="PackedScene" uid="uid://bgbe4y5w7u2qp" path="res://scenes/maps/Map_Test.tscn" id="2_4f5vv"]
@@ -24,6 +24,7 @@
 [ext_resource type="PackedScene" uid="uid://3ep8bkob147y" path="res://scenes/ui/ProductionMenu.tscn" id="16_y5y3l"]
 [ext_resource type="Script" uid="uid://bqwaqtx6tluj4" path="res://core/camera.gd" id="18_kyk2p"]
 [ext_resource type="Script" uid="uid://dmkawvjbv5xww" path="res://ui/lobby.gd" id="21_a8wo8"]
+[ext_resource type="AudioStream" uid="uid://cs4gik3mpjq2m" path="res://music/Music_PVP1.mp3" id="25_l46ev"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_vjgi4"]
 texture = ExtResource("11_1hd46")
@@ -148,3 +149,7 @@ metadata/_edit_lock_ = true
 
 [node name="Lobby" type="CanvasLayer" parent="."]
 script = ExtResource("21_a8wo8")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("25_l46ev")
+autoplay = true

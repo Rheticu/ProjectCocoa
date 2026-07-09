@@ -9,8 +9,7 @@ extends Node
 @onready var state_hasher = $"../StateHasher"
 
 # ── Config ────────────────────────────────────────────────────────────────────
-const PORT      := 9999
-const MAX_PEERS := 2
+var signaling_server: String = "wss://webrtc.signaling.w4games.com"
 
 # ── Estado ────────────────────────────────────────────────────────────────────
 var player_id:    int  = 0
@@ -28,8 +27,15 @@ signal game_ready
 # ══════════════════════════════════════════════════════════════════════════════
 
 func host_game() -> bool:
-	var peer = ENetMultiplayerPeer.new()
-	var err = peer.create_server(PORT, MAX_PEERS)
+	var peer = WebRTCMultiplayerPeer.new()
+	var config = {
+		"signaling_urls": [signaling_server],
+		"channels_config": [
+			{ "name": "reliable", "ordered": true, "max_packet_life_time": 0, "max_retransmits": -1 },
+			{ "name": "unreliable", "ordered": false, "max_packet_life_time": 0, "max_retransmits": -1 }
+		]
+	}
+	var err = peer.create_server(config)
 	if err != OK:
 		push_error("MultiplayerManager: no se pudo crear servidor (error %d)" % err)
 		return false
@@ -42,11 +48,18 @@ func host_game() -> bool:
 	connected_as_host.emit()
 	return true
 
-func join_game(ip: String) -> bool:
-	var peer = ENetMultiplayerPeer.new()
-	var err = peer.create_client(ip, PORT)
+func join_game(_room_id: String) -> bool:
+	var peer = WebRTCMultiplayerPeer.new()
+	var config = {
+		"signaling_urls": [signaling_server],
+		"channels_config": [
+			{ "name": "reliable", "ordered": true, "max_packet_life_time": 0, "max_retransmits": -1 },
+			{ "name": "unreliable", "ordered": false, "max_packet_life_time": 0, "max_retransmits": -1 }
+		]
+	}
+	var err = peer.create_client(2, config)
 	if err != OK:
-		push_error("MultiplayerManager: no se pudo conectar a %s:%d" % [ip, PORT])
+		push_error("MultiplayerManager: no se pudo conectar al servidor de señalización: %d" % err)
 		return false
 	multiplayer.set_multiplayer_peer(peer)
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
