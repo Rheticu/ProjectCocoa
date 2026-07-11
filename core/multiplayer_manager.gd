@@ -1,97 +1,71 @@
+# core/multiplayer_manager.gd
 class_name MultiplayerManager
 extends Node
 
-# ── Referencias ───────────────────────────────────────────────────────────────
-@onready var game_manager  = $"../GameManager"
+@onready var game_manager = $"../GameManager"
 @onready var action_system = $"../ActionSystem"
-@onready var turn_manager  = $"../TurnManager"
-@onready var fog_system    = $"../FogSystem"
+@onready var turn_manager = $"../TurnManager"
+@onready var fog_system = $"../FogSystem"
 @onready var state_hasher = $"../StateHasher"
 
-# ── Config ────────────────────────────────────────────────────────────────────
-var signaling_server: String = "wss://webrtc.signaling.w4games.com"
-
-# ── Estado ────────────────────────────────────────────────────────────────────
-var player_id:    int  = 0
+var webrtc_manager: WebRTCManager
+var signaling_server_url: String = "wss://catchy-pointing-prune.ngrok-free.dev"
+var room_secret: String = ""
+var player_id: int = 0
 var is_network_connected: bool = false
 
-# ── Señales ───────────────────────────────────────────────────────────────────
 signal connected_as_host
 signal connected_as_client
 signal peer_joined
 signal disconnected
 signal game_ready
 
-# ══════════════════════════════════════════════════════════════════════════════
-# CONEXIÓN
-# ══════════════════════════════════════════════════════════════════════════════
+func _ready():
+	webrtc_manager = WebRTCManager.new()
+	add_child(webrtc_manager)
+	webrtc_manager.connected_to_signaling.connect(_on_connected_to_signaling)
+	webrtc_manager.disconnected_from_signaling.connect(_on_disconnected_from_signaling)
+	webrtc_manager.peer_connected.connect(_on_webrtc_peer_connected)
+	webrtc_manager.peer_disconnected.connect(_on_webrtc_peer_disconnected)
 
-func host_game() -> bool:
-	var peer = WebRTCMultiplayerPeer.new()
-	var config = {
-		"signaling_urls": [signaling_server],
-		"channels_config": [
-			{ "name": "reliable", "ordered": true, "max_packet_life_time": 0, "max_retransmits": -1 },
-			{ "name": "unreliable", "ordered": false, "max_packet_life_time": 0, "max_retransmits": -1 }
-		]
-	}
-	var err = peer.create_server(config)
-	if err != OK:
-		push_error("MultiplayerManager: no se pudo crear servidor (error %d)" % err)
-		return false
-	multiplayer.set_multiplayer_peer(peer)
-	multiplayer.peer_connected.connect(_on_peer_connected)
-	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
-	player_id = 1
-	game_manager.local_player_id = 1
+func host_game(secret: String = "") -> void:
+	room_secret = secret if not secret.is_empty() else "sala-" + str(randi_range(1000, 9999))
+	print("🔴 Host iniciado con room secret: ", room_secret)  # ← Debe mostrar el código
+	webrtc_manager.start_connection(signaling_server_url, room_secret)
+
+func join_game(secret: String) -> void:
+	room_secret = secret
+	webrtc_manager.start_connection(signaling_server_url, room_secret)
+	print("🔵 Join iniciado con room secret: ", room_secret)
+
+func _on_connected_to_signaling(id: int, _use_mesh: bool):
+	# Mapear ID de sala a equipo 1 o 2
+	if id == 1:
+		player_id = 1
+		connected_as_host.emit()
+		print("🔴 Conectado como HOST (Equipo 1)")
+	else:
+		player_id = 2
+		connected_as_client.emit()
+		print("🔵 Conectado como CLIENTE (Equipo 2)")
+
+	game_manager.local_player_id = player_id
 	is_network_connected = true
-	connected_as_host.emit()
-	return true
 
-func join_game(_room_id: String) -> bool:
-	var peer = WebRTCMultiplayerPeer.new()
-	var config = {
-		"signaling_urls": [signaling_server],
-		"channels_config": [
-			{ "name": "reliable", "ordered": true, "max_packet_life_time": 0, "max_retransmits": -1 },
-			{ "name": "unreliable", "ordered": false, "max_packet_life_time": 0, "max_retransmits": -1 }
-		]
-	}
-	var err = peer.create_client(2, config)
-	if err != OK:
-		push_error("MultiplayerManager: no se pudo conectar al servidor de señalización: %d" % err)
-		return false
-	multiplayer.set_multiplayer_peer(peer)
-	multiplayer.connected_to_server.connect(_on_connected_to_server)
-	multiplayer.connection_failed.connect(_on_connection_failed)
-	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
-	return true
-
-func is_multiplayer_active() -> bool:
-	return multiplayer.multiplayer_peer != null and is_network_connected
-
-# ══════════════════════════════════════════════════════════════════════════════
-# CALLBACKS DE CONEXIÓN
-# ══════════════════════════════════════════════════════════════════════════════
-
-func _on_peer_connected(_id: int) -> void:
-	if player_id == 1:
-		await get_tree().create_timer(0.3).timeout
-	peer_joined.emit()
-
-func _on_connected_to_server() -> void:
-	player_id = 2
-	game_manager.local_player_id = 2
-	is_network_connected = true
-	connected_as_client.emit()
-
-func _on_connection_failed() -> void:
-	push_error("MultiplayerManager: falló la conexión")
-	is_network_connected = false
-
-func _on_peer_disconnected(_id: int) -> void:
+func _on_disconnected_from_signaling():
 	is_network_connected = false
 	disconnected.emit()
+	print("⚠️ Desconectado del servidor de señalización")
+
+func _on_webrtc_peer_connected(id: int):
+	print("🔵🔵🔵 Peer conectado: ", id)
+	if player_id == 1:
+		await get_tree().create_timer(0.3).timeout
+		peer_joined.emit()
+		print("🔵🔵🔵 peer_joined emitido")
+
+func _on_webrtc_peer_disconnected(id: int):
+	print("⚠️ Peer desconectado: ", id)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SINCRONIZACIÓN DE ESTADO INICIAL (host → cliente)
@@ -159,7 +133,7 @@ func receive_unit_state(udata: Dictionary) -> void:
 				break
 	if not unit:
 		return
-	unit.unit_id = udata["id"]  # ← adoptar el ID del host
+	unit.unit_id = udata["id"]
 	unit.health  = udata["health"]
 	unit.state   = udata["state"] as Unit.State
 	if unit is Shade:
@@ -176,16 +150,15 @@ func receive_building_state(bdata: Dictionary) -> void:
 
 @rpc("authority", "reliable")
 func receive_initial_state_done(_data: Dictionary) -> void:
-	#print("INITIAL STATE [player %d]:\n" % game_manager.local_player_id, state_hasher.compute_state_string())
 	fog_system.recalculate(player_id)
 	game_ready.emit()
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SINCRONIZACIÓN DE ACCIONES
+# SINCRONIZACIÓN DE ACCIONES (MANTIENE TU LÓGICA EXISTENTE)
 # ══════════════════════════════════════════════════════════════════════════════
 
 func send_action(action_dict: Dictionary) -> void:
-	if not is_multiplayer_active():
+	if not is_network_connected:
 		return
 	rpc("receive_action", action_dict)
 
@@ -205,6 +178,7 @@ func receive_action(action_dict: Dictionary) -> void:
 		send_checksum(action_dict.get("type", "unknown"))
 	else:
 		push_error("MultiplayerManager: no se pudo deserializar la acción: " + str(action_dict))
+
 # ══════════════════════════════════════════════════════════════════════════════
 # SERIALIZACIÓN / DESERIALIZACIÓN
 # ══════════════════════════════════════════════════════════════════════════════
@@ -330,7 +304,7 @@ func receive_new_unit_id(new_id: int, gx: int, gy: int, team: int) -> void:
 			return
 
 func send_checksum(action_name: String) -> void:
-	if not is_multiplayer_active():
+	if not is_network_connected:
 		return
 	var checksum = state_hasher.compute_checksum()
 	print("LOCAL STATE después de '%s':\n" % action_name, state_hasher.compute_state_string())

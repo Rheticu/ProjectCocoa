@@ -12,6 +12,7 @@ var _host_btn: Button
 var _join_btn: Button
 
 func _ready() -> void:
+	print("✅ LOBBY CARGADO CORRECTAMENTE - VERSIÓN CON DEBUG")
 	_build_ui()
 	multiplayer_manager.connected_as_host.connect(_on_connected_as_host)
 	multiplayer_manager.connected_as_client.connect(_on_connected_as_client)
@@ -114,29 +115,33 @@ func _set_status(text: String) -> void:
 func _on_host_pressed() -> void:
 	_host_btn.disabled = true
 	_join_btn.disabled = true
-	var ok = multiplayer_manager.host_game()
-	_set_status("Esperando al otro jugador..." if ok else "Error al crear servidor")
-	if not ok:
-		_host_btn.disabled = false
-		_join_btn.disabled = false
+	var room_secret = _ip_field.text.strip_edges()
+	if room_secret.is_empty():
+		room_secret = ""
+	multiplayer_manager.host_game(room_secret)
+	_set_status("Creando sala...")
 
 func _on_join_pressed() -> void:
 	_host_btn.disabled = true
 	_join_btn.disabled = true
-	# No uses IP, solo conecta al servidor de señalización
-	var ok = multiplayer_manager.join_game("")
-	_set_status("Conectando al servidor de señalización..." if ok else "Error de conexión")
-	if not ok:
+	var room_secret = _ip_field.text.strip_edges()
+	if room_secret.is_empty():
+		_set_status("❌ Error: Ingresa un código de sala")
 		_host_btn.disabled = false
 		_join_btn.disabled = false
+		return
+	multiplayer_manager.join_game(room_secret)
+	_set_status("Conectando a la sala " + room_secret + "...")
 
 func _on_connected_as_host() -> void:
 	_set_status("Servidor activo — esperando jugador...")
 
 func _on_connected_as_client() -> void:
+	print("LOBBY: connected_as_client")
 	_set_status("Conectado — esperando estado del host...")
 
 func _on_peer_joined() -> void:
+	print("LOBBY: peer_joined")
 	_set_status("¡Ambos conectados! Iniciando...")
 	await get_tree().create_timer(0.6).timeout
 	visible = false
@@ -149,5 +154,6 @@ func _on_disconnected() -> void:
 	_join_btn.disabled = false
 
 func _on_game_ready() -> void:
+	print("LOBBY: game_ready")
 	visible = false
 	get_parent().start_multiplayer_game()
