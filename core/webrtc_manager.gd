@@ -60,7 +60,23 @@ func _on_peer_disconnected(id: int):
 func _create_peer(id: int):
 	var peer = WebRTCPeerConnection.new()
 	peer.initialize({
-		"iceServers": [ { "urls": ["stun:stun.l.google.com:19302"] } ]
+		"iceServers": [
+			{
+				"urls": [
+					"stun:stun.l.google.com:19302",
+					"stun:stun1.l.google.com:19302"
+				]
+			},
+			{
+				"urls": [
+					"turn:global.turn.metered.ca:80?transport=udp",
+					"turn:global.turn.metered.ca:443?transport=tcp",
+					"turns:global.turn.metered.ca:443?transport=tcp"
+				],
+				"username": "68b6144f5b046c3cf5350e8d",
+				"credential": "Hyxc2ec/pBUekQ5e"
+			}
+		]
 	})
 	peer.session_description_created.connect(_on_offer_created.bind(id))
 	peer.ice_candidate_created.connect(_on_ice_candidate.bind(id))

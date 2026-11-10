@@ -14,6 +14,10 @@ config/name="Project_Cocoa"
 run/main_scene="uid://mscq8xb55cqc"
 config/features=PackedStringArray("4.5", "Forward Plus")
 
+[autoload]
+
+SignalLens="*res://addons/signal_lens/autoload/signal_lens_autoload.gd"
+
 [display]
 
 window/size/viewport_width=640
@@ -22,7 +26,11 @@ window/stretch/mode="canvas_items"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/ai_context_generator/plugin.cfg")
+enabled=PackedStringArray("res://addons/ai_context_generator/plugin.cfg", "res://addons/signal_lens/plugin.cfg")
+
+[gui]
+
+theme/custom_font="uid://c6msrby30gul8"
 
 [input]
 
