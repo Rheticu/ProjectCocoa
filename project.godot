@@ -14,6 +14,10 @@ config/name="Project_Cocoa"
 run/main_scene="uid://mscq8xb55cqc"
 config/features=PackedStringArray("4.5", "Forward Plus")
 
+[autoload]
+
+Signal_Debugger="*res://addons/SignalVisualizer/Debugger/SignalDebugger.gd"
+
 [display]
 
 window/size/viewport_width=640
@@ -22,7 +26,7 @@ window/stretch/mode="canvas_items"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/ai_context_generator/plugin.cfg")
+enabled=PackedStringArray("res://addons/SignalVisualizer/plugin.cfg", "res://addons/ai_context_generator/plugin.cfg")
 
 [input]
 

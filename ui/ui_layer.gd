@@ -23,6 +23,10 @@ var _preview_target: Unit = null
 var _preview_attacker: Unit = null
 var _current_preview_target: Unit = null
 var _preview_targets: Array[Unit] = []
+# Caché de casillas atacables (evita recalcular el BFS de alcance en cada frame)
+var _atk_cache: Array[Vector2i] = []
+var _atk_cache_unit: Unit = null
+var _atk_cache_pos: Vector2i = Vector2i(-999, -999)
 
 # Sistemas — sin cambios
 @onready var game_manager      = $"../GameManager"
@@ -204,7 +208,19 @@ func _on_action_menu_unload() -> void:
 
 # ── Overlays ─────────────────────────────────────────────────────────
 
+func _get_cached_attackable(unit: Unit) -> Array[Vector2i]:
+	if unit != _atk_cache_unit or unit.grid_position != _atk_cache_pos:
+		_atk_cache_unit = unit
+		_atk_cache_pos = unit.grid_position
+		_atk_cache = selection_system.get_attackable_tiles(unit)
+	return _atk_cache
+
+func _invalidate_attackable_cache() -> void:
+	_atk_cache_unit = null
+	_atk_cache.clear()
+
 func _on_unit_selected(unit: Unit, reachable: Array[Vector2i]) -> void:
+	_invalidate_attackable_cache()
 	move_range_overlay.clear()
 	attack_range_overlay.clear()
 	for pos in reachable:
@@ -214,7 +230,7 @@ func _on_unit_selected(unit: Unit, reachable: Array[Vector2i]) -> void:
 	if unit.unit_type == "Cannon":
 		attackable = grid_system.get_tiles_in_range(unit.grid_position, unit.attack_range, unit.is_shade())
 	else:
-		attackable = selection_system.get_attackable_tiles(unit)
+		attackable = _get_cached_attackable(unit)
 	for unit2 in game_manager.all_units:
 		if unit2.team != unit.team and unit2.visible and unit2.is_shade() == unit.is_shade():
 			if unit2.grid_position in attackable:
@@ -222,6 +238,7 @@ func _on_unit_selected(unit: Unit, reachable: Array[Vector2i]) -> void:
 	hud.show_unit_info(unit)
 
 func _on_unit_deselected() -> void:
+	_invalidate_attackable_cache()
 	hide_damage_preview()
 	_current_preview_target = null
 	move_range_overlay.clear()
@@ -441,6 +458,7 @@ func _animate_movement(unit: Unit, path: Array[Vector2i], _is_remote: bool = fal
 		previous_tile = tile
 
 func _on_action_executed(action: BaseAction) -> void:
+	_invalidate_attackable_cache()
 	hide_action_menu()
 	match action.type:
 		BaseAction.Type.MOVE:
@@ -540,7 +558,7 @@ func _process(_delta: float) -> void:
 						if unit.is_shade() == attacker.is_shade():
 							hovered_enemy = unit
 							break
-				var attackable_tiles = selection_system.get_attackable_tiles(attacker)
+				var attackable_tiles = _get_cached_attackable(attacker)
 				if hovered_enemy and grid_pos in attackable_tiles:
 					if hovered_enemy != _current_preview_target:
 						hide_damage_preview()

@@ -10,7 +10,6 @@ extends Node2D
 @onready var hud = $HUD
 @onready var multiplayer_manager = $MultiplayerManager
 @onready var lobby = $Lobby
-
 @export var map_scene: PackedScene
 
 func _ready() -> void:

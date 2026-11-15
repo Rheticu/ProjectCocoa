@@ -189,7 +189,7 @@ data = ExtResource("8_tchv4")
 texture = ExtResource("9_n3cqq")
 
 [node name="Unit2" parent="Units" instance=ExtResource("7_0aoq8")]
-position = Vector2(304, 144)
+position = Vector2(336, 112)
 data = ExtResource("8_tchv4")
 
 [node name="Sprite2D" parent="Units/Unit2" index="0"]
@@ -210,7 +210,7 @@ team = 2
 texture = ExtResource("14_kvb6m")
 
 [node name="Shade" parent="Units" instance=ExtResource("11_067xy")]
-position = Vector2(784, 304)
+position = Vector2(400, 176)
 team = 2
 data = ExtResource("12_yql4v")
 
@@ -225,7 +225,7 @@ data = ExtResource("12_yql4v")
 texture = ExtResource("16_khhay")
 
 [node name="Shade3" parent="Units" instance=ExtResource("11_067xy")]
-position = Vector2(720, 272)
+position = Vector2(784, 144)
 data = ExtResource("12_yql4v")
 
 [node name="Sprite2D" parent="Units/Shade3" index="0"]
